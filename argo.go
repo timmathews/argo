@@ -108,6 +108,8 @@ func main() {
 
   go WebSocketServer(addr)
 
+  go ApiServer()
+
 	// Print and transmit received messages
 	go func() {
 		for {
