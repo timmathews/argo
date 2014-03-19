@@ -23,11 +23,11 @@ func MessagesIndex(w http.ResponseWriter, r *http.Request) {
 
   var pgns []IndexEntry
 
-  for _, pgn := range nmea2k.PgnList {
+  for i, pgn := range nmea2k.PgnList {
     p := IndexEntry{}
     p.Pgn = pgn.Pgn
     p.Name = pgn.Description
-    p.Details = fmt.Sprintf("/api/v1/messages/%d", pgn.Pgn)
+    p.Details = fmt.Sprintf("/api/v1/messages/%d", i)
     pgns = append(pgns, p)
   }
 
@@ -42,9 +42,8 @@ func MessageDetailsHandler(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
   pgn, _ := strconv.ParseInt(vars["key"], 10, 32)
 
-  _, pgnDef := nmea2k.PgnList.First(uint32(pgn))
+  pgnDef := nmea2k.PgnList[pgn]
 
-//  pgnDef := nmea2k.PgnList[pgn]
   b, err := json.MarshalIndent(pgnDef, "", "  ")
   if( err != nil) {
     fmt.Println("error:", err)
