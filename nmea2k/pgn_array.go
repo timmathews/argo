@@ -1,5 +1,10 @@
 package nmea2k
 
+import (
+  "strconv"
+  "encoding/json"
+)
+
 const ACTISENSE_BEM = 0x40000 // Actisense specific fake PGNs
 
 const Pi = 3.14159
@@ -51,37 +56,49 @@ type Pgn struct {
 
 type PgnArray []Pgn
 
-var lookupAisAccuracy = map[int]string{
+type PgnLookup map[int]string
+
+func (inVal PgnLookup) MarshalJSON() ([]byte, error) {
+  outVal := make(map[string]string)
+
+  for k, v := range inVal {
+    outVal[strconv.Itoa(k)] = v
+  }
+
+  return json.Marshal(outVal)
+}
+
+var lookupAisAccuracy = PgnLookup{
 	0: "Low",
 	1: "High",
 }
 
-var lookupAisBand = map[int]string{
+var lookupAisBand = PgnLookup{
 	0: "top 525 kHz of marine band",
 	1: "entire marine band",
 }
 
-var lookupAisCommState = map[int]string{
+var lookupAisCommState = PgnLookup{
 	0: "SOTDMA",
 	1: "ITDMA",
 }
 
-var lookupAisDTE = map[int]string{
+var lookupAisDTE = PgnLookup{
 	0: "Available",
 	1: "Not available",
 }
 
-var lookupAisMode = map[int]string{
+var lookupAisMode = PgnLookup{
 	0: "Autonomous",
 	1: "Assigned",
 }
 
-var lookupAisRAIM = map[int]string{
+var lookupAisRAIM = PgnLookup{
 	0: "not in use",
 	1: "in use",
 }
 
-var lookupAisTransceiver = map[int]string{
+var lookupAisTransceiver = PgnLookup{
 	0: "Channel A VDL reception",
 	1: "Channel B VDL reception",
 	2: "Channel A VDL transmission",
@@ -90,18 +107,18 @@ var lookupAisTransceiver = map[int]string{
 	5: "Reserved",
 }
 
-var lookupAisUnitType = map[int]string{
+var lookupAisUnitType = PgnLookup{
 	0: "SOTDMA",
 	1: "CS",
 }
 
-var lookupAisVersion = map[int]string{
+var lookupAisVersion = PgnLookup{
 	0: "ITU-R M.1371-1",
 	1: "ITU-R M.1371-3",
 }
 
 // http://www.nmea.org/Assets/20120726%20nmea%202000%20class%20&%20function%20codes%20v%202.00.pdf
-var lookupDeviceClass = map[int]string{
+var lookupDeviceClass = PgnLookup{
 	0:   "Reserved for 2000 Use",
 	10:  "System tools",
 	20:  "Safety systems",
@@ -121,36 +138,36 @@ var lookupDeviceClass = map[int]string{
 	125: "Entertainment",
 }
 
-var lookupIndustryCode = map[int]string{
+var lookupIndustryCode = PgnLookup{
 	4: "Marine",
 }
 
-var lookupRepeatIndicator = map[int]string{
+var lookupRepeatIndicator = PgnLookup{
 	0: "Initial",
 	1: "First retransmission",
 	2: "Second retransmission",
 	3: "Final retransmission",
 }
 
-var lookupEngineInstance = map[int]string{
+var lookupEngineInstance = PgnLookup{
 	0: "Single Engine or Dual Engine Port",
 	1: "Dual Engine Starboard",
 }
 
-var lookupGearStatus = map[int]string{
+var lookupGearStatus = PgnLookup{
 	0: "Forward",
 	1: "Neutral",
 	2: "Reverse",
 	3: "Unknown",
 }
 
-var lookupPositionAccuracy = map[int]string{
+var lookupPositionAccuracy = PgnLookup{
 	0: "Low",
 	1: "High",
 }
 
 // http://www.navcen.uscg.gov/?pageName=AISMessagesAStatic
-var lookupShipType = map[int]string{
+var lookupShipType = PgnLookup{
 	0:  "Unavailable",
 	20: "Wing in ground",
 	21: "Wing in ground hazard cat A",
@@ -208,14 +225,14 @@ var lookupShipType = map[int]string{
 	99: "Other (no additional information)",
 }
 
-var lookupTimeStamp = map[int]string{
+var lookupTimeStamp = PgnLookup{
 	60: "Not available",
 	61: "Manual input mode",
 	62: "Dead reckoning mode",
 	63: "Positioning system is inoperative",
 }
 
-var lookupGns = map[int]string{
+var lookupGns = PgnLookup{
 	0: "GPS",
 	1: "GLONASS",
 	2: "GPS+GLONASS",
@@ -227,7 +244,7 @@ var lookupGns = map[int]string{
 	8: "Galileo",
 }
 
-var lookupGnsAis = map[int]string{
+var lookupGnsAis = PgnLookup{
 	0: "Undefined",
 	1: "GPS",
 	2: "GLONASS",
@@ -239,13 +256,13 @@ var lookupGnsAis = map[int]string{
 	8: "Galileo",
 }
 
-var lookupGnsIntegrity = map[int]string{
+var lookupGnsIntegrity = PgnLookup{
 	0: "No integrity checking",
 	1: "Safe",
 	2: "Caution",
 }
 
-var lookupGnsMethod = map[int]string{
+var lookupGnsMethod = PgnLookup{
 	0: "No GNSS",
 	1: "GNSS Fix",
 	2: "DGNSS Fix",
@@ -257,7 +274,7 @@ var lookupGnsMethod = map[int]string{
 	8: "Simulate Mode",
 }
 
-var lookupSystemTime = map[int]string{
+var lookupSystemTime = PgnLookup{
 	0: "GPS",
 	1: "GLONASS",
 	2: "Radio Station",
@@ -266,7 +283,7 @@ var lookupSystemTime = map[int]string{
 	5: "Local Crystal clock",
 }
 
-var lookupMagneticVariation = map[int]string{
+var lookupMagneticVariation = PgnLookup{
 	0: "Manual",
 	1: "Automatic Chart",
 	2: "Automatic Table",
@@ -278,12 +295,12 @@ var lookupMagneticVariation = map[int]string{
 	8: "WMM 2020",
 }
 
-var lookupNavCalculation = map[int]string{
+var lookupNavCalculation = PgnLookup{
 	0: "Great Circle",
 	1: "Rhumb Line",
 }
 
-var lookupNavMarkType = map[int]string{
+var lookupNavMarkType = PgnLookup{
 	0: "Collision",
 	1: "Turning point",
 	2: "Reference",
@@ -291,7 +308,7 @@ var lookupNavMarkType = map[int]string{
 	4: "Waypoint",
 }
 
-var lookupResidualMode = map[int]string{
+var lookupResidualMode = PgnLookup{
 	0: "Autonomous",
 	1: "Differential Enhanced",
 	2: "Estimated",
@@ -299,7 +316,7 @@ var lookupResidualMode = map[int]string{
 	4: "Manual",
 }
 
-var lookupWindReference = map[int]string{
+var lookupWindReference = PgnLookup{
 	0: "True (ground referenced to North)",
 	1: "Magnetic (ground referenced to Magnetic North)",
 	2: "Apparent",
@@ -307,17 +324,17 @@ var lookupWindReference = map[int]string{
 	4: "True (water referenced)",
 }
 
-var lookupYesNo = map[int]string{
+var lookupYesNo = PgnLookup{
 	0: "No",
 	1: "Yes",
 }
 
-var lookupDirectionReference = map[int]string{
+var lookupDirectionReference = PgnLookup{
 	0: "True",
 	1: "Magnetic",
 }
 
-var lookupNavStatus = map[int]string{
+var lookupNavStatus = PgnLookup{
 	0: "Under way using engine",
 	1: "At anchor",
 	2: "Not under command",
@@ -329,13 +346,13 @@ var lookupNavStatus = map[int]string{
 	8: "Under way sailing",
 }
 
-var lookupPowerFactor = map[int]string{
+var lookupPowerFactor = PgnLookup{
 	0: "Leading",
 	1: "Lagging",
 	2: "Error",
 }
 
-var lookupTemperatureSource = map[int]string{
+var lookupTemperatureSource = PgnLookup{
 	0: "Sea Temperature",
 	1: "Outside Temperature",
 	2: "Inside Temperature",
@@ -348,12 +365,12 @@ var lookupTemperatureSource = map[int]string{
 	9: "Freezer Temperature",
 }
 
-var lookupHumidityInstance = map[int]string{
+var lookupHumidityInstance = PgnLookup{
 	0: "Inside",
 	1: "Outside",
 }
 
-var lookupPressureSource = map[int]string{
+var lookupPressureSource = PgnLookup{
 	0: "Atmospheric",
 	1: "Water",
 	2: "Steam",
@@ -361,7 +378,7 @@ var lookupPressureSource = map[int]string{
 	4: "Hydraulic",
 }
 
-var lookupTankType = map[int]string{
+var lookupTankType = PgnLookup{
 	0: "Fuel",
 	1: "Water",
 	2: "Gray water",
@@ -370,67 +387,67 @@ var lookupTankType = map[int]string{
 	5: "Black water",
 }
 
-var lookupTideTendency = map[int]string{
+var lookupTideTendency = PgnLookup{
 	0: "Falling",
 	1: "Rising",
 }
 
-var lookupIsoAckResults = map[int]string{
+var lookupIsoAckResults = PgnLookup{
 	0: "ACK",
 	1: "NAK",
 	2: "Access Denied",
 	3: "Address Busy",
 }
 
-var lookupWaveform = map[int]string{
+var lookupWaveform = PgnLookup{
 	0: "Sine Wave",
 	1: "Modified Sine Wave",
 	6: "Error",
 	7: "Data Not Available",
 }
 
-var lookupOffOn = map[int]string{
+var lookupOffOn = PgnLookup{
 	0: "Off",
 	1: "On",
 }
 
-var lookupStandbyOn = map[int]string{
+var lookupStandbyOn = PgnLookup{
 	0: "Standby",
 	1: "On",
 }
 
-var lookupAcceptability = map[int]string{
+var lookupAcceptability = PgnLookup{
 	0: "Bad Level",
 	1: "Bad Frequency",
 	2: "Being Qualified",
 	3: "Good",
 }
 
-var lookupTrackStatus = map[int]string{
+var lookupTrackStatus = PgnLookup{
 	0: "Cancelled",
 	1: "Acquiring",
 	2: "Tracking",
 	3: "Lost",
 }
 
-var lookupTargetAcquisition = map[int]string{
+var lookupTargetAcquisition = PgnLookup{
 	0: "Manual",
 	1: "Automatic",
 }
 
-var lookupLine = map[int]string{
+var lookupLine = PgnLookup{
 	0: "Line 1",
 	1: "Line 2",
 	2: "Line 3",
 	3: "Reserved",
 }
 
-var lookupFunctionCode = map[int]string{
+var lookupFunctionCode = PgnLookup{
 	0: "Transmit PGN List",
 	1: "Receive PGN List",
 }
 
-var lookupGnssMode = map[int]string{
+var lookupGnssMode = PgnLookup{
 	0: "1D",
 	1: "2D",
 	2: "3D",
@@ -440,22 +457,22 @@ var lookupGnssMode = map[int]string{
 	6: "Error",
 }
 
-var lookupDGnssMode = map[int]string{
+var lookupDGnssMode = PgnLookup{
 	0: "no SBAS",
 	1: "SBAS",
 	3: "SBAS",
 }
 
-var lookupGnssAntenna = map[int]string{
+var lookupGnssAntenna = PgnLookup{
 	0: "use last 3D height",
 	1: "Use antenna altitude",
 }
 
-var lookupGnssSatMode = map[int]string{
+var lookupGnssSatMode = PgnLookup{
 	3: "Range residuals used to calculate position",
 }
 
-var lookupGnssSatStatus = map[int]string{
+var lookupGnssSatStatus = PgnLookup{
 	0: "Not tracked",
 	1: "Tracked",
 	2: "Used",
@@ -464,13 +481,13 @@ var lookupGnssSatStatus = map[int]string{
 	5: "Used+Diff",
 }
 
-var lookupAirmarBootState = map[int]string{
+var lookupAirmarBootState = PgnLookup{
 	0: "In Startup Monitor",
 	1: "Running Bootloader",
 	2: "Running Application",
 }
 
-var lookupAirmarCalibrateFunction = map[int]string{
+var lookupAirmarCalibrateFunction = PgnLookup{
 	0: "Normal/cancel calibration",
 	1: "Enter calibration mode",
 	2: "Reset calibration to 0",
@@ -479,7 +496,7 @@ var lookupAirmarCalibrateFunction = map[int]string{
 	5: "Reset damping to defaults",
 }
 
-var lookupAirmarCalibrationStatus = map[int]string{
+var lookupAirmarCalibrationStatus = PgnLookup{
 	0: "Queried",
 	1: "Passed",
 	2: "Failed - timeout",
@@ -492,39 +509,39 @@ var lookupAirmarFormatCode = map[uint32]string{
 	1: "Format Code 1",
 }
 
-var lookupAirmarAccessLevel = map[int]string{
+var lookupAirmarAccessLevel = PgnLookup{
 	0: "Locked",
 	1: "Unlocked Level 1",
 	2: "Unlocked Level 2",
 }
 
-var lookupAirmarCogSubstitute = map[int]string{
+var lookupAirmarCogSubstitute = PgnLookup{
 	0: "Use HDG only",
 	1: "Allow COG to replace HDG",
 }
 
-var lookupAirmarControl = map[int]string{
+var lookupAirmarControl = PgnLookup{
 	0: "Report previous values",
 	1: "Generate new values",
 }
 
-var lookupAirmarTempInstance = map[int]string{
+var lookupAirmarTempInstance = PgnLookup{
 	0: "Device Sensor",
 	1: "Onboard Water Sensor",
 	2: "Optional Water Sensor",
 }
 
-var lookupAirmarSpeedFilter = map[int]string{
+var lookupAirmarSpeedFilter = PgnLookup{
 	0: "No filter",
 	1: "Basic IIR filter",
 }
 
-var lookupAirmarTransmissionInterval = map[int]string{
+var lookupAirmarTransmissionInterval = PgnLookup{
 	0: "Measure Interval",
 	1: "Requested by user",
 }
 
-var lookupAirmarTestId = map[int]string{
+var lookupAirmarTestId = PgnLookup{
 	1: "Format Code",
 	2: "Factory EEPROM",
 	3: "User EEPROM",
@@ -535,12 +552,12 @@ var lookupAirmarTestId = map[int]string{
 	8: "Battery voltage sensor",
 }
 
-var lookupSonicHubControl = map[int]string{
+var lookupSonicHubControl = PgnLookup{
 	0:   "Set",
 	128: "Ack",
 }
 
-var lookupSonicHubSource = map[int]string{
+var lookupSonicHubSource = PgnLookup{
 	0: "AM",
 	1: "FM",
 	2: "iPod",
@@ -550,31 +567,31 @@ var lookupSonicHubSource = map[int]string{
 	6: "Mic",
 }
 
-var lookupSonicHubTuning = map[int]string{
+var lookupSonicHubTuning = PgnLookup{
 	1: "Seeking Up",
 	2: "Tuned",
 	3: "Seeking Down",
 }
 
-var lookupSonicHubMute = map[int]string{
+var lookupSonicHubMute = PgnLookup{
 	1: "Mute On",
 	2: "Mute Off",
 }
 
-var lookupSonicHubPlaylist = map[int]string{
+var lookupSonicHubPlaylist = PgnLookup{
 	1: "Report",
 	4: "Next Song",
 	6: "Previous Song",
 }
 
-var lookupSonicHubZone = map[int]string{
+var lookupSonicHubZone = PgnLookup{
 	0: "Zone 1",
 	1: "Zone 2",
 	2: "Zone 3",
 }
 
 // http://www.nmea.org/Assets/20121212%20nmea%202000%20registration%20list.pdf
-var lookupCompanyCode = map[int]string{
+var lookupCompanyCode = PgnLookup{
 	174:  "Volvo Penta",
 	199:  "Actia Corporation",
 	273:  "Actisense",
@@ -676,11 +693,11 @@ var lookupCompanyCode = map[int]string{
 	228:  "ZF",
 }
 
-var lookupPriorityLevel = map[int]string{
+var lookupPriorityLevel = PgnLookup{
 	8: "Leave priority unchanged",
 }
 
-var lookupSimnetBacklightLevel = map[int]string{
+var lookupSimnetBacklightLevel = PgnLookup{
 	1:  "Day Mode",
 	4:  "Night Mode",
 	11: "Level 1",
@@ -694,7 +711,7 @@ var lookupSimnetBacklightLevel = map[int]string{
 	99: "Level 9",
 }
 
-var lookupSimnetApEvents = map[int]string{
+var lookupSimnetApEvents = PgnLookup{
 	6:  "Standby",
 	9:  "Auto mode",
 	10: "Nav mode",
@@ -703,7 +720,7 @@ var lookupSimnetApEvents = map[int]string{
 	26: "Change Course",
 }
 
-var lookupSimnetDirection = map[int]string{
+var lookupSimnetDirection = PgnLookup{
 	2: "Port",
 	3: "Starboard",
 	4: "Left rudder (port)",

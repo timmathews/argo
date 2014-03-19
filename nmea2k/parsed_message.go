@@ -2,20 +2,27 @@ package nmea2k
 
 import (
 	"fmt"
+  "strconv"
 	msgpack "github.com/vmihailenco/msgpack"
   "encoding/json"
 )
 
+type DataMap map[int]interface{}
+
+func (inVal DataMap) MarshalJSON() ([]byte, error) {
+  outVal := make(map[string]interface{})
+
+  for k, v := range inVal {
+    outVal[strconv.Itoa(k)] = v
+  }
+
+  return json.Marshal(outVal)
+}
+
 type ParsedMessage struct {
 	Header RawMessage
 	Index  int
-	Data   map[int]interface{}
-}
-
-type JsonMessage struct {
-  Header RawMessage
-  Index int
-  Data map[string]interface{}
+	Data   DataMap
 }
 
 func (msg *ParsedMessage) Print(verbose bool) string {
@@ -60,18 +67,7 @@ func (msg *ParsedMessage) MsgPack() []byte {
 
 // Pack a PGN into a JSON formatted byte array
 func (msg *ParsedMessage) JSON() []byte {
-
-  jpgn := JsonMessage{}
-  jpgn.Header = msg.Header
-  jpgn.Index = msg.Index
-  jpgn.Data = make(map[string]interface{})
-
-  for k, v := range msg.Data {
-    key := fmt.Sprintf("%d", k)
-    jpgn.Data[key] = v
-  }
-
-  b, err := json.Marshal(jpgn)
+  b, err := json.Marshal(&msg)
   if err != nil {
     fmt.Println(err)
     return nil
