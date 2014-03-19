@@ -9,13 +9,29 @@ import (
   "strconv"
 )
 
+type IndexEntry struct {
+  Pgn uint32
+  Name string
+  Details string `json:"@Details"`
+}
+
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
   fmt.Fprintf(w, "<html><head><title>Pyxis API</title></head><body><h1>Pyxis API</h1></body></html>")
 }
 
 func MessagesIndex(w http.ResponseWriter, r *http.Request) {
 
-  b, err := json.MarshalIndent(nmea2k.PgnList, "", "  ")
+  var pgns []IndexEntry
+
+  for _, pgn := range nmea2k.PgnList {
+    p := IndexEntry{}
+    p.Pgn = pgn.Pgn
+    p.Name = pgn.Description
+    p.Details = fmt.Sprintf("/api/v1/messages/%d", pgn.Pgn)
+    pgns = append(pgns, p)
+  }
+
+  b, err := json.MarshalIndent(pgns, "", "  ")
   if( err != nil ) {
     fmt.Println("error:", err)
   }
@@ -40,6 +56,7 @@ func ApiServer() {
   r := mux.NewRouter()
   r.HandleFunc("/api/v1/", HomeHandler)
   r.HandleFunc("/api/v1/messages", MessagesIndex)
+  r.HandleFunc("/api/v1/messages/", MessagesIndex)
   r.HandleFunc("/api/v1/messages/{key}", MessageDetailsHandler)
   http.Handle("/api/v1/", r)
   http.ListenAndServe(":8082", nil)
