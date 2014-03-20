@@ -1,14 +1,14 @@
 package nmea2k
 
 import (
-  "strconv"
   "encoding/json"
+  "encoding/xml"
+  "math"
 )
 
 const ACTISENSE_BEM = 0x40000 // Actisense specific fake PGNs
 
-const Pi = 3.14159
-const RadianToDegree = 180.0 / Pi
+const RadianToDegree = 180.0 / math.Pi
 
 const RES_LAT_LONG_PRECISION = 1e7
 const RES_LAT_LONG = 1.0e-7
