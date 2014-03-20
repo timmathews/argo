@@ -59,10 +59,13 @@ type PgnArray []Pgn
 type PgnLookup map[int]string
 
 func (inVal PgnLookup) MarshalJSON() ([]byte, error) {
-  outVal := make(map[string]string)
+  var outVal []map[string]interface{}
 
   for k, v := range inVal {
-    outVal[strconv.Itoa(k)] = v
+    vv := make(map[string]interface{})
+    vv["Value"] = k
+    vv["Name"] = v
+    outVal = append(outVal, vv)
   }
 
   return json.Marshal(outVal)
