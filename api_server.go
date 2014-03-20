@@ -6,7 +6,9 @@ import (
   "github.com/gorilla/mux"
   "argo/nmea2k"
   "encoding/json"
+  "encoding/xml"
   "strconv"
+  "strings"
 )
 
 type IndexEntry struct {
@@ -40,11 +42,33 @@ func MessagesIndex(w http.ResponseWriter, r *http.Request) {
 
 func MessageDetailsHandler(w http.ResponseWriter, r *http.Request) {
   vars := mux.Vars(r)
-  pgn, _ := strconv.ParseInt(vars["key"], 10, 32)
+  key, _ := vars["key"]
+  tok := strings.Split(key, ".")
+  pgn, _ := strconv.ParseInt(tok[0], 10, 32)
+  var enc string
+  var pgnDef interface{}
+  var b []byte
+  var err error
 
-  pgnDef := nmea2k.PgnList[pgn]
+  if(len(tok) > 1) {
+    enc = tok[1]
+  }
 
-  b, err := json.MarshalIndent(pgnDef, "", "  ")
+  if(pgn >= int64(len(nmea2k.PgnList))) {
+    pgnDef = map[string]interface{}{
+      "Error": "Index out of range",
+      "Index": pgn,
+    }
+  } else {
+    pgnDef = nmea2k.PgnList[pgn]
+  }
+
+  if(enc == "xml") {
+    b, err = xml.Marshal(pgnDef)
+  } else {
+    b, err = json.MarshalIndent(pgnDef, "", "  ")
+  }
+
   if( err != nil) {
     fmt.Println("error:", err)
   }
