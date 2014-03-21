@@ -25,7 +25,12 @@ func MessagesIndex(w http.ResponseWriter, r *http.Request) {
 
   var pgns []IndexEntry
 
+  category := r.URL.Query().Get("category")
+
   for i, pgn := range nmea2k.PgnList {
+    if(category != "" && !strings.EqualFold(category, pgn.Category)) {
+      continue
+    }
     p := IndexEntry{}
     p.Pgn = pgn.Pgn
     p.Name = pgn.Description
