@@ -46,7 +46,8 @@ type Field struct {
 }
 
 type Pgn struct {
-	Description     string
+  Description     string
+  Category        string
 	Pgn             uint32
 	IsKnown         bool    // Are we pretty sure we've got all fields with correct definitions?
 	Size            uint32  // (Minimal) size of this PGN. Helps to determine fast/single frame and initial malloc
@@ -69,6 +70,11 @@ func (inVal PgnLookup) MarshalJSON() ([]byte, error) {
   }
 
   return json.Marshal(outVal)
+}
+
+/* Placeholder until I have a chance to figure out XML encoding in Go */
+func (inVal PgnLookup) MarshalXML(e *xml.Encoder, start xml.StartElement) (error) {
+  return nil
 }
 
 var lookupAisAccuracy = PgnLookup{
@@ -731,24 +737,24 @@ var lookupSimnetDirection = PgnLookup{
 }
 
 var PgnList = PgnArray{
-	{"Unknown PGN", 0, false, 8, 0, []Field{
+	{"Unknown PGN", "Mandatory", 0, false, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, nil, "", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
-	{"ISO Acknowledgement", 59392, true, 8, 0, []Field{
+	{"ISO Acknowledgement", "Mandatory", 59392, true, 8, 0, []Field{
 		{"Control", 8, RES_LOOKUP, false, lookupIsoAckResults, "", 0},
 		{"Group Function", 8, 1, false, nil, "", 0},
 		{"Reserved", 24, RES_BINARY, false, nil, "Reserved", 0},
 		{"PGN", 24, RES_INTEGER, false, nil, "Parameter Group Number of requested information", 0}},
 	},
 
-	{"ISO Request", 59904, true, 3, 0, []Field{
+	{"ISO Request", "Mandatory", 59904, true, 3, 0, []Field{
 		{"PGN", 24, RES_INTEGER, false, nil, "", 0}},
 	},
 
-	{"ISO Address Claim", 60928, true, 8, 0, []Field{
+	{"ISO Address Claim", "Mandatory", 60928, true, 8, 0, []Field{
 		{"Unique Number", 21, RES_BINARY, false, nil, "ISO Identity Number", 0},
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, nil, "", 0},
 		{"Device Instance Lower", 4, 1, false, nil, "ISO ECU Instance", 0},
@@ -762,7 +768,7 @@ var PgnList = PgnArray{
 		{"Reserved", 3, 1, false, nil, "ISO Self Configurable", 0}},
 	},
 
-	{"ISO: Manu. Proprietary single-frame addressed", 61184, false, 8, 0, []Field{
+	{"ISO: Manu. Proprietary single-frame addressed", "General", 61184, false, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, nil, "", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, 1, false, nil, "", 0},
@@ -771,178 +777,178 @@ var PgnList = PgnArray{
 
 	// Maretron ACM 100 manual documents PGN 65001-65030
 
-	{"Bus #1 Phase C Basic AC Quantities", 65001, false, 8, 0, []Field{
+	{"Bus #1 Phase C Basic AC Quantities", "Power", 65001, false, 8, 0, []Field{
 		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", 0}},
 	},
 
-	{"Bus #1 Phase B Basic AC Quantities", 65002, false, 8, 0, []Field{
+	{"Bus #1 Phase B Basic AC Quantities", "Power", 65002, false, 8, 0, []Field{
 		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", 0}},
 	},
 
-	{"Bus #1 Phase A Basic AC Quantities", 65003, false, 8, 0, []Field{
+	{"Bus #1 Phase A Basic AC Quantities", "Power", 65003, false, 8, 0, []Field{
 		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", 0}},
 	},
 
-	{"Bus #1 Average Basic AC Quantities", 65004, false, 8, 0, []Field{
+	{"Bus #1 Average Basic AC Quantities", "Power", 65004, false, 8, 0, []Field{
 		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", 0}},
 	},
 
-	{"Utility Total AC Energy", 65005, false, 8, 0, []Field{
+	{"Utility Total AC Energy", "Power", 65005, false, 8, 0, []Field{
 		{"Total Energy Export", 32, 1, false, "kWh", "", 0},
 		{"Total Energy Import", 32, 1, false, "kWh", "", 0}},
 	},
 
-	{"Utility Phase C AC Reactive Power", 65006, false, 8, 0, []Field{
+	{"Utility Phase C AC Reactive Power", "Power", 65006, false, 8, 0, []Field{
 		{"Reactive Power", 16, 1, false, "VAr", "", 0},
 		{"Power Factor", 16, 1.0 / 16384, false, nil, "", 0},
 		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", 0}},
 	},
 
-	{"Utility Phase C AC Power", 65007, false, 8, 0, []Field{
+	{"Utility Phase C AC Power", "Power", 65007, false, 8, 0, []Field{
 		{"Real Power", 32, 1, true, "W", "", -2000000000},
 		{"Apparent Power", 32, 1, true, "VA", "", -2000000000}},
 	},
 
-	{"Utility Phase C Basic AC Quantities", 65008, false, 8, 0, []Field{
+	{"Utility Phase C Basic AC Quantities", "Power", 65008, false, 8, 0, []Field{
 		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", 0},
 		{"AC RMS Current", 16, 1, false, "A", "", 0}},
 	},
 
-	{"Utility Phase B AC Reactive Power", 65009, false, 8, 0, []Field{
+	{"Utility Phase B AC Reactive Power", "Power", 65009, false, 8, 0, []Field{
 		{"Reactive Power", 16, 1, false, "VAr", "", 0},
 		{"Power Factor", 16, 1.0 / 16384, false, nil, "", 0},
 		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", 0}},
 	},
 
-	{"Utility Phase B AC Power", 65010, false, 8, 0, []Field{
+	{"Utility Phase B AC Power", "Power", 65010, false, 8, 0, []Field{
 		{"Real Power", 32, 1, true, "W", "", -2000000000},
 		{"Apparent Power", 32, 1, true, "VA", "", -2000000000}},
 	},
 
-	{"Utility Phase B Basic AC Quantities", 65011, false, 8, 0, []Field{
+	{"Utility Phase B Basic AC Quantities", "Power", 65011, false, 8, 0, []Field{
 		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", 0},
 		{"AC RMS Current", 16, 1, false, "A", "", 0}},
 	},
 
-	{"Utility Phase A AC Reactive Power", 65012, false, 8, 0, []Field{
+	{"Utility Phase A AC Reactive Power", "Power", 65012, false, 8, 0, []Field{
 		{"Reactive Power", 32, 1, true, "VAr", "", -2000000000},
 		{"Power Factor", 16, 1.0 / 16384, true, nil, "", 0},
 		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", 0}},
 	},
 
-	{"Utility Phase A AC Power", 65013, false, 8, 0, []Field{
+	{"Utility Phase A AC Power", "Power", 65013, false, 8, 0, []Field{
 		{"Real Power", 32, 1, true, "W", "", -2000000000},
 		{"Apparent Power", 32, 1, true, "VA", "", -2000000000}},
 	},
 
-	{"Utility Phase A Basic AC Quantities", 65014, false, 8, 0, []Field{
+	{"Utility Phase A Basic AC Quantities", "Power", 65014, false, 8, 0, []Field{
 		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", 0},
 		{"AC RMS Current", 16, 1, false, "A", "", 0}},
 	},
 
-	{"Utility Total AC Reactive Power", 65015, false, 8, 0, []Field{
+	{"Utility Total AC Reactive Power", "Power", 65015, false, 8, 0, []Field{
 		{"Reactive Power", 32, 1, true, "VAr", "", -2000000000},
 		{"Power Factor", 16, 1.0 / 16384, false, nil, "", 0},
 		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", 0}},
 	},
 
-	{"Utility Total AC Power", 65016, false, 8, 0, []Field{
+	{"Utility Total AC Power", "Power", 65016, false, 8, 0, []Field{
 		{"Real Power", 32, 1, true, "W", "", -2000000000},
 		{"Apparent Power", 32, 1, true, "VA", "", -2000000000}},
 	},
 
-	{"Utility Average Basic AC Quantities", 65017, false, 8, 0, []Field{
+	{"Utility Average Basic AC Quantities", "Power", 65017, false, 8, 0, []Field{
 		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", 0},
 		{"AC RMS Current", 16, 1, false, "A", "", 0}},
 	},
 
-	{"Generator Total AC Energy", 65018, false, 8, 0, []Field{
+	{"Generator Total AC Energy", "Power", 65018, false, 8, 0, []Field{
 		{"Total Energy Export", 32, 1, false, "kWh", "", 0},
 		{"Total Energy Import", 32, 1, false, "kWh", "", 0}},
 	},
 
-	{"Generator Phase C AC Reactive Power", 65019, false, 8, 0, []Field{
+	{"Generator Phase C AC Reactive Power", "Power", 65019, false, 8, 0, []Field{
 		{"Reactive Power", 16, 1, false, "VAr", "", -2000000000},
 		{"Power Factor", 16, 1.0 / 16384, false, nil, "", 0},
 		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", 0}},
 	},
 
-	{"Generator Phase C AC Power", 65020, false, 8, 0, []Field{
+	{"Generator Phase C AC Power", "Power", 65020, false, 8, 0, []Field{
 		{"Real Power", 16, 1, false, "W", "", -2000000000},
 		{"Apparent Power", 16, 1, false, "VA", "", -2000000000}},
 	},
 
-	{"Generator Phase C Basic AC Quantities", 65021, false, 8, 0, []Field{
+	{"Generator Phase C Basic AC Quantities", "Power", 65021, false, 8, 0, []Field{
 		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", 0},
 		{"AC RMS Current", 16, 1, false, "A", "", 0}},
 	},
 
-	{"Generator Phase B AC Reactive Power", 65022, false, 8, 0, []Field{
+	{"Generator Phase B AC Reactive Power", "Power", 65022, false, 8, 0, []Field{
 		{"Reactive Power", 16, 1, false, "VAr", "", -2000000000},
 		{"Power Factor", 16, 1.0 / 16384, false, nil, "", 0},
 		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", 0}},
 	},
 
-	{"Generator Phase B AC Power", 65023, false, 8, 0, []Field{
+	{"Generator Phase B AC Power", "Power", 65023, false, 8, 0, []Field{
 		{"Real Power", 16, 1, false, "W", "", -2000000000},
 		{"Apparent Power", 16, 1, false, "VA", "", -2000000000}},
 	},
 
-	{"Generator Phase B Basic AC Quantities", 65024, false, 8, 0, []Field{
+	{"Generator Phase B Basic AC Quantities", "Power", 65024, false, 8, 0, []Field{
 		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", 0},
 		{"AC RMS Current", 16, 1, false, "A", "", 0}},
 	},
 
-	{"Generator Phase A AC Reactive Power", 65025, false, 8, 0, []Field{
+	{"Generator Phase A AC Reactive Power", "Power", 65025, false, 8, 0, []Field{
 		{"Reactive Power", 16, 1, false, "VAr", "", -2000000000},
 		{"Power Factor", 16, 1.0 / 16384, false, nil, "", 0},
 		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", 0}},
 	},
 
-	{"Generator Phase A AC Power", 65026, false, 8, 0, []Field{
+	{"Generator Phase A AC Power", "Power", 65026, false, 8, 0, []Field{
 		{"Real Power", 16, 1, false, "W", "", -2000000000},
 		{"Apparent Power", 16, 1, false, "VA", "", -2000000000}},
 	},
 
-	{"Generator Phase A Basic AC Quantities", 65027, false, 8, 0, []Field{
+	{"Generator Phase A Basic AC Quantities", "Power", 65027, false, 8, 0, []Field{
 		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", 0},
 		{"AC RMS Current", 16, 1, false, "A", "", 0}},
 	},
 
-	{"Generator Total AC Reactive Power", 65028, false, 8, 0, []Field{
+	{"Generator Total AC Reactive Power", "Power", 65028, false, 8, 0, []Field{
 		{"Reactive Power", 16, 1, false, "VAr", "", -2000000000},
 		{"Power Factor", 16, 1.0 / 16384, false, nil, "", 0},
 		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", 0}},
 	},
 
-	{"Generator Total AC Power", 65029, false, 8, 0, []Field{
+	{"Generator Total AC Power", "Power", 65029, false, 8, 0, []Field{
 		{"Real Power", 16, 1, false, "W", "", -2000000000},
 		{"Apparent Power", 16, 1, false, "VA", "", -2000000000}},
 	},
 
-	{"Generator Average Basic AC Quantities", 65030, false, 8, 0, []Field{
+	{"Generator Average Basic AC Quantities", "Power", 65030, false, 8, 0, []Field{
 		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", 0},
 		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", 0},
@@ -953,7 +959,7 @@ var PgnList = PgnArray{
 	// network address to a node. The NAME information in the data portion of the
 	// message must match the name information of the node whose network address
 	// is to be set.
-	{"ISO Commanded Address", 65240, false, 8, 0, []Field{
+	{"ISO Commanded Address", "General", 65240, false, 8, 0, []Field{
 		{"Unique Number", 21, RES_BINARY, false, nil, "ISO Identity Number", 0},
 		{"Manufacturer Code", 11, 1, false, nil, "", 0},
 		{"Device Instance Lower", 4, 1, false, nil, "ISO ECU Instance", 0},
@@ -969,7 +975,7 @@ var PgnList = PgnArray{
 	},
 
 	// ISO 11783: 65,280 to 65,535 (0xFF00 to 0xFFFF): Propietary PDU-2 messages
-	{"ISO: Manu. Proprietary single-frame non-addressed", 65280, false, 8, 0, []Field{
+	{"ISO: Manu. Proprietary single-frame non-addressed", "General", 65280, false, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, nil, "", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, 1, false, nil, "", 0},
@@ -977,14 +983,14 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/DST200UserlManual.pdf
-	{"Airmar: Boot State Acknowledgment", 65285, true, 8, 0, []Field{
+  {"Boot State Acknowledgment", "Airmar", 65285, true, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "Marine Industry", 0},
 		{"Boot State", 4, RES_LOOKUP, false, lookupAirmarBootState, "", 0}},
 	},
 
-	{"Lowrance: Temperature", 65285, false, 8, 0, []Field{
+	{"Temperature", "Lowrance", 65285, false, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=140", "", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -994,14 +1000,14 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/DST200UserlManual.pdf
-	{"Airmar: Boot State Request", 65286, true, 8, 0, []Field{
+	{"Boot State Request", "Airmar", 65286, true, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/DST200UserlManual.pdf
-	{"Airmar: Access Level", 65287, true, 8, 0, []Field{
+	{"Access Level", "Airmar", 65287, true, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "Marine Industry", 0},
@@ -1011,50 +1017,50 @@ var PgnList = PgnArray{
 		{"Access Seed/Key", 32, RES_INTEGER, false, nil, "When transmitted, it provides a seed for an unlock operation. It is used to provide the key during PGN 126208.", 0}},
 	},
 
-	{"Simnet: Configure Temperature Sensor", 65287, false, 0x08, 0, []Field{
+	{"Configure Temperature Sensor", "Simnet", 65287, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
-	{"Simnet: Trim Tab Sensor Calibration", 65289, false, 0x08, 0, []Field{
+	{"Trim Tab Sensor Calibration", "Simnet", 65289, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
-	{"Simnet: Paddle Wheel Speed Configuration", 65290, false, 0x08, 0, []Field{
+	{"Paddle Wheel Speed Configuration", "Simnet", 65290, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
-	{"Simnet: Clear Fluid Level Warnings", 65292, false, 0x08, 0, []Field{
+	{"Clear Fluid Level Warnings", "Simnet", 65292, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
-	{"Simnet: LGC-2000 Configuration", 65293, false, 0x08, 0, []Field{
+	{"LGC-2000 Configuration", "Simnet", 65293, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
-	{"Simnet: Reprogram Status", 65325, false, 0x08, 0, []Field{
+	{"Reprogram Status", "Simnet", 65325, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
-	{"Simnet: Autopilot Mode", 65341, false, 0x08, 0, []Field{
+	{"Autopilot Mode", "Simnet", 65341, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/DST200UserlManual.pdf
-	{"Airmar: Depth Quality Factor", 65408, false, 8, 0, []Field{
+	{"Depth Quality Factor", "Airmar", 65408, false, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "Marine Industry", 0},
@@ -1063,7 +1069,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/DST200UserlManual.pdf
-	{"Airmar: Device Information", 65410, false, 8, 0, []Field{
+	{"Device Information", "Airmar", 65410, false, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -1073,14 +1079,14 @@ var PgnList = PgnArray{
 		{"Reserved", 8, 1, false, nil, "", 0}},
 	},
 
-	{"Simnet: Autopilot Mode", 65480, false, 0x08, 0, []Field{
+	{"Autopilot Mode", "Simnet", 65480, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
 	// http://www.maretron.com/support/manuals/DST100UM_1.2.pdf
-	{"NMEA - Request group function", 126208, true, 8, 2, []Field{
+	{"NMEA - Request group function", "General", 126208, true, 8, 2, []Field{
 		{"Function Code", 8, RES_INTEGER, false, "=0", "Request", 0},
 		{"PGN", 24, RES_INTEGER, false, nil, "Requested PGN", 0},
 		{"Transmission interval", 32, 1, false, nil, "", 0},
@@ -1090,7 +1096,7 @@ var PgnList = PgnArray{
 		{"Parameter Value", LEN_VARIABLE, RES_INTEGER, false, nil, "Parameter value, variable length", 0}},
 	},
 
-	{"NMEA - Command group function", 126208, true, 8, 2, []Field{
+	{"NMEA - Command group function", "General", 126208, true, 8, 2, []Field{
 		{"Function Code", 8, RES_INTEGER, false, "=1", "Command", 0},
 		{"PGN", 24, RES_INTEGER, false, nil, "Commanded or requested PGN", 0},
 		{"Priority", 4, 1, false, lookupPriorityLevel, "", 0},
@@ -1100,7 +1106,7 @@ var PgnList = PgnArray{
 		{"Parameter Value", LEN_VARIABLE, RES_INTEGER, false, nil, "Parameter value, variable length", 0}},
 	},
 
-	{"NMEA - Acknowledge group function", 126208, true, 8, 1, []Field{
+	{"NMEA - Acknowledge group function", "General", 126208, true, 8, 1, []Field{
 		{"Function Code", 8, RES_INTEGER, false, "=2", "Acknowledge", 0},
 		{"PGN", 24, RES_INTEGER, false, nil, "Commanded or requested PGN", 0},
 		{"PGN error code", 4, 1, false, nil, "", 0},
@@ -1110,7 +1116,7 @@ var PgnList = PgnArray{
 	},
 
 	/////////////////////////// RESPONSE TO REQUEST PGNS ////////////////////////
-	{"Maretron: Slave Response", 126270, false, 8, 0, []Field{
+	{"Slave Response", "Maretron", 126270, false, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, nil, "", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -1120,19 +1126,19 @@ var PgnList = PgnArray{
 		{"Status", 8, 1, false, nil, "", 0}},
 	},
 
-	{"PGN List (Transmit and Receive)", 126464, false, 8, 1, []Field{
+	{"PGN List (Transmit and Receive)", "Mandatory", 126464, false, 8, 1, []Field{
 		{"Function Code", 8, RES_LOOKUP, false, lookupFunctionCode, "Transmit or receive PGN Group Function Code", 0},
 		{"PGN", 24, RES_INTEGER, false, nil, "", 0}},
 	},
 
-	{"Manufacturer Propietary: Addressable Multi-Frame", 126720, true, 8, 0, []Field{
+	{"Manufacturer Propietary: Addressable Multi-Frame", "General", 126720, true, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, nil, "", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
 		{"Payload", LEN_VARIABLE, RES_BINARY, false, nil, "", 0}},
 	},
 
-	{"Airmar: Addressable Multi-Frame", 126720, true, 8, 0, []Field{
+	{"Addressable Multi-Frame", "Airmar", 126720, true, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "Marine Industry", 0},
@@ -1140,7 +1146,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/PB200UserManual.pdf
-	{"Airmar: Attitude Offset", 126720, true, 8, 0, []Field{
+	{"Attitude Offset", "Airmar", 126720, true, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "Marine Industry", 0},
@@ -1151,7 +1157,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/PB200UserManual.pdf
-	{"Airmar: Calibrate Compass", 126720, true, 8, 0, []Field{
+	{"Calibrate Compass", "Airmar", 126720, true, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "Marine Industry", 0},
@@ -1171,7 +1177,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/PB200UserManual.pdf
-	{"Airmar: True Wind Options", 126720, true, 8, 0, []Field{
+	{"True Wind Options", "Airmar", 126720, true, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "Marine Industry", 0},
@@ -1191,7 +1197,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/DST200UserlManual.pdf
-	{"Airmar: Simulate Mode", 126720, true, 8, 0, []Field{
+	{"Simulate Mode", "Airmar", 126720, true, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "Marine Industry", 0},
@@ -1201,7 +1207,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/DST200UserlManual.pdf
-	{"Airmar: Calibrate Depth", 126720, true, 8, 0, []Field{
+	{"Calibrate Depth", "Airmar", 126720, true, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "Marine Industry", 0},
@@ -1211,7 +1217,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/DST200UserlManual.pdf
-	{"Airmar: Calibrate Speed", 126720, true, 8, 2, []Field{
+	{"Calibrate Speed", "Airmar", 126720, true, 8, 2, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "Marine Industry", 0},
@@ -1222,7 +1228,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/DST200UserlManual.pdf
-	{"Airmar: Calibrate Temperature", 126720, true, 8, 2, []Field{
+	{"Calibrate Temperature", "Airmar", 126720, true, 8, 2, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "Marine Industry", 0},
@@ -1234,7 +1240,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/DST200UserlManual.pdf
-	{"Airmar: Speed Filter", 126720, true, 8, 2, []Field{
+  {"Speed Filter", "Airmar", 126720, true, 8, 2, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, "=43", "Marine Industry", 0},
@@ -1246,7 +1252,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/DST200UserlManual.pdf
-	{"Airmar: NMEA 2000 options", 126720, true, 8, 2, []Field{
+	{"NMEA 2000 options", "Airmar", 126720, true, 8, 2, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, "=46", "Marine Industry", 0},
@@ -1256,7 +1262,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.maretron.com/support/manuals/GPS100UM_1.2.pdf
-	{"System Time", 126992, true, 8, 0, []Field{
+	{"System Time", "General", 126992, true, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Source", 4, RES_LOOKUP, false, lookupSystemTime, "", 0},
 		{"Reserved", 4, RES_BINARY, false, nil, "Reserved", 0},
@@ -1264,7 +1270,7 @@ var PgnList = PgnArray{
 		{"Time", 32, RES_TIME, false, "s", "Seconds since midnight", 0}},
 	},
 
-	{"Product Information", 126996, false, 0x86, 0, []Field{
+	{"Product Information", "Mandatory", 126996, false, 0x86, 0, []Field{
 		{"NMEA 2000 Version", 16, 1, false, nil, "", 0},
 		{"Product Code", 16, 1, false, nil, "", 0},
 		{"Model ID", 256, RES_ASCII, false, nil, "", 0},
@@ -1275,7 +1281,7 @@ var PgnList = PgnArray{
 		{"Load Equivalency", 8, 1, false, nil, "", 0}},
 	},
 
-	{"Configuration Information", 126998, false, 0x2a, 0, []Field{
+	{"Configuration Information", "General", 126998, false, 0x2a, 0, []Field{
 		{"Station ID", 16, 1, false, nil, "", 0},
 		{"Station Name", 16, 1, false, nil, "", 0},
 		{"A", 16, 1, false, nil, "", 0},
@@ -1289,7 +1295,7 @@ var PgnList = PgnArray{
 	// http://www.maretron.com/support/manuals/USB100UM_1.2.pdf
 	// http://www8.garmin.com/manuals/GPSMAP4008_NMEA2000NetworkFundamentals.pdf
 
-	{"Heading/Track control", 127237, false, 0x15, 0, []Field{
+	{"Heading/Track control", "Steering", 127237, false, 0x15, 0, []Field{
 		{"Rudder Limit Exceeded", 2, 1, false, nil, "", 0},
 		{"Off-Heading Limit Exceeded", 2, 1, false, nil, "", 0},
 		{"Off-Track Limit Exceeded", 2, 1, false, nil, "", 0},
@@ -1312,7 +1318,7 @@ var PgnList = PgnArray{
 
 	// http://www.maretron.com/support/manuals/RAA100UM_1.0.pdf
 	// Haven't actually seen this value yet, lengths are guesses
-	{"Rudder", 127245, false, 8, 0, []Field{
+	{"Rudder", "Steering", 127245, false, 8, 0, []Field{
 		{"Instance", 8, 1, false, nil, "", 0},
 		{"Direction Order", 2, 1, false, nil, "", 0},
 		{"Reserved", 6, RES_BINARY, false, nil, "Reserved", 0},
@@ -1323,7 +1329,7 @@ var PgnList = PgnArray{
 	// NMEA + Simrad AT10
 	// http://www.maretron.com/support/manuals/SSC200UM_1.7.pdf
 	// molly_rose_E80start.kees
-	{"Vessel Heading", 127250, true, 8, 0, []Field{
+	{"Vessel Heading", "Steering", 127250, true, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Heading", 16, RES_DEGREES, false, "deg", "", 0},
 		{"Deviation", 16, RES_DEGREES, true, "deg", "", 0},
@@ -1333,12 +1339,12 @@ var PgnList = PgnArray{
 
 	// http://www.maretron.com/support/manuals/SSC200UM_1.7.pdf
 	// Lengths observed from Simrad RC42
-	{"Rate of Turn", 127251, true, 5, 0, []Field{
+	{"Rate of Turn", "Steering", 127251, true, 5, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Rate", 32, RES_ROTATION * 0.0001, true, "deg/s", "", 0}},
 	},
 
-	{"Attitude", 127257, true, 7, 0, []Field{
+	{"Attitude", "Steering", 127257, true, 7, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Yaw", 16, RES_ROTATION, true, "deg/s", "", 0},
 		{"Pitch", 16, RES_ROTATION, true, "deg/s", "", 0},
@@ -1347,7 +1353,7 @@ var PgnList = PgnArray{
 
 	// NMEA + Simrad AT10
 	// http://www.maretron.com/support/manuals/GPS100UM_1.2.pdf
-	{"Magnetic Variation", 127258, true, 6, 0, []Field{
+	{"Magnetic Variation", "Steering", 127258, true, 6, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Source", 4, RES_LOOKUP, false, lookupMagneticVariation, "", 0},
 		{"Reserved", 4, RES_BINARY, false, nil, "Reserved", 0},
@@ -1359,14 +1365,14 @@ var PgnList = PgnArray{
 	// http://www.maretron.com/products/pdf/J2K100-Data_Sheet.pdf
 	// http://www.floscan.com/html/blue/NMEA2000.php
 
-	{"Engine Parameters, Rapid Update", 127488, true, 8, 0, []Field{
+	{"Engine Parameters, Rapid Update", "Propulsion", 127488, true, 8, 0, []Field{
 		{"Engine Instance", 8, RES_LOOKUP, false, lookupEngineInstance, "", 0},
 		{"Engine Speed", 16, RES_INTEGER, false, "rpm", "", 0},
 		{"Engine Boost Pressure", 16, RES_PRESSURE, false, "hPa", "", 0},
 		{"Engine Tilt/Trim", 8, 1, true, nil, "", 0}},
 	},
 
-	{"Engine Parameters, Dynamic", 127489, true, 26, 0, []Field{
+	{"Engine Parameters, Dynamic", "Propulsion", 127489, true, 26, 0, []Field{
 		{"Engine Instance", 8, RES_LOOKUP, false, lookupEngineInstance, "", 0},
 		{"Oil pressure", 16, RES_PRESSURE, false, "hPa", "", 0},
 		{"Oil temperature", 16, RES_TEMPERATURE, false, "K", "", 0},
@@ -1383,7 +1389,7 @@ var PgnList = PgnArray{
 		{"Percent Engine Torque", 8, RES_INTEGER, true, "%", "", 0}},
 	},
 
-	{"Transmission Parameters, Dynamic", 127493, true, 7, 0, []Field{
+	{"Transmission Parameters, Dynamic", "Propulsion", 127493, true, 7, 0, []Field{
 		{"Engine Instance", 2, RES_LOOKUP, false, lookupEngineInstance, "", 0},
 		{"Transmission Gear", 2, RES_LOOKUP, false, lookupGearStatus, "", 0},
 		{"Reserved", 4, 1, false, nil, "", 0},
@@ -1392,14 +1398,14 @@ var PgnList = PgnArray{
 		{"Discrete Status 1", 8, RES_INTEGER, false, nil, "", 0}},
 	},
 
-	{"Trip Parameters, Vessel", 127496, true, 10, 0, []Field{
+	{"Trip Parameters, Vessel", "Propulsion", 127496, true, 10, 0, []Field{
 		{"Time to Empty", 32, 0.001, false, "s", "", 0},
 		{"Distance to Empty", 32, 0.01, false, "m", "", 0},
 		{"Estimated Fuel Remaining", 16, 1, false, "L", "", 0},
 		{"Trip Run Time", 32, 0.001, false, "s", "", 0}},
 	},
 
-	{"Trip Parameters, Engine", 127497, true, 9, 0, []Field{
+	{"Trip Parameters, Engine", "Propulsion", 127497, true, 9, 0, []Field{
 		{"Engine Instance", 8, RES_LOOKUP, false, lookupEngineInstance, "", 0},
 		{"Trip Fuel Used", 16, 1, false, "L", "", 0},
 		{"Fuel Rate, Average", 16, 0.1, true, "L/h", "", 0},
@@ -1407,25 +1413,25 @@ var PgnList = PgnArray{
 		{"Instantaneous Fuel Economy", 16, 0.1, true, "L/h", "", 0}},
 	},
 
-	{"Engine Parameters, Static", 127498, true, 8, 0, []Field{
+	{"Engine Parameters, Static", "Propulsion", 127498, true, 8, 0, []Field{
 		{"Engine Instance", 8, RES_LOOKUP, false, lookupEngineInstance, "", 0},
 		{"Rated Engine Speed", 16, 1, false, nil, "", 0},
 		{"VIN", 8, 1, false, nil, "", 0},
 		{"Software ID", 16, 1, false, nil, "", 0}},
 	},
 
-	{"Binary Switch Bank Status", 127501, false, 8, 1, []Field{
+	{"Binary Switch Bank Status", "Power", 127501, false, 8, 1, []Field{
 		{"Indicator Bank Instance", 8, 1, false, nil, "", 0},
 		{"Indicator", 2, RES_LOOKUP, false, lookupOffOn, "", 0}},
 	},
 
-	{"Switch Bank Control", 127502, false, 8, 1, []Field{
+	{"Switch Bank Control", "Power", 127502, false, 8, 1, []Field{
 		{"Switch Bank Instance", 8, 1, false, nil, "", 0},
 		{"Switch", 2, RES_LOOKUP, false, lookupOffOn, "", 0}},
 	},
 
 	// http://www.nmea.org/Assets/nmea-2000-corrigendum-1-2010-1.pdf
-	{"AC Input Status", 127503, true, 8, 10, []Field{
+	{"AC Input Status", "Power", 127503, true, 8, 10, []Field{
 		{"AC Instance", 8, 1, false, nil, "", 0},
 		{"Number of Lines", 8, 1, false, nil, "", 0},
 		{"Line", 2, RES_LOOKUP, false, lookupLine, "", 0},
@@ -1441,7 +1447,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.nmea.org/Assets/nmea-2000-corrigendum-1-2010-1.pdf
-	{"AC Output Status", 127504, true, 8, 10, []Field{
+	{"AC Output Status", "Power", 127504, true, 8, 10, []Field{
 		{"AC Instance", 8, 1, false, nil, "", 0},
 		{"Number of Lines", 8, 1, false, nil, "", 0},
 		{"Line", 2, RES_LOOKUP, false, lookupLine, "", 0},
@@ -1458,14 +1464,14 @@ var PgnList = PgnArray{
 
 	// http://www.maretron.com/support/manuals/TLA100UM_1.2.pdf
 	// Observed from EP65R
-	{"Fluid Level", 127505, true, 7, 0, []Field{
+	{"Fluid Level", "General", 127505, true, 7, 0, []Field{
 		{"Instance", 4, 1, false, nil, "", 0},
 		{"Type", 4, RES_LOOKUP, false, lookupTankType, "", 0},
 		{"Level", 16, 100.0 / 25000, false, "%", "", 0},
 		{"Capacity", 32, 0.1, false, "L", "", 0}},
 	},
 
-	{"DC Detailed Status", 127506, false, 8, 0, []Field{
+	{"DC Detailed Status", "Power", 127506, false, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"DC Instance", 8, 1, false, nil, "", 0},
 		{"DC Type", 8, 1, false, nil, "", 0},
@@ -1475,7 +1481,7 @@ var PgnList = PgnArray{
 		{"Ripple Voltage", 16, 0.01, false, "V", "", 0}},
 	},
 
-	{"Charger Status", 127507, false, 8, 0, []Field{
+	{"Charger Status", "Power", 127507, false, 8, 0, []Field{
 		{"Charger Instance", 8, 1, false, nil, "", 0},
 		{"Battery Instance", 8, 1, false, nil, "", 0},
 		{"Operating State", 8, 1, false, nil, "", 0},
@@ -1486,7 +1492,7 @@ var PgnList = PgnArray{
 		{"Equalization Time Remaining", 16, 1, false, nil, "", 0}},
 	},
 
-	{"Battery Status", 127508, true, 8, 0, []Field{
+	{"Battery Status", "Power", 127508, true, 8, 0, []Field{
 		{"Battery Instance", 8, 1, false, nil, "", 0},
 		{"Voltage", 16, 0.01, true, "V", "", 0},
 		{"Current", 16, 0.1, true, "A", "", 0},
@@ -1494,7 +1500,7 @@ var PgnList = PgnArray{
 		{"SID", 8, 1, false, nil, "", 0}},
 	},
 
-	{"Inverter Status", 127509, false, 8, 0, []Field{
+	{"Inverter Status", "Power", 127509, false, 8, 0, []Field{
 		{"Inverter Instance", 8, 1, false, nil, "", 0},
 		{"AC Instance", 8, 1, false, nil, "", 0},
 		{"DC Instance", 8, 1, false, nil, "", 0},
@@ -1502,7 +1508,7 @@ var PgnList = PgnArray{
 		{"Inverter", 2, RES_LOOKUP, false, lookupStandbyOn, "", 0}},
 	},
 
-	{"Charger Configuration Status", 127510, false, 8, 0, []Field{
+	{"Charger Configuration Status", "Power", 127510, false, 8, 0, []Field{
 		{"Charger Instance", 8, 1, false, nil, "", 0},
 		{"Battery Instance", 8, 1, false, nil, "", 0},
 		{"Charger Enable/Disable", 2, 1, false, nil, "", 0},
@@ -1516,7 +1522,7 @@ var PgnList = PgnArray{
 		{"Equalize Time", 16, 1, false, nil, "", 0}},
 	},
 
-	{"Inverter Configuration Status", 127511, false, 8, 0, []Field{
+	{"Inverter Configuration Status", "Power", 127511, false, 8, 0, []Field{
 		{"Inverter Instance", 8, 1, false, nil, "", 0},
 		{"AC Instance", 8, 1, false, nil, "", 0},
 		{"DC Instance", 8, 1, false, nil, "", 0},
@@ -1527,13 +1533,13 @@ var PgnList = PgnArray{
 		{"Load Sense Interval", 8, 1, false, nil, "", 0}},
 	},
 
-	{"AGS Configuration Status", 127512, false, 8, 0, []Field{
+	{"AGS Configuration Status", "Power", 127512, false, 8, 0, []Field{
 		{"AGS Instance", 8, 1, false, nil, "", 0},
 		{"Generator Instance", 8, 1, false, nil, "", 0},
 		{"AGS Mode", 8, 1, false, nil, "", 0}},
 	},
 
-	{"Battery Configuration Status", 127513, false, 8, 0, []Field{
+	{"Battery Configuration Status", "Power", 127513, false, 8, 0, []Field{
 		{"Battery Instance", 8, 1, false, nil, "", 0},
 		{"Battery Type", 8, 1, false, nil, "", 0},
 		{"Supports Equalization", 2, 1, false, nil, "", 0},
@@ -1546,7 +1552,7 @@ var PgnList = PgnArray{
 		{"Charge Efficiency Factor", 16, 1, false, nil, "", 0}},
 	},
 
-	{"AGS Status", 127514, false, 8, 0, []Field{
+	{"AGS Status", "Power", 127514, false, 8, 0, []Field{
 		{"AGS Instance", 8, 1, false, nil, "", 0},
 		{"Generator Instance", 8, 1, false, nil, "", 0},
 		{"AGS Operating State", 8, 1, false, nil, "", 0},
@@ -1556,7 +1562,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.maretron.com/support/manuals/DST100UM_1.2.pdf
-	{"Speed", 128259, true, 6, 0, []Field{
+	{"Speed", "Propulsion", 128259, true, 6, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Speed Water Referenced", 16, 0.01, false, "m/s", "", 0},
 		{"Speed Ground Referenced", 16, 0.01, false, "m/s", "", 0},
@@ -1564,21 +1570,21 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.maretron.com/support/manuals/DST100UM_1.2.pdf
-	{"Water Depth", 128267, true, 5, 0, []Field{
+	{"Water Depth", "Navigation", 128267, true, 5, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Depth", 32, 0.01, false, "m", "Depth below transducer", 0},
 		{"Offset", 16, 0.001, true, "m", "Distance between transducer and surface (positive) or keel (negative)", 0}},
 	},
 
 	// http://www.nmea.org/Assets/nmea-2000-digital-interface-white-paper.pdf
-	{"Distance Log", 128275, true, 14, 0, []Field{
+	{"Distance Log", "Navigation", 128275, true, 14, 0, []Field{
 		{"Date", 16, RES_DATE, false, "days", "Days since January 1, 1970", 0},
 		{"Time", 32, RES_TIME, false, "s", "Seconds since midnight", 0},
 		{"Log", 32, 1, false, "m", "Total cumulative distance", 0},
 		{"Trip Log", 32, 1, false, "m", "Distance since last reset", 0}},
 	},
 
-	{"Tracked Target Data", 128520, true, 27, 0, []Field{
+	{"Tracked Target Data", "Navigation", 128520, true, 27, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Target ID #", 8, 1, false, nil, "Number of route, waypoint, event, mark, etc.", 0},
 		{"Track Status", 2, RES_LOOKUP, false, lookupTrackStatus, "", 0},
@@ -1596,13 +1602,13 @@ var PgnList = PgnArray{
 		{"Name", 2040, RES_ASCII, false, nil, "", 0}},
 	},
 
-	{"Position, Rapid Update", 129025, true, 8, 0, []Field{
+	{"Position, Rapid Update", "Navigation", 129025, true, 8, 0, []Field{
 		{"Latitude", 32, RES_LATITUDE, true, "deg", "", 0},
 		{"Longitude", 32, RES_LONGITUDE, true, "deg", "", 0}},
 	},
 
 	// http://www.maretron.com/support/manuals/GPS100UM_1.2.pdf
-	{"COG & SOG, Rapid Update", 129026, true, 8, 0, []Field{
+	{"COG & SOG, Rapid Update", "Navigation", 129026, true, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"COG Reference", 2, RES_LOOKUP, false, lookupDirectionReference, "", 0},
 		{"Reserved", 6, RES_BINARY, false, nil, "Reserved", 0},
@@ -1611,14 +1617,14 @@ var PgnList = PgnArray{
 		{"Reserved", 16, RES_BINARY, false, nil, "Reserved", 0}},
 	},
 
-	{"Position Delta, Rapid Update", 129027, false, 8, 0, []Field{
+	{"Position Delta, Rapid Update", "Navigation", 129027, false, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Time Delta", 16, 1, false, nil, "", 0},
 		{"Latitude Delta", 16, 1, true, nil, "", 0},
 		{"Longitude Delta", 16, 1, true, nil, "", 0}},
 	},
 
-	{"Altitude Delta, Rapid Update", 129028, false, 8, 0, []Field{
+	{"Altitude Delta, Rapid Update", "Navigation", 129028, false, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Time Delta", 16, 1, true, nil, "", 0},
 		{"GNSS Quality", 2, 1, false, nil, "", 0},
@@ -1629,7 +1635,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.maretron.com/support/manuals/GPS100UM_1.2.pdf
-	{"GNSS Position Data", 129029, true, 51, 3, []Field{
+	{"GNSS Position Data", "Navigation", 129029, true, 51, 3, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Date", 16, RES_DATE, false, "days", "Days since January 1, 1970", 0},
 		{"Time", 32, RES_TIME, false, "s", "Seconds since midnight", 0},
@@ -1650,13 +1656,13 @@ var PgnList = PgnArray{
 		{"Age of DGNSS Corrections", 16, 0.01, false, "s", "", 0}},
 	},
 
-	{"Time & Date", 129033, true, 8, 0, []Field{
+	{"Time & Date", "Navigation", 129033, true, 8, 0, []Field{
 		{"Date", 16, RES_DATE, false, "days", "Days since January 1, 1970", 0},
 		{"Time", 32, RES_TIME, false, "seconds", "Seconds since midnight", 0},
 		{"Local Offset", 16, RES_INTEGER, true, "minutes", "Minutes", 0}},
 	},
 
-	{"AIS Class A Position Report", 129038, true, 27, 0, []Field{
+	{"AIS Class A Position Report", "AIS", 129038, true, 27, 0, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat Indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"User ID", 32, RES_INTEGER, false, "MMSI", "", 0},
@@ -1676,7 +1682,7 @@ var PgnList = PgnArray{
 		{"Spare", 8, 1, false, nil, "", 0}},
 	},
 
-	{"AIS Class B Position Report", 129039, true, 0x1a, 0, []Field{
+	{"AIS Class B Position Report", "AIS", 129039, true, 0x1a, 0, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat Indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"User ID", 32, RES_INTEGER, false, "MMSI", "", 0},
@@ -1701,7 +1707,7 @@ var PgnList = PgnArray{
 		{"AIS communication state", 1, RES_LOOKUP, false, lookupAisCommState, "", 0}},
 	},
 
-	{"AIS Class B Extended Position Report", 129040, true, 33, 0, []Field{
+	{"AIS Class B Extended Position Report", "AIS", 129040, true, 33, 0, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat Indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"User ID", 32, RES_INTEGER, false, "MMSI", "", 0},
@@ -1730,7 +1736,7 @@ var PgnList = PgnArray{
 		{"AIS Transceiver information", 5, RES_LOOKUP, false, lookupAisTransceiver, "", 0}},
 	},
 
-	{"Datum", 129044, true, 24, 0, []Field{
+	{"Datum", "Navigation", 129044, true, 24, 0, []Field{
 		{"Local Datum", 32, RES_ASCII, false, nil, "defined in IHO Publication S-60, Appendices B and C. " +
 			"First three chars are datum ID as per IHO tables." +
 			"Fourth char is local datum subdivision code.", 0},
@@ -1742,7 +1748,7 @@ var PgnList = PgnArray{
 			"Fourth char is local datum subdivision code.", 0}},
 	},
 
-	{"User Datum", 129045, true, 37, 0, []Field{
+	{"User Datum", "Navigation", 129045, true, 37, 0, []Field{
 		{"Delta X", 32, 0.01, true, "m", "Delta shift in X axis from WGS 84", 0},
 		{"Delta Y", 32, 0.01, true, "m", "Delta shift in Y axis from WGS 84", 0},
 		{"Delta Z", 32, 0.01, true, "m", "Delta shift in Z axis from WGS 84", 0},
@@ -1757,7 +1763,7 @@ var PgnList = PgnArray{
 			"Fourth char is local datum subdivision code.", 0}},
 	},
 
-	{"Cross Track Error", 129283, false, 6, 0, []Field{
+	{"Cross Track Error", "Navigation", 129283, false, 6, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"XTE mode", 4, RES_LOOKUP, false, lookupResidualMode, "", 0},
 		{"Reserved", 2, RES_BINARY, false, nil, "reserved", 0},
@@ -1765,7 +1771,7 @@ var PgnList = PgnArray{
 		{"XTE", 32, 0.01, true, "m", "", 0}},
 	},
 
-	{"Navigation Data", 129284, true, 0x22, 0, []Field{
+	{"Navigation Data", "Navigation", 129284, true, 0x22, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Distance to Waypoint", 32, 0.01, false, "m", "", 0},
 		{"Course/Bearing reference", 2, RES_LOOKUP, false, lookupDirectionReference, "", 0},
@@ -1783,7 +1789,7 @@ var PgnList = PgnArray{
 		{"Waypoint Closing Velocity", 16, 0.01, true, "m/s", "", 0}},
 	},
 
-	{"Navigation - Route/WP Information", 129285, true, 8, 4, []Field{
+	{"Navigation - Route/WP Information", "Navigation", 129285, true, 8, 4, []Field{
 		{"Start RPS#", 16, 1, false, nil, "", 0},
 		{"nItems", 16, 1, false, nil, "", 0},
 		{"Database ID", 16, 1, false, nil, "", 0},
@@ -1799,7 +1805,7 @@ var PgnList = PgnArray{
 		{"WP Longitude", 32, RES_LONGITUDE, true, "deg", "", 0}},
 	},
 
-	{"Set & Drift, Rapid Update", 129291, true, 8, 0, []Field{
+	{"Set & Drift, Rapid Update", "Navigation", 129291, true, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Set Reference", 2, RES_LOOKUP, false, lookupDirectionReference, "", 0},
 		{"Reserved", 6, RES_BINARY, false, nil, "Reserved", 0},
@@ -1807,7 +1813,7 @@ var PgnList = PgnArray{
 		{"Drift", 16, 0.01, false, "m/s", "", 0}},
 	},
 
-	{"Navigation - Route / Time to+from Mark", 129301, true, 10, 0, []Field{
+	{"Navigation - Route / Time to+from Mark", "Navigation", 129301, true, 10, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Time to mark", 32, 0.001, true, "s", "negative = elapsed since event, positive = time to go", 0},
 		{"Mark Type", 4, RES_LOOKUP, false, lookupNavMarkType, "", 0},
@@ -1815,7 +1821,7 @@ var PgnList = PgnArray{
 		{"Mark ID", 32, 1, false, nil, "", 0}},
 	},
 
-	{"Bearing and Distance between two Marks", 129302, false, 8, 0, []Field{
+	{"Bearing and Distance between two Marks", "Navigation", 129302, false, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Bearing Reference", 4, RES_LOOKUP, false, nil, "", 0},
 		{"Calculation Type", 2, RES_LOOKUP, false, nil, "", 0},
@@ -1830,7 +1836,7 @@ var PgnList = PgnArray{
 
 	// http://www.maretron.com/support/manuals/GPS100UM_1.2.pdf
 	// Haven't seen this yet (no way to send PGN 059904 yet) so lengths unknown
-	{"GNSS Control Status", 129538, false, 8, 0, []Field{
+	{"GNSS Control Status", "Navigation", 129538, false, 8, 0, []Field{
 		{"SV Elevation Mask", 16, 1, false, nil, "Will not use SV below this elevation", 0},
 		{"PDOP Mask", 16, 0.01, false, nil, "Will not report position above this PDOP", 0},
 		{"PDOP Switch", 16, 0.01, false, nil, "Will report 2D position above this PDOP", 0},
@@ -1844,7 +1850,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.maretron.com/support/manuals/GPS100UM_1.2.pdf
-	{"GNSS DOPs", 129539, true, 8, 0, []Field{
+	{"GNSS DOPs", "Navigation", 129539, true, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Desired Mode", 3, RES_LOOKUP, false, lookupGnssMode, "", 0},
 		{"Actual Mode", 3, RES_LOOKUP, false, lookupGnssMode, "", 0},
@@ -1854,7 +1860,7 @@ var PgnList = PgnArray{
 		{"TDOP", 16, 0.01, true, nil, "Time dilution of precision", 0}},
 	},
 
-	{"GNSS Sats in View", 129540, true, 0xff, 7, []Field{
+	{"GNSS Sats in View", "Navigation", 129540, true, 0xff, 7, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Mode", 2, RES_LOOKUP, false, lookupGnssSatMode, "", 0},
 		{"Reserved", 6, RES_BINARY, false, nil, "Reserved", 0},
@@ -1868,7 +1874,7 @@ var PgnList = PgnArray{
 		{"Reserved", 4, RES_BINARY, false, nil, "Reserved", 0}},
 	},
 
-	{"GPS Almanac Data", 129541, false, 8, 0, []Field{
+	{"GPS Almanac Data", "Navigation", 129541, false, 8, 0, []Field{
 		{"PRN", 8, 1, false, nil, "", 0},
 		{"GPS Week number", 8, 1, false, nil, "", 0},
 		{"SV Health Bits", 8, 1, false, nil, "", 0},
@@ -1884,7 +1890,7 @@ var PgnList = PgnArray{
 		{"Clock Parameter 2", 8, 1, false, nil, "", 0}},
 	},
 
-	{"GNSS Pseudorange Noise Statistics", 129542, false, 8, 0, []Field{
+	{"GNSS Pseudorange Noise Statistics", "Navigation", 129542, false, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"RMS of Position Uncertainty", 16, 1, false, nil, "", 0},
 		{"STD of Major axis", 8, 1, false, nil, "", 0},
@@ -1895,7 +1901,7 @@ var PgnList = PgnArray{
 		{"STD of Alt Error", 8, 1, false, nil, "", 0}},
 	},
 
-	{"GNSS RAIM Output", 129545, false, 8, 0, []Field{
+	{"GNSS RAIM Output", "Navigation", 129545, false, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Integrity flag", 4, 1, false, nil, "", 0},
 		{"Reserved", 4, RES_BINARY, false, nil, "Reserved", 0},
@@ -1908,14 +1914,14 @@ var PgnList = PgnArray{
 		{"Std Deviation of bias", 8, 1, false, nil, "", 0}},
 	},
 
-	{"GNSS RAIM Settings", 129546, false, 8, 0, []Field{
+	{"GNSS RAIM Settings", "Navigation", 129546, false, 8, 0, []Field{
 		{"Radial Position Error Maximum Threshold", 8, 1, false, nil, "", 0},
 		{"Probability of False Alarm", 8, 1, false, nil, "", 0},
 		{"Probability of Missed Detection", 8, 1, false, nil, "", 0},
 		{"Pseudorange Residual Filtering Time Constant", 8, 1, false, nil, "", 0}},
 	},
 
-	{"GNSS Pseudorange Error Statistics", 129547, false, 8, 0, []Field{
+	{"GNSS Pseudorange Error Statistics", "Navigation", 129547, false, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"RMS Std Dev of Range Inputs", 16, 1, false, nil, "", 0},
 		{"Std Dev of Major error ellipse", 8, 1, false, nil, "", 0},
@@ -1926,7 +1932,7 @@ var PgnList = PgnArray{
 		{"Std Dev Alt Error", 8, 1, false, nil, "", 0}},
 	},
 
-	{"DGNSS Corrections", 129549, false, 8, 0, []Field{
+	{"DGNSS Corrections", "Navigation", 129549, false, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Reference Station ID", 16, 1, false, nil, "", 0},
 		{"Reference Station Type", 16, 1, false, nil, "", 0},
@@ -1940,7 +1946,7 @@ var PgnList = PgnArray{
 		{"IOD", 8, 1, false, nil, "", 0}},
 	},
 
-	{"GNSS Differential Correction Receiver Interface", 129550, false, 8, 0, []Field{
+	{"GNSS Differential Correction Receiver Interface", "Navigation", 129550, false, 8, 0, []Field{
 		{"Channel", 8, 1, false, nil, "", 0},
 		{"Frequency", 8, 1, false, nil, "", 0},
 		{"Serial Interface Bit Rate", 8, 1, false, nil, "", 0},
@@ -1949,7 +1955,7 @@ var PgnList = PgnArray{
 		{"Differential Operation Mode", 8, 1, false, nil, "", 0}},
 	},
 
-	{"GNSS Differential Correction Receiver Signal", 129551, false, 8, 0, []Field{
+	{"GNSS Differential Correction Receiver Signal", "Navigation", 129551, false, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Channel", 8, 1, false, nil, "", 0},
 		{"Signal Strength", 8, 1, false, nil, "", 0},
@@ -1966,7 +1972,7 @@ var PgnList = PgnArray{
 		{"Satellite Service ID No.", 8, 1, false, nil, "", 0}},
 	},
 
-	{"GLONASS Almanac Data", 129556, false, 8, 0, []Field{
+	{"GLONASS Almanac Data", "Navigation", 129556, false, 8, 0, []Field{
 		{"PRN", 8, 1, false, nil, "", 0},
 		{"NA", 8, 1, false, nil, "", 0},
 		{"CnA", 8, 1, false, nil, "", 0},
@@ -1982,7 +1988,7 @@ var PgnList = PgnArray{
 		{"tnA", 8, 1, false, nil, "", 0}},
 	},
 
-	{"AIS DGNSS Broadcast Binary Message", 129792, false, 8, 0, []Field{
+	{"AIS DGNSS Broadcast Binary Message", "AIS", 129792, false, 8, 0, []Field{
 		{"Message ID", 8, 1, false, nil, "", 0},
 		{"Repeat Indicator", 8, 1, false, nil, "", 0},
 		{"Source ID", 8, 1, false, nil, "", 0},
@@ -1997,7 +2003,7 @@ var PgnList = PgnArray{
 		{"Binary Data", 64, RES_BINARY, false, nil, "", 0}},
 	},
 
-	{"AIS UTC and Date Report", 129793, false, 8, 0, []Field{
+	{"AIS UTC and Date Report", "AIS", 129793, false, 8, 0, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat Indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"User ID", 32, RES_INTEGER, false, "MMSI", "", 0},
@@ -2016,7 +2022,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.navcen.uscg.gov/enav/ais/AIS_messages.htm
-	{"AIS Class A Static and Voyage Related Data", 129794, true, 0x18, 0, []Field{
+	{"AIS Class A Static and Voyage Related Data", "AIS", 129794, true, 0x18, 0, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"User ID", 32, RES_INTEGER, false, "MMSI", "", 0},
@@ -2039,7 +2045,7 @@ var PgnList = PgnArray{
 		{"AIS Transceiver information", 5, RES_LOOKUP, false, lookupAisTransceiver, "", 0}},
 	},
 
-	{"AIS Addressed Binary Message", 129795, true, 13, 0, []Field{
+	{"AIS Addressed Binary Message", "AIS", 129795, true, 13, 0, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat Indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"Source ID", 32, RES_INTEGER, false, "MMSI", "", 0},
@@ -2054,7 +2060,7 @@ var PgnList = PgnArray{
 		{"Binary Data", 64, RES_BINARY, false, nil, "", 0}},
 	},
 
-	{"AIS Acknowledge", 129796, true, 12, 0, []Field{
+	{"AIS Acknowledge", "AIS", 129796, true, 12, 0, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat Indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"Source ID", 32, 1, false, "MMSI", "", 0},
@@ -2067,7 +2073,7 @@ var PgnList = PgnArray{
 		{"Sequence Number for ID n", 2, RES_BINARY, false, nil, "reserved", 0}},
 	},
 
-	{"AIS Binary Broadcast Message", 129797, true, 8, 0, []Field{
+	{"AIS Binary Broadcast Message", "AIS", 129797, true, 8, 0, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat Indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"Source ID", 32, 1, false, nil, "", 0},
@@ -2078,7 +2084,7 @@ var PgnList = PgnArray{
 		{"Binary Data", 2040, RES_BINARY, false, nil, "", 0}},
 	},
 
-	{"AIS SAR Aircraft Position Report", 129798, false, 8, 0, []Field{
+	{"AIS SAR Aircraft Position Report", "AIS", 129798, false, 8, 0, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"User ID", 32, RES_INTEGER, false, "MMSI", "", 0},
@@ -2097,7 +2103,7 @@ var PgnList = PgnArray{
 		{"Reserved", 7, RES_BINARY, false, nil, "reserved", 0}},
 	},
 
-	{"Radio Frequency/Mode/Power", 129799, false, 9, 0, []Field{
+	{"Radio Frequency/Mode/Power", "AIS", 129799, false, 9, 0, []Field{
 		{"Rx Frequency", 32, 10, false, "Hz", "", 0},
 		{"Tx Frequency", 32, 10, false, "Hz", "", 0},
 		{"Radio Channel", 8, 1, false, nil, "", 0},
@@ -2106,7 +2112,7 @@ var PgnList = PgnArray{
 		{"Channel Bandwidth", 8, 1, false, nil, "", 0}},
 	},
 
-	{"AIS UTC/Date Inquiry", 129800, false, 8, 0, []Field{
+	{"AIS UTC/Date Inquiry", "AIS", 129800, false, 8, 0, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat Indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"Source ID", 30, 1, false, nil, "", 0},
@@ -2117,7 +2123,7 @@ var PgnList = PgnArray{
 		{"Reserved", 2, RES_BINARY, false, nil, "reserved", 0}},
 	},
 
-	{"AIS Addressed Safety Related Message", 129801, true, 12, 0, []Field{
+	{"AIS Addressed Safety Related Message", "AIS", 129801, true, 12, 0, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat Indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"Source ID", 32, 1, false, "MMSI", "", 0},
@@ -2131,7 +2137,7 @@ var PgnList = PgnArray{
 		{"Safety Related Text", 2040, RES_ASCII, false, nil, "", 0}},
 	},
 
-	{"AIS Safety Related Broadcast Message", 129802, false, 8, 0, []Field{
+	{"AIS Safety Related Broadcast Message", "AIS", 129802, false, 8, 0, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat Indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"Source ID", 30, RES_INTEGER, false, nil, "", 0},
@@ -2141,7 +2147,7 @@ var PgnList = PgnArray{
 		{"Safety Related Text", 288, RES_ASCII, false, nil, "", 0}},
 	},
 
-	{"AIS Interrogation", 129803, false, 8, 8, []Field{
+	{"AIS Interrogation", "AIS", 129803, false, 8, 8, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat Indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"Source ID", 30, RES_INTEGER, false, nil, "", 0},
@@ -2158,7 +2164,7 @@ var PgnList = PgnArray{
 		{"Reserved", 2, RES_BINARY, false, nil, "reserved", 0}},
 	},
 
-	{"AIS Assignment Mode Command", 129804, true, 23, 3, []Field{
+	{"AIS Assignment Mode Command", "AIS", 129804, true, 23, 3, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat Indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"Source ID", 32, RES_INTEGER, false, "MMSI", "", 0},
@@ -2170,7 +2176,7 @@ var PgnList = PgnArray{
 		{"Increment", 16, RES_INTEGER, false, nil, "", 0}},
 	},
 
-	{"AIS Data Link Management Message", 129805, false, 8, 4, []Field{
+	{"AIS Data Link Management Message", "AIS", 129805, false, 8, 4, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat Indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"Source ID", 30, RES_INTEGER, false, nil, "", 0},
@@ -2183,7 +2189,7 @@ var PgnList = PgnArray{
 		{"Increment", 8, RES_INTEGER, false, nil, "", 0}},
 	},
 
-	{"AIS Channel Management", 129806, false, 8, 0, []Field{
+	{"AIS Channel Management", "AIS", 129806, false, 8, 0, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat Indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"Source ID", 30, RES_INTEGER, false, nil, "", 0},
@@ -2207,7 +2213,7 @@ var PgnList = PgnArray{
 		{"Transitional Zone Size", 8, 1, false, nil, "", 0}},
 	},
 
-	{"AIS Class B Group Assignment", 129807, false, 8, 0, []Field{
+	{"AIS Class B Group Assignment", "AIS", 129807, false, 8, 0, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat Indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"Source ID", 30, RES_INTEGER, false, nil, "", 0},
@@ -2226,7 +2232,7 @@ var PgnList = PgnArray{
 		{"Quiet Time", 16, 1, false, nil, "", 0}},
 	},
 
-	{"DSC Call Information", 129808, false, 8, 2, []Field{
+  {"DSC Call Information", "Other", 129808, false, 8, 2, []Field{
 		{"DSC Format Symbol", 8, 1, false, nil, "", 0},
 		{"DSC Category Symbol", 8, 1, false, nil, "", 0},
 		{"DSC Message Address", 8, 1, false, nil, "", 0},
@@ -2250,14 +2256,14 @@ var PgnList = PgnArray{
 		{"DSC Expansion Field Data", 8, 1, false, nil, "", 0}},
 	},
 
-	{"AIS Class B static data (msg 24 Part A)", 129809, false, 20 + 4 + 1, 0, []Field{
+	{"AIS Class B static data (msg 24 Part A)", "AIS", 129809, false, 20 + 4 + 1, 0, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"User ID", 32, RES_INTEGER, false, "MMSI", "", 0},
 		{"Name", 160, RES_ASCII, false, nil, "", 0}},
 	},
 
-	{"AIS Class B static data (msg 24 Part B)", 129810, false, 0x25 - 4, 0, []Field{
+	{"AIS Class B static data (msg 24 Part B)", "AIS", 129810, false, 0x25 - 4, 0, []Field{
 		{"Message ID", 6, 1, false, nil, "", 0},
 		{"Repeat indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", 0},
 		{"User ID", 32, RES_INTEGER, false, "MMSI", "", 0},
@@ -2273,7 +2279,7 @@ var PgnList = PgnArray{
 		{"Spare", 6, RES_INTEGER, false, nil, "0=unavailable", 0}},
 	},
 
-	{"Route and WP Service - Database List", 130064, false, 8, 9, []Field{
+	{"Route and WP Service - Database List", "Navigation", 130064, false, 8, 9, []Field{
 		{"Start Database ID", 8, 1, false, nil, "", 0},
 		{"nItems", 8, 1, false, nil, "", 0},
 		{"Number of Databases Available", 8, 1, false, nil, "", 0},
@@ -2288,7 +2294,7 @@ var PgnList = PgnArray{
 		{"Number of Bytes in Database", 16, 1, false, nil, "", 0}},
 	},
 
-	{"Route and WP Service - Route List", 130065, false, 8, 6, []Field{
+	{"Route and WP Service - Route List", "Navigation", 130065, false, 8, 6, []Field{
 		{"Start Route ID", 8, 1, false, nil, "", 0},
 		{"nItems", 8, 1, false, nil, "", 0},
 		{"Number of Routes in Database", 8, 1, false, nil, "", 0},
@@ -2300,7 +2306,7 @@ var PgnList = PgnArray{
 		{"Route Status", 2, 1, false, nil, "", 0}},
 	},
 
-	{"Route and WP Service - Route/WP-List Attributes", 130066, false, 8, 0, []Field{
+	{"Route and WP Service - Route/WP-List Attributes", "Navigation", 130066, false, 8, 0, []Field{
 		{"Database ID", 8, 1, false, nil, "", 0},
 		{"Route ID", 8, 1, false, nil, "", 0},
 		{"Route/WP-List Name", 64, RES_ASCII, false, nil, "", 0},
@@ -2315,7 +2321,7 @@ var PgnList = PgnArray{
 		{"XTE Limit for the Route", 16, 1, false, nil, "", 0}},
 	},
 
-	{"Route and WP Service - Route - WP Name & Position", 130067, false, 8, 4, []Field{
+	{"Route and WP Service - Route - WP Name & Position", "Navigation", 130067, false, 8, 4, []Field{
 		{"Start RPS#", 8, 1, false, nil, "", 0},
 		{"nItems", 8, 1, false, nil, "", 0},
 		{"Number of WPs in the Route/WP-List", 16, 1, false, nil, "", 0},
@@ -2327,7 +2333,7 @@ var PgnList = PgnArray{
 		{"WP Longitude", 32, RES_LONGITUDE, true, "deg", "", 0}},
 	},
 
-	{"Route and WP Service - Route - WP Name", 130068, false, 8, 2, []Field{
+	{"Route and WP Service - Route - WP Name", "Navigation", 130068, false, 8, 2, []Field{
 		{"Start RPS#", 8, 1, false, nil, "", 0},
 		{"nItems", 8, 1, false, nil, "", 0},
 		{"Number of WPs in the Route/WP-List", 16, 1, false, nil, "", 0},
@@ -2337,7 +2343,7 @@ var PgnList = PgnArray{
 		{"WP Name", 64, RES_ASCII, false, nil, "", 0}},
 	},
 
-	{"Route and WP Service - XTE Limit & Navigation Method", 130069, false, 8, 6, []Field{
+	{"Route and WP Service - XTE Limit & Navigation Method", "Navigation", 130069, false, 8, 6, []Field{
 		{"Start RPS#", 8, 1, false, nil, "", 0},
 		{"nItems", 8, 1, false, nil, "", 0},
 		{"Number of WPs with a specific XTE Limit or Nav. Method", 16, 1, false, nil, "", 0},
@@ -2349,7 +2355,7 @@ var PgnList = PgnArray{
 		{"Reserved", 4, RES_BINARY, false, nil, "", 0}},
 	},
 
-	{"Route and WP Service - WP Comment", 130070, false, 8, 2, []Field{
+	{"Route and WP Service - WP Comment", "Navigation", 130070, false, 8, 2, []Field{
 		{"Start ID", 8, 1, false, nil, "", 0},
 		{"nItems", 8, 1, false, nil, "", 0},
 		{"Number of WPs with Comments", 16, 1, false, nil, "", 0},
@@ -2359,7 +2365,7 @@ var PgnList = PgnArray{
 		{"Comment", 64, RES_ASCII, false, nil, "", 0}},
 	},
 
-	{"Route and WP Service - Route Comment", 130071, false, 8, 2, []Field{
+	{"Route and WP Service - Route Comment", "Navigation", 130071, false, 8, 2, []Field{
 		{"Start Route ID", 8, 1, false, nil, "", 0},
 		{"nItems", 8, 1, false, nil, "", 0},
 		{"Number of Routes with Comments", 16, 1, false, nil, "", 0},
@@ -2368,7 +2374,7 @@ var PgnList = PgnArray{
 		{"Comment", 64, RES_ASCII, false, nil, "", 0}},
 	},
 
-	{"Route and WP Service - Database Comment", 130072, false, 8, 2, []Field{
+	{"Route and WP Service - Database Comment", "Navigation", 130072, false, 8, 2, []Field{
 		{"Start Database ID", 8, 1, false, nil, "", 0},
 		{"nItems", 8, 1, false, nil, "", 0},
 		{"Number of Databases with Comments", 16, 1, false, nil, "", 0},
@@ -2376,7 +2382,7 @@ var PgnList = PgnArray{
 		{"Comment", 64, RES_ASCII, false, nil, "", 0}},
 	},
 
-	{"Route and WP Service - Radius of Turn", 130073, false, 8, 2, []Field{
+	{"Route and WP Service - Radius of Turn", "Navigation", 130073, false, 8, 2, []Field{
 		{"Start RPS#", 8, 1, false, nil, "", 0},
 		{"nItems", 8, 1, false, nil, "", 0},
 		{"Number of WPs with a specific Radius of Turn", 16, 1, false, nil, "", 0},
@@ -2386,7 +2392,7 @@ var PgnList = PgnArray{
 		{"Radius of Turn", 16, 1, false, nil, "", 0}},
 	},
 
-	{"Route and WP Service - WP List - WP Name & Position", 130074, false, 8, 4, []Field{
+	{"Route and WP Service - WP List - WP Name & Position", "Navigation", 130074, false, 8, 4, []Field{
 		{"Start WP ID", 8, 1, false, nil, "", 0},
 		{"nItems", 8, 1, false, nil, "", 0},
 		{"Number of valid WPs in the WP-List", 16, 1, false, nil, "", 0},
@@ -2399,7 +2405,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://askjackrabbit.typepad.com/ask_jack_rabbit/page/7
-	{"Wind Data", 130306, true, 6, 0, []Field{
+	{"Wind Data", "Environmental", 130306, true, 6, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Wind Speed", 16, 0.01, false, "m/s", "", 0},
 		{"Wind Angle", 16, RES_DEGREES, false, "deg", "", 0},
@@ -2407,14 +2413,14 @@ var PgnList = PgnArray{
 	},
 
 	// Water temperature, Transducer Measurement
-	{"Environmental Parameters", 130310, true, 7, 0, []Field{
+	{"Environmental Parameters", "Environmental", 130310, true, 7, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Water Temperature", 16, RES_TEMPERATURE, false, "K", "", 0},
 		{"Outside Ambient Air Temperature", 16, RES_TEMPERATURE, false, "K", "", 0},
 		{"Atmospheric Pressure", 16, RES_PRESSURE, false, "hPa", "", 0}},
 	},
 
-	{"Environmental Parameters", 130311, true, 8, 0, []Field{
+	{"Environmental Parameters", "Environmental", 130311, true, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Temperature Instance", 6, RES_LOOKUP, false, lookupTemperatureSource, "", 0},
 		{"Humidity Instance", 2, RES_LOOKUP, false, lookupHumidityInstance, "", 0},
@@ -2423,7 +2429,7 @@ var PgnList = PgnArray{
 		{"Atmospheric Pressure", 16, RES_PRESSURE, false, "hPa", "", 0}},
 	},
 
-	{"Temperature", 130312, true, 8, 0, []Field{
+	{"Temperature", "Environmental", 130312, true, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Temperature Instance", 8, 1, false, nil, "", 0},
 		{"Temperature Source", 8, RES_LOOKUP, false, lookupTemperatureSource, "", 0},
@@ -2431,7 +2437,7 @@ var PgnList = PgnArray{
 		{"Set Temperature", 16, RES_TEMPERATURE, false, "K", "", 0}},
 	},
 
-	{"Humidity", 130313, true, 8, 0, []Field{
+	{"Humidity", "Environmental", 130313, true, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Humidity Instance", 8, 1, false, nil, "", 0},
 		{"Humidity Source", 8, 1, false, nil, "", 0},
@@ -2440,7 +2446,7 @@ var PgnList = PgnArray{
 	},
 
 	// Based off the definition for 130315. Appears to be correct
-	{"Actual Pressure", 130314, true, 8, 0, []Field{
+	{"Actual Pressure", "Environmental", 130314, true, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Pressure Instance", 8, 1, false, nil, "", 0},
 		{"Pressure Source", 8, RES_LOOKUP, false, lookupPressureSource, "", 0},
@@ -2448,14 +2454,14 @@ var PgnList = PgnArray{
 	},
 
 	// Source: http://standards.nmea.org/NSNA/corrigenda/nmea-2000/nmea-2000-corrigendum-3-2009.pdf
-	{"Set Pressure", 130315, true, 8, 0, []Field{
+	{"Set Pressure", "General", 130315, true, 8, 0, []Field{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Pressure Instance", 8, 1, false, nil, "", 0},
 		{"Pressure Source", 8, RES_LOOKUP, false, lookupPressureSource, "", 0},
 		{"Pressure", 32, 0.1, true, "Pa", "", 0}},
 	},
 
-	{"Tide Station Data", 130320, true, 20, 0, []Field{
+	{"Tide Station Data", "Environmental", 130320, true, 20, 0, []Field{
 		{"Mode", 4, RES_LOOKUP, false, lookupResidualMode, "", 0},
 		{"Tide Tendency", 2, RES_LOOKUP, false, lookupTideTendency, "", 0},
 		{"Reserved", 2, RES_BINARY, false, nil, "", 0},
@@ -2469,7 +2475,7 @@ var PgnList = PgnArray{
 		{"Station Name", 16, RES_STRING, false, nil, "", 0}},
 	},
 
-	{"Salinity Station Data", 130321, true, 22, 0, []Field{
+	{"Salinity Station Data", "Environmental", 130321, true, 22, 0, []Field{
 		{"Mode", 4, RES_LOOKUP, false, lookupResidualMode, "", 0},
 		{"Reserved", 4, RES_BINARY, false, nil, "", 0},
 		{"Measurement Date", 16, RES_DATE, false, "days", "Days since January 1, 1970", 0},
@@ -2482,7 +2488,7 @@ var PgnList = PgnArray{
 		{"Station Name", 16, RES_STRING, false, nil, "", 0}},
 	},
 
-	{"Current Station Data", 130322, false, 8, 0, []Field{
+	{"Current Station Data", "Environmental", 130322, false, 8, 0, []Field{
 		{"Mode", 4, 1, false, nil, "", 0},
 		{"Reserved", 4, RES_BINARY, false, nil, "", 0},
 		{"Measurement Date", 16, RES_DATE, false, "days", "Days since January 1, 1970", 0},
@@ -2497,7 +2503,7 @@ var PgnList = PgnArray{
 		{"Station Name", 16, RES_STRING, false, nil, "", 0}},
 	},
 
-	{"Meteorological Station Data", 130323, false, 0x1e, 0, []Field{
+	{"Meteorological Station Data", "Environmental", 130323, false, 0x1e, 0, []Field{
 		{"Mode", 4, 1, false, nil, "", 0},
 		{"Reserved", 4, RES_BINARY, false, nil, "", 0},
 		{"Measurement Date", 16, RES_DATE, false, "days", "Days since January 1, 1970", 0},
@@ -2515,7 +2521,7 @@ var PgnList = PgnArray{
 		{"Station Name", 16, RES_STRING, false, nil, "", 0}},
 	},
 
-	{"Moored Buoy Station Data", 130324, false, 8, 0, []Field{
+	{"Moored Buoy Station Data", "Environmental", 130324, false, 8, 0, []Field{
 		{"Mode", 4, 1, false, nil, "", 0},
 		{"Reserved", 4, RES_BINARY, false, nil, "", 0},
 		{"Measurement Date", 16, RES_DATE, false, "days", "Days since January 1, 1970", 0},
@@ -2536,12 +2542,12 @@ var PgnList = PgnArray{
 		{"Station ID", 64, RES_ASCII, false, nil, "", 0}},
 	},
 
-	{"Small Craft Status", 130576, true, 2, 0, []Field{
+	{"Small Craft Status", "General", 130576, true, 2, 0, []Field{
 		{"Port trim tab", 8, 1, true, nil, "", 0},
 		{"Starboard trim tab", 8, 1, true, nil, "", 0}},
 	},
 
-	{"Direction Data", 130577, true, 14, 0, []Field{
+	{"Direction Data", "General", 130577, true, 14, 0, []Field{
 		{"Data Mode", 4, RES_LOOKUP, false, lookupResidualMode, "", 0},
 		{"COG Reference", 2, RES_LOOKUP, false, lookupDirectionReference, "", 0},
 		{"Reserved", 2, RES_BINARY, false, nil, "Reserved", 0},
@@ -2555,7 +2561,7 @@ var PgnList = PgnArray{
 		{"Drift", 16, 0.01, false, "m/s", "", 0}},
 	},
 
-	{"Vessel Speed Components", 130578, true, 12, 0, []Field{
+  {"Vessel Speed Components", "General", 130578, true, 12, 0, []Field{
 		{"Longitudinal Speed, Water-referenced", 16, 0.001, true, "m/s", "", 0},
 		{"Transverse Speed, Water-referenced", 16, 0.001, true, "m/s", "", 0},
 		{"Longitudinal Speed, Ground-referenced", 16, 0.001, true, "m/s", "", 0},
@@ -2564,7 +2570,7 @@ var PgnList = PgnArray{
 		{"Stern Speed, Ground-referenced", 16, 0.001, true, "m/s", "", 0}},
 	},
 
-	{"SonicHub: Init #2", 130816, false, 9, 0, []Field{
+	{"SonicHub: Init #2", "Entertainment", 130816, false, 9, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2575,7 +2581,7 @@ var PgnList = PgnArray{
 		{"B", 16, RES_INTEGER, false, nil, "", 0}},
 	},
 
-	{"SonicHub: AM Radio", 130816, false, 0x40, 0, []Field{
+	{"SonicHub: AM Radio", "Entertainment", 130816, false, 0x40, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, lookupCompanyCode, "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, "=275", "", 0},
@@ -2590,7 +2596,7 @@ var PgnList = PgnArray{
 		{"Text", 256, RES_STRINGLZ, false, nil, "", 0}},
 	},
 
-	{"SonicHub: Zone Info", 130816, false, 6, 0, []Field{
+	{"SonicHub: Zone Info", "Entertainment", 130816, false, 6, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2600,7 +2606,7 @@ var PgnList = PgnArray{
 		{"Zone", 8, RES_INTEGER, false, nil, "", 0}},
 	},
 
-	{"SonicHub: Source", 130816, false, 0x40, 0, []Field{
+	{"SonicHub: Source", "Entertainment", 130816, false, 0x40, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2610,7 +2616,7 @@ var PgnList = PgnArray{
 		{"Source", 8, RES_LOOKUP, false, lookupSonicHubSource, "", 0}},
 	},
 
-	{"SonicHub: Source List", 130816, false, 0x40, 0, []Field{
+	{"SonicHub: Source List", "Entertainment", 130816, false, 0x40, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2622,7 +2628,7 @@ var PgnList = PgnArray{
 		{"Text", 256, RES_STRINGLZ, false, nil, "", 0}},
 	},
 
-	{"SonicHub: Mute Control", 130816, false, 0x40, 0, []Field{
+	{"SonicHub: Mute Control", "Entertainment", 130816, false, 0x40, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2632,7 +2638,7 @@ var PgnList = PgnArray{
 		{"Item", 8, RES_LOOKUP, false, lookupSonicHubMute, "", 0}},
 	},
 
-	{"SonicHub: FM Radio", 130816, false, 0x40, 0, []Field{
+	{"SonicHub: FM Radio", "Entertainment", 130816, false, 0x40, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2647,7 +2653,7 @@ var PgnList = PgnArray{
 		{"Text", 256, RES_STRINGLZ, false, nil, "", 0}},
 	},
 
-	{"SonicHub: Playlist", 130816, false, 0x40, 0, []Field{
+	{"SonicHub: Playlist", "Entertainment", 130816, false, 0x40, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2662,7 +2668,7 @@ var PgnList = PgnArray{
 		{"Position in track", 32, 0.001, false, nil, "Seconds", 0}},
 	},
 
-	{"SonicHub: Track", 130816, false, 0x40, 0, []Field{
+	{"SonicHub: Track", "Entertainment", 130816, false, 0x40, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2673,7 +2679,7 @@ var PgnList = PgnArray{
 		{"Text", 256, RES_STRINGLZ, false, nil, "", 0}},
 	},
 
-	{"SonicHub: Artist", 130816, false, 0x40, 0, []Field{
+	{"SonicHub: Artist", "Entertainment", 130816, false, 0x40, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2684,7 +2690,7 @@ var PgnList = PgnArray{
 		{"Text", 256, RES_STRINGLZ, false, nil, "", 0}},
 	},
 
-	{"SonicHub: Album", 130816, false, 0x40, 0, []Field{
+	{"SonicHub: Album", "Entertainment", 130816, false, 0x40, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2695,7 +2701,7 @@ var PgnList = PgnArray{
 		{"Text", 256, RES_STRINGLZ, false, nil, "", 0}},
 	},
 
-	{"SonicHub: Menu Item", 130816, false, 0x40, 0, []Field{
+	{"SonicHub: Menu Item", "Entertainment", 130816, false, 0x40, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2709,7 +2715,7 @@ var PgnList = PgnArray{
 		{"Text", 256, RES_STRINGLZ, false, nil, "", 0}},
 	},
 
-	{"SonicHub: Zones", 130816, false, 0x40, 0, []Field{
+	{"SonicHub: Zones", "Entertainment", 130816, false, 0x40, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2719,7 +2725,7 @@ var PgnList = PgnArray{
 		{"Zones", 8, RES_INTEGER, false, nil, "", 0}},
 	},
 
-	{"SonicHub: Max Volume", 130816, false, 0x40, 0, []Field{
+	{"SonicHub: Max Volume", "Entertainment", 130816, false, 0x40, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2730,7 +2736,7 @@ var PgnList = PgnArray{
 		{"Level", 8, RES_INTEGER, false, nil, "", 0}},
 	},
 
-	{"SonicHub: Volume", 130816, false, 0x40, 0, []Field{
+	{"SonicHub: Volume", "Entertainment", 130816, false, 0x40, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2741,7 +2747,7 @@ var PgnList = PgnArray{
 		{"Level", 8, RES_INTEGER, false, nil, "", 0}},
 	},
 
-	{"SonicHub: Init #1", 130816, false, 0x40, 0, []Field{
+	{"SonicHub: Init #1", "Entertainment", 130816, false, 0x40, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2750,7 +2756,7 @@ var PgnList = PgnArray{
 		{"Control", 8, RES_LOOKUP, false, lookupSonicHubControl, "", 0}},
 	},
 
-	{"SonicHub: Position", 130816, true, 0x40, 0, []Field{
+	{"SonicHub: Position", "Entertainment", 130816, true, 0x40, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2760,7 +2766,7 @@ var PgnList = PgnArray{
 		{"Position", 32, 0.001, false, nil, "Seconds", 0}},
 	},
 
-	{"SonicHub: Init #3", 130816, false, 9, 0, []Field{
+	{"SonicHub: Init #3", "Entertainment", 130816, false, 9, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2771,7 +2777,7 @@ var PgnList = PgnArray{
 		{"B", 8, RES_INTEGER, false, nil, "", 0}},
 	},
 
-	{"Simrad: Text Message", 130816, false, 0x40, 0, []Field{
+	{"Simrad: Text Message", "Simrad", 130816, false, 0x40, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2785,7 +2791,7 @@ var PgnList = PgnArray{
 		{"Text", 256, RES_ASCII, false, nil, "", 0}},
 	},
 
-	{"Navico: Product Information", 130817, false, 0x0e, 0, []Field{
+	{"Navico: Product Information", "Navico", 130817, false, 0x0e, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2799,7 +2805,7 @@ var PgnList = PgnArray{
 		{"Firmware time", 256, RES_ASCII, false, 0, "", 0}},
 	},
 
-	{"Simnet: Reprogram Data", 130818, false, 0x08, 0, []Field{
+	{"Simnet: Reprogram Data", "Simrad", 130818, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2808,14 +2814,14 @@ var PgnList = PgnArray{
 		{"Data", 2040, RES_BINARY, false, 0, "", 0}},
 	},
 
-	{"Simnet: Request Reprogram", 130819, false, 0x08, 0, []Field{
+	{"Simnet: Request Reprogram", "Simrad", 130819, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
 	/* Fusion */
-	{"Fusion: Source Name", 130820, false, 13, 0, []Field{
+	{"Fusion: Source Name", "Entertainment", 130820, false, 13, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2828,7 +2834,7 @@ var PgnList = PgnArray{
 		{"Source", 40, RES_STRINGLZ, false, 0, "", 0}},
 	},
 
-	{"Fusion: Track", 130820, false, 0x20, 0, []Field{
+	{"Fusion: Track", "Entertainment", 130820, false, 0x20, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2838,7 +2844,7 @@ var PgnList = PgnArray{
 		{"Track", 80, RES_STRINGLZ, false, 0, "", 0}},
 	},
 
-	{"Fusion: Artist", 130820, false, 0x20, 0, []Field{
+	{"Fusion: Artist", "Entertainment", 130820, false, 0x20, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2848,7 +2854,7 @@ var PgnList = PgnArray{
 		{"Artist", 80, RES_STRINGLZ, false, 0, "", 0}},
 	},
 
-	{"Fusion: Album", 130820, false, 0x20, 0, []Field{
+	{"Fusion: Album", "Entertainment", 130820, false, 0x20, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2858,7 +2864,7 @@ var PgnList = PgnArray{
 		{"Album", 80, RES_STRINGLZ, false, 0, "", 0}},
 	},
 
-	{"Fusion: Play Progress", 130820, false, 9, 0, []Field{
+	{"Fusion: Play Progress", "Entertainment", 130820, false, 9, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2868,7 +2874,7 @@ var PgnList = PgnArray{
 		{"Progress", 24, 0.001, false, "s", "", 0}},
 	},
 
-	{"Fusion: AM/FM Station", 130820, false, 0x0A, 0, []Field{
+	{"Fusion: AM/FM Station", "Entertainment", 130820, false, 0x0A, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2879,7 +2885,7 @@ var PgnList = PgnArray{
 		{"Track", 80, RES_STRINGLZ, false, 0, "", 0}},
 	},
 
-	{"Fusion: VHF", 130820, false, 9, 0, []Field{
+	{"Fusion: VHF", "Entertainment", 130820, false, 9, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2890,7 +2896,7 @@ var PgnList = PgnArray{
 		{"D", 24, 1, false, 0, "", 0}},
 	},
 
-	{"Fusion: Squelch", 130820, false, 6, 0, []Field{
+	{"Fusion: Squelch", "Entertainment", 130820, false, 6, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2900,7 +2906,7 @@ var PgnList = PgnArray{
 		{"Squelch", 8, 1, false, 0, "", 0}},
 	},
 
-	{"Fusion: Scan", 130820, false, 6, 0, []Field{
+	{"Fusion: Scan", "Entertainment", 130820, false, 6, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2910,7 +2916,7 @@ var PgnList = PgnArray{
 		{"Scan", 8, RES_LOOKUP, false, ",0=Off,1=Scan", "", 0}},
 	},
 
-	{"Fusion: Menu Item", 130820, false, 23, 0, []Field{
+	{"Fusion: Menu Item", "Entertainment", 130820, false, 23, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2926,7 +2932,7 @@ var PgnList = PgnArray{
 		{"Text", 40, RES_STRINGLZ, false, 0, "", 0}},
 	},
 
-	{"Fusion: Replay", 130820, false, 23, 0, []Field{
+	{"Fusion: Replay", "Entertainment", 130820, false, 23, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2942,7 +2948,7 @@ var PgnList = PgnArray{
 		{"J", 8, 1, false, 0, "", 0}},
 	},
 
-	{"Fusion: Time", 130820, false, 23, 0, []Field{
+	{"Fusion: Time", "Entertainment", 130820, false, 23, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2958,7 +2964,7 @@ var PgnList = PgnArray{
 		{"J", 8, 1, false, 0, "", 0}},
 	},
 
-	{"Fusion: Mute", 130820, false, 5, 0, []Field{
+	{"Fusion: Mute", "Entertainment", 130820, false, 5, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2968,7 +2974,7 @@ var PgnList = PgnArray{
 	},
 
 	// Range: 0 to +24
-	{"Fusion: Sub Volume", 130820, false, 8, 0, []Field{
+	{"Fusion: Sub Volume", "Entertainment", 130820, false, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2981,7 +2987,7 @@ var PgnList = PgnArray{
 	},
 
 	// Range: -15 to +15
-	{"Fusion: Tone", 130820, false, 8, 0, []Field{
+	{"Fusion: Tone", "Entertainment", 130820, false, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -2993,7 +2999,7 @@ var PgnList = PgnArray{
 		{"Treble", 8, 1, true, "vol", "", 0}},
 	},
 
-	{"Fusion: Volume", 130820, false, 0x0A, 0, []Field{
+	{"Fusion: Volume", "Entertainment", 130820, false, 0x0A, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -3005,7 +3011,7 @@ var PgnList = PgnArray{
 		{"Zone 4", 8, 1, false, "vol", "", 0}},
 	},
 
-	{"Fusion: Transport", 130820, false, 5, 0, []Field{
+	{"Fusion: Transport", "Entertainment", 130820, false, 5, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -3014,8 +3020,7 @@ var PgnList = PgnArray{
 		{"Transport", 8, RES_LOOKUP, false, ",1=Paused", "", 0}},
 	},
 
-	// M/V Dirona
-	{"Furuno: Unknown", 130820, false, 0x08, 0, []Field{
+	{"Furuno: Unknown", "Entertainment", 130820, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1855", "Furuno", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -3026,7 +3031,8 @@ var PgnList = PgnArray{
 		{"E", 8, 1, false, 0, "", 0}},
 	},
 
-	{"Simnet: Reprogram Status", 130820, false, 0x08, 0, []Field{
+	// M/V Dirona
+	{"Simnet: Reprogram Status", "Simrad", 130820, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -3036,7 +3042,7 @@ var PgnList = PgnArray{
 	},
 
 	// M/V Dirona
-	{"Furuno: Unknown", 130821, false, 0x0c, 0, []Field{
+	{"Furuno: Unknown", "Furuno", 130821, false, 0x0c, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1855", "Furuno", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -3053,7 +3059,7 @@ var PgnList = PgnArray{
 	},
 
 	// Uwe Lovas has seen this from EP-70R
-	{"Lowrance: unknown", 130827, false, 10, 0, []Field{
+	{"Lowrance: unknown", "Lowrance", 130827, false, 10, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=140", "Lowrance", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -3065,38 +3071,38 @@ var PgnList = PgnArray{
 		{"F", 16, 1, false, 0, "", 0}},
 	},
 
-	{"Simnet: Set Serial Number", 130828, false, 0x08, 0, []Field{
+	{"Simnet: Set Serial Number", "Simrad", 130828, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
-	{"Suzuki: Engine and Storage Device Config", 130831, false, 8, 0, []Field{
+	{"Suzuki: Engine and Storage Device Config", "Suzuki", 130831, false, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, 0, "", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
-	{"Simnet: Fuel Used - High Resolution", 130832, false, 0x08, 0, []Field{
+	{"Simnet: Fuel Used - High Resolution", "Simrad", 130832, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
-	{"Simnet: Engine and Tank Configuration", 130834, false, 0x08, 0, []Field{
+	{"Simnet: Engine and Tank Configuration", "Simrad", 130834, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
-	{"Simnet: Set Engine and Tank Configuration", 130835, false, 0x08, 0, []Field{
+	{"Simnet: Set Engine and Tank Configuration", "Simrad", 130835, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
 	// Seen when HDS8 configures EP65R
-	{"Simnet: Fluid Level Sensor Configuration", 130836, false, 0x0e, 0, []Field{
+	{"Simnet: Fluid Level Sensor Configuration", "Simrad", 130836, false, 0x0e, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, 0, "", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -3111,25 +3117,25 @@ var PgnList = PgnArray{
 		{"I", 8, 1, true, 0, "", 0}},
 	},
 
-	{"Simnet: Fuel Flow Turbine Configuration", 130837, false, 0x08, 0, []Field{
+	{"Simnet: Fuel Flow Turbine Configuration", "Simrad", 130837, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
-	{"Simnet: Fluid Level Warning", 130838, false, 0x08, 0, []Field{
+	{"Simnet: Fluid Level Warning", "Simrad", 130838, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
-	{"Simnet: Pressure Sensor Configuration", 130839, false, 0x08, 0, []Field{
+	{"Simnet: Pressure Sensor Configuration", "Simrad", 130839, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
-	{"Simnet: Data User Group Configuration", 130840, false, 0x08, 0, []Field{
+	{"Simnet: Data User Group Configuration", "Simrad", 130840, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
@@ -3142,7 +3148,7 @@ var PgnList = PgnArray{
 	//  { "Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	// },
 
-	{"Simnet: AIS Class B static data (msg 24 Part A)", 130842, false, 0x1d, 0, []Field{
+	{"Simnet: AIS Class B static data (msg 24 Part A)", "Simrad", 130842, false, 0x1d, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, lookupCompanyCode, "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -3154,7 +3160,7 @@ var PgnList = PgnArray{
 		{"Name", 160, RES_ASCII, false, 0, "", 0}},
 	},
 
-	{"Simnet: AIS Class B static data (msg 24 Part B)", 130842, false, 0x25, 0, []Field{
+	{"Simnet: AIS Class B static data (msg 24 Part B)", "Simrad", 130842, false, 0x25, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, lookupCompanyCode, "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -3175,13 +3181,13 @@ var PgnList = PgnArray{
 		{"Spare", 6, RES_INTEGER, false, 0, "0=unavailable", 0}},
 	},
 
-	{"Simnet: Sonar Status, Frequency and DSP Voltage", 130843, false, 0x08, 0, []Field{
+	{"Simnet: Sonar Status, Frequency and DSP Voltage", "Simrad", 130843, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0}},
 	},
 
-	{"Simnet: Parameter Handle", 130845, false, 0x0e, 0, []Field{
+	{"Simnet: Parameter Handle", "Simrad", 130845, false, 0x0e, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -3198,7 +3204,7 @@ var PgnList = PgnArray{
 		{"L", 16, 1, false, 0, "", 0}},
 	},
 
-	{"Simnet: Event Command: Alarm?", 130850, false, 12, 0, []Field{
+	{"Simnet: Event Command: Alarm?", "Simrad", 130850, false, 12, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -3211,7 +3217,7 @@ var PgnList = PgnArray{
 		{"G", 8, 1, false, 0, "", 0}},
 	},
 
-	{"Simnet: Event Command: AP command", 130850, false, 12, 0, []Field{
+	{"Simnet: Event Command: AP command", "Simrad", 130850, false, 12, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -3236,7 +3242,7 @@ var PgnList = PgnArray{
 	//    { "E", 16, 1, false, 0, "", 0}},
 	//  },
 
-	{"Simnet: Event Reply: AP command", 130851, false, 12, 0, []Field{
+	{"Simnet: Event Reply: AP command", "Simrad", 130851, false, 12, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -3249,7 +3255,7 @@ var PgnList = PgnArray{
 		{"G", 8, 1, false, 0, "", 0}},
 	},
 
-	{"Simnet: Alarm Message", 130856, false, 0x08, 0, []Field{
+	{"Simnet: Alarm Message", "Simrad", 130856, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -3259,7 +3265,7 @@ var PgnList = PgnArray{
 		{"Text", 2040, RES_ASCII, false, 0, "", 0}},
 	},
 
-	{"Airmar: Additional Weather Data", 130880, false, 9, 0, []Field{
+	{"Airmar: Additional Weather Data", "Airmar", 130880, false, 9, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -3269,7 +3275,7 @@ var PgnList = PgnArray{
 		{"Dewpoint", 16, RES_TEMPERATURE, false, "K", "", 0}},
 	},
 
-	{"Airmar: Heater Control", 130881, false, 9, 0, []Field{
+	{"Airmar: Heater Control", "Airmar", 130881, false, 9, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -3279,7 +3285,7 @@ var PgnList = PgnArray{
 		{"Dewpoint", 16, RES_TEMPERATURE, false, "K", "", 0}},
 	},
 
-	{"Airmar: POST", 130944, false, 8, 0, []Field{
+	{"Airmar: POST", "Airmar", 130944, false, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
@@ -3290,7 +3296,7 @@ var PgnList = PgnArray{
 		{"Test result", 8, RES_LOOKUP, false, nil, "Values other than 0 are failure codes. See Airmar docs for description.", 0}},
 	},
 
-	{"Actisense: Operating mode", ACTISENSE_BEM + 0x11, false, 0x0e, 0, []Field{
+	{"Actisense: Operating mode", "Actisense", ACTISENSE_BEM + 0x11, false, 0x0e, 0, []Field{
 		{"SID", 8, 1, false, 0, "", 0},
 		{"Model ID", 16, RES_INTEGER, false, 0, "", 0},
 		{"Serial ID", 32, RES_INTEGER, false, 0, "", 0},
@@ -3298,7 +3304,7 @@ var PgnList = PgnArray{
 		{"Operating Mode", 16, 1, false, 0, "", 0}},
 	},
 
-	{"Actisense: Startup status", ACTISENSE_BEM + 0xf0, false, 0x0f, 0, []Field{
+	{"Actisense: Startup status", "Actisense", ACTISENSE_BEM + 0xf0, false, 0x0f, 0, []Field{
 		{"SID", 8, 1, false, 0, "", 0},
 		{"Model ID", 16, RES_INTEGER, false, 0, "", 0},
 		{"Serial ID", 32, RES_INTEGER, false, 0, "", 0},
@@ -3308,7 +3314,7 @@ var PgnList = PgnArray{
 		{"A", 8, 1, false, 0, "", 0}},
 	},
 
-	{"Actisense: System status", ACTISENSE_BEM + 0xf2, false, 0x22, 0, []Field{
+	{"Actisense: System status", "Actisense", ACTISENSE_BEM + 0xf2, false, 0x22, 0, []Field{
 		{"SID", 8, 1, false, 0, "", 0},
 		{"Model ID", 16, RES_INTEGER, false, 0, "", 0},
 		{"Serial ID", 32, RES_INTEGER, false, 0, "", 0},
@@ -3337,7 +3343,7 @@ var PgnList = PgnArray{
 		{"Ch2 PointerLoading", 8, 1, false, 0, "", 0}},
 	},
 
-	{"Actisense: ?", ACTISENSE_BEM + 0xf4, false, 17, 0, []Field{
+	{"Actisense: ?", "Actisense", ACTISENSE_BEM + 0xf4, false, 17, 0, []Field{
 		{"SID", 8, 1, false, 0, "", 0},
 		{"Model ID", 16, RES_INTEGER, false, 0, "", 0},
 		{"Serial ID", 32, RES_INTEGER, false, 0, "", 0}},
