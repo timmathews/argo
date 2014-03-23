@@ -1,11 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"time"
-  "fmt"
 )
 
 const (
@@ -63,9 +63,9 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", 405)
 		return
 	}
-  // Origin is the URL that the client connects to
-  // This shouldn't be hard-coded, but needs to be
-  // defined somewhere. Add a flag?
+	// Origin is the URL that the client connects to
+	// This shouldn't be hard-coded, but needs to be
+	// defined somewhere. Add a flag?
 	if r.Header.Get("Origin") != "http://pyxis.openseasproject.org" {
 		http.Error(w, "Origin not allowed", 403)
 		return
@@ -79,12 +79,11 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-  if r.URL.Path == "/ws/v1/data" {
-	  c := &connection{send: make(chan []byte, 256), ws: ws}
-	  h.register <- c
-	  go c.writePump()
-  } else if r.URL.Path == "/ws/v1/control" {
-    fmt.Println("Got registration")
-  }
+	if r.URL.Path == "/ws/v1/data" {
+		c := &connection{send: make(chan []byte, 256), ws: ws}
+		h.register <- c
+		go c.writePump()
+	} else if r.URL.Path == "/ws/v1/control" {
+		fmt.Println("Got registration")
+	}
 }
-

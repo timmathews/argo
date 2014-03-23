@@ -49,7 +49,7 @@ func (msg *RawMessage) ParsePacket() (pgnParsed *ParsedMessage) {
 	i, pgnDefinition := PgnList.First(msg.Pgn)
 	j, _ := PgnList.Last(msg.Pgn)
 
-  oneSolution := false
+	oneSolution := false
 
 	if i == j {
 		oneSolution = true
@@ -433,7 +433,7 @@ func (msg *RawMessage) extractManufacturer(f *Field, start, end, startBit, bits 
 }
 
 func (msg *RawMessage) Print(verbose bool) (s string) {
-  // Timestamp Priority Source Destination Pgn PgnName: Data
+	// Timestamp Priority Source Destination Pgn PgnName: Data
 	s = fmt.Sprintf("%s,%v,%v,%v,%v,%v,% x", msg.Timestamp.Format(layout), msg.Priority, msg.Pgn, msg.Source, msg.Destination, msg.Length, msg.Data)
 	return
 }
@@ -442,4 +442,3 @@ func (msg *RawMessage) GetPgnDefinition(pgn uint32) *Pgn {
 	_, p := PgnList.First(msg.Pgn)
 	return &p
 }
-

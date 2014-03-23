@@ -26,18 +26,18 @@ package main
 
 import (
 	"argo/actisense"
-  "argo/nmea2k"
+	"argo/nmea2k"
 	"flag"
 	"fmt"
 	zmq "github.com/alecthomas/gozmq"
 	"github.com/schleibinger/sio"
 	msgpack "github.com/vmihailenco/msgpack"
 	"log"
+	"net/http"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
-  "net/http"
 )
 
 // Timestamp format for printing
@@ -57,7 +57,7 @@ func main() {
 	pgn := flag.Int("pgn", 0, "Display only this PGN")
 	src := flag.Int("source", 255, "Display PGNs from this source only")
 	quiet := flag.Bool("q", false, "Don't display PGN data")
-  addr := flag.String("addr", ":8081", "http service address")
+	addr := flag.String("addr", ":8081", "http service address")
 	device := "/dev/ttyUSB0"
 
 	flag.Parse()
@@ -95,8 +95,8 @@ func main() {
 
 	go actisense.ReadNGT1(port, rxch, txch)
 
-  // Start up the WebSockets hub
-  go h.run()
+	// Start up the WebSockets hub
+	go h.run()
 
 	context, _ := zmq.NewContext()
 	socket, _ := context.NewSocket(zmq.PUB)
@@ -106,9 +106,9 @@ func main() {
 
 	go PgnDefServer(context)
 
-  go WebSocketServer(addr)
+	go WebSocketServer(addr)
 
-  go ApiServer()
+	go ApiServer()
 
 	// Print and transmit received messages
 	go func() {
@@ -124,11 +124,11 @@ func main() {
 				fmt.Println(res.Print(*verbose))
 			}
 
-      bm := res.MsgPack()
-      bj := res.JSON()
+			bm := res.MsgPack()
+			bj := res.JSON()
 
 			socket.Send(bm, 0)
-      h.broadcast <- bj
+			h.broadcast <- bj
 		}
 	}()
 
@@ -167,17 +167,16 @@ func PgnDefServer(context zmq.Context) {
 }
 
 func Log(handler http.Handler) http.Handler {
-  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-    fmt.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
-    handler.ServeHTTP(w, r)
-  })
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+		handler.ServeHTTP(w, r)
+	})
 }
 
 func WebSocketServer(addr *string) {
-  http.HandleFunc("/ws/v1/", serveWs)
-  err := http.ListenAndServe(*addr, Log(http.DefaultServeMux))
-  if err != nil {
-    log.Fatal("ListenAndServe: ", err)
-  }
+	http.HandleFunc("/ws/v1/", serveWs)
+	err := http.ListenAndServe(*addr, Log(http.DefaultServeMux))
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
 }
-

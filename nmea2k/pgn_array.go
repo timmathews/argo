@@ -1,9 +1,9 @@
 package nmea2k
 
 import (
-  "encoding/json"
-  "encoding/xml"
-  "math"
+	"encoding/json"
+	"encoding/xml"
+	"math"
 )
 
 const ACTISENSE_BEM = 0x40000 // Actisense specific fake PGNs
@@ -46,8 +46,8 @@ type Field struct {
 }
 
 type Pgn struct {
-  Description     string
-  Category        string
+	Description     string
+	Category        string
 	Pgn             uint32
 	IsKnown         bool    // Are we pretty sure we've got all fields with correct definitions?
 	Size            uint32  // (Minimal) size of this PGN. Helps to determine fast/single frame and initial malloc
@@ -60,21 +60,21 @@ type PgnArray []Pgn
 type PgnLookup map[int]string
 
 func (inVal PgnLookup) MarshalJSON() ([]byte, error) {
-  var outVal []map[string]interface{}
+	var outVal []map[string]interface{}
 
-  for k, v := range inVal {
-    vv := make(map[string]interface{})
-    vv["Value"] = k
-    vv["Name"] = v
-    outVal = append(outVal, vv)
-  }
+	for k, v := range inVal {
+		vv := make(map[string]interface{})
+		vv["Value"] = k
+		vv["Name"] = v
+		outVal = append(outVal, vv)
+	}
 
-  return json.Marshal(outVal)
+	return json.Marshal(outVal)
 }
 
 /* Placeholder until I have a chance to figure out XML encoding in Go */
-func (inVal PgnLookup) MarshalXML(e *xml.Encoder, start xml.StartElement) (error) {
-  return nil
+func (inVal PgnLookup) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	return nil
 }
 
 var lookupAisAccuracy = PgnLookup{
@@ -983,7 +983,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/DST200UserlManual.pdf
-  {"Boot State Acknowledgment", "Airmar", 65285, true, 8, 0, []Field{
+	{"Boot State Acknowledgment", "Airmar", 65285, true, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "Marine Industry", 0},
@@ -1240,7 +1240,7 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/DST200UserlManual.pdf
-  {"Speed Filter", "Airmar", 126720, true, 8, 2, []Field{
+	{"Speed Filter", "Airmar", 126720, true, 8, 2, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", 0},
 		{"Reserved", 2, 1, false, nil, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, "=43", "Marine Industry", 0},
@@ -2232,7 +2232,7 @@ var PgnList = PgnArray{
 		{"Quiet Time", 16, 1, false, nil, "", 0}},
 	},
 
-  {"DSC Call Information", "Other", 129808, false, 8, 2, []Field{
+	{"DSC Call Information", "Other", 129808, false, 8, 2, []Field{
 		{"DSC Format Symbol", 8, 1, false, nil, "", 0},
 		{"DSC Category Symbol", 8, 1, false, nil, "", 0},
 		{"DSC Message Address", 8, 1, false, nil, "", 0},
@@ -2561,7 +2561,7 @@ var PgnList = PgnArray{
 		{"Drift", 16, 0.01, false, "m/s", "", 0}},
 	},
 
-  {"Vessel Speed Components", "General", 130578, true, 12, 0, []Field{
+	{"Vessel Speed Components", "General", 130578, true, 12, 0, []Field{
 		{"Longitudinal Speed, Water-referenced", 16, 0.001, true, "m/s", "", 0},
 		{"Transverse Speed, Water-referenced", 16, 0.001, true, "m/s", "", 0},
 		{"Longitudinal Speed, Ground-referenced", 16, 0.001, true, "m/s", "", 0},
