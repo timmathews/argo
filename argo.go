@@ -147,7 +147,7 @@ func main() {
 
 }
 
-func PgnDefServer(context zmq.Context) {
+func PgnDefServer(context *zmq.Context) {
 	socket, _ := context.NewSocket(zmq.REP)
 	defer socket.Close()
 	socket.Bind("tcp://*:5556")
