@@ -34,18 +34,22 @@ func (msg *ParsedMessage) Print(verbose bool) string {
 
 	s := fmt.Sprintf("%s %v %v %v %v %s:", msg.Header.Timestamp.Format(layout), msg.Header.Priority, msg.Header.Source, msg.Header.Destination, msg.Header.Pgn, name)
 
-	for i := 0; i < len(msg.Data); i++ {
+	for i, j := 0, 0; i < len(msg.Data); i, j = i+1, j+1 {
 		f := msg.Data[i]
 		if f != nil {
 			if _, ok := f.(float32); ok {
-				s += fmt.Sprintf(" %v.%s = %f;", i, pgnFields[i].Name, f)
+				s += fmt.Sprintf(" %v.%s = %f;", i, pgnFields[j].Name, f)
 			} else if _, ok := f.(float64); ok {
-				s += fmt.Sprintf(" %v.%s = %f;", i, pgnFields[i].Name, f)
+				s += fmt.Sprintf(" %v.%s = %f;", i, pgnFields[j].Name, f)
 			} else {
-				s += fmt.Sprintf(" %v.%s = %v;", i, pgnFields[i].Name, f)
+				s += fmt.Sprintf(" %v.%s = %v;", i, pgnFields[j].Name, f)
 			}
 		} else if verbose {
-			s += fmt.Sprintf(" %v.%s = nil;", i, pgnFields[i].Name)
+			s += fmt.Sprintf(" %v.%s = nil;", i, pgnFields[j].Name)
+		}
+
+		if pp.RepeatingFields > 0 && j == len(pgnFields)-1 {
+			j -= int(pp.RepeatingFields)
 		}
 	}
 

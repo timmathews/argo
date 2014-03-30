@@ -67,7 +67,7 @@ func (msg *RawMessage) ParsePacket() (pgnParsed *ParsedMessage) {
 	var start_byte uint32
 	var start_bit uint32
 
-	for idx := 0; idx < len(fields); idx++ {
+	for idx, odx := 0, 0; idx < len(fields); idx, odx = idx+1, odx+1 {
 
 		field := fields[idx]
 		res := field.Resolution
@@ -118,7 +118,7 @@ func (msg *RawMessage) ParsePacket() (pgnParsed *ParsedMessage) {
 		}
 
 		if err == nil {
-			pgnParsed.Data[idx] = data
+			pgnParsed.Data[odx] = data
 
 			if !oneSolution {
 				for i <= j {
@@ -144,12 +144,16 @@ func (msg *RawMessage) ParsePacket() (pgnParsed *ParsedMessage) {
 				pgnParsed.Index = i
 			}
 		} else {
-			pgnParsed.Data[idx] = nil
+			pgnParsed.Data[odx] = nil
 		}
 
 		start_byte = start_byte + ((bits + start_bit) / 8)
 		start_bit += bits
 		start_bit %= 8
+
+		if idx == len(fields)-1 && pgnDefinition.RepeatingFields > 0 && start_byte < uint32(data_len) {
+			idx -= int(pgnDefinition.RepeatingFields)
+		}
 
 	}
 
