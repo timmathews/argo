@@ -106,7 +106,10 @@ func (msg *RawMessage) ParsePacket() (pgnParsed *ParsedMessage) {
 			case RES_PRESSURE:
 				data, err = msg.extractPressure(start_byte, bytes)
 			case RES_STRINGLZ:
-				data, err = msg.extractString(start_byte)
+				data, err = msg.extractStringLZ(start_byte)
+			case RES_STRING:
+				//data, err = msg.extractString(start_byte, bytes)
+				data = string(msg.Data[start_byte:bytes])
 			default:
 				data = msg.Data[start_byte:bytes]
 			}
@@ -290,7 +293,7 @@ func (msg *RawMessage) extractPressure(start, end uint32) (p float32, e error) {
 
 }
 
-func (msg *RawMessage) extractString(start uint32) (s string, e error) {
+func (msg *RawMessage) extractStringLZ(start uint32) (s string, e error) {
 
 	if int(start) >= len(msg.Data) {
 		e = &DecodeError{nil, "Data not present"}
@@ -304,6 +307,7 @@ func (msg *RawMessage) extractString(start uint32) (s string, e error) {
 		return
 	}
 
+	start++
 	end += byte(start)
 
 	if int(end) >= len(msg.Data) {
@@ -311,9 +315,40 @@ func (msg *RawMessage) extractString(start uint32) (s string, e error) {
 		return
 	}
 
-	start++
-
 	data := msg.Data[start:end]
+
+	if len(data) == 0 {
+		e = &DecodeError{data, "Data not present"}
+	} else {
+		s = string(data)
+	}
+
+	return
+
+}
+
+func (msg *RawMessage) extractString(start, length uint32) (s string, e error) {
+
+	if int(start) >= len(msg.Data) {
+		e = &DecodeError{nil, "Data not present"}
+		return
+	}
+
+	if msg.Data[start] == 0 {
+		e = &DecodeError{nil, "Data not present"}
+		return
+	}
+
+	i := start
+	for ; int(i) < len(msg.Data); i++ {
+		if msg.Data[i] == 0 {
+			break
+		}
+	}
+
+	i--
+
+	data := msg.Data[start:i]
 
 	if len(data) == 0 {
 		e = &DecodeError{data, "Data not present"}
