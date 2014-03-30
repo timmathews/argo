@@ -1385,8 +1385,8 @@ var PgnList = PgnArray{
 		{"Reserved", 8, 1, false, nil, "", 0},
 		{"Discrete Status 1", 16, RES_INTEGER, false, nil, "", 0},
 		{"Discrete Status 2", 16, RES_INTEGER, false, nil, "", 0},
-		{"Percent Engine Load", 8, RES_INTEGER, true, "%", "", 0},
-		{"Percent Engine Torque", 8, RES_INTEGER, true, "%", "", 0}},
+		{"Percent Engine Load", 8, RES_INTEGER, true, "%%", "", 0},
+		{"Percent Engine Torque", 8, RES_INTEGER, true, "%%", "", 0}},
 	},
 
 	{"Transmission Parameters, Dynamic", "Propulsion", 127493, true, 7, 0, []Field{
@@ -1467,7 +1467,7 @@ var PgnList = PgnArray{
 	{"Fluid Level", "General", 127505, true, 7, 0, []Field{
 		{"Instance", 4, 1, false, nil, "", 0},
 		{"Type", 4, RES_LOOKUP, false, lookupTankType, "", 0},
-		{"Level", 16, 100.0 / 25000, false, "%", "", 0},
+		{"Level", 16, 100.0 / 25000, false, "%%", "", 0},
 		{"Capacity", 32, 0.1, false, "L", "", 0}},
 	},
 
@@ -2425,7 +2425,7 @@ var PgnList = PgnArray{
 		{"Temperature Instance", 6, RES_LOOKUP, false, lookupTemperatureSource, "", 0},
 		{"Humidity Instance", 2, RES_LOOKUP, false, lookupHumidityInstance, "", 0},
 		{"Temperature", 16, RES_TEMPERATURE, false, "K", "", 0},
-		{"Humidity", 16, 0.004, true, "%", "", 0},
+		{"Humidity", 16, 0.004, true, "%%", "", 0},
 		{"Atmospheric Pressure", 16, RES_PRESSURE, false, "hPa", "", 0}},
 	},
 
@@ -2441,8 +2441,8 @@ var PgnList = PgnArray{
 		{"SID", 8, 1, false, nil, "", 0},
 		{"Humidity Instance", 8, 1, false, nil, "", 0},
 		{"Humidity Source", 8, 1, false, nil, "", 0},
-		{"Actual Humidity", 16, 100.0 / 25000, true, "%", "", 0},
-		{"Set Humidity", 16, 100.0 / 25000, true, "%", "", 0}},
+		{"Actual Humidity", 16, 100.0 / 25000, true, "%%", "", 0},
+		{"Set Humidity", 16, 100.0 / 25000, true, "%%", "", 0}},
 	},
 
 	// Based off the definition for 130315. Appears to be correct
