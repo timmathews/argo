@@ -2821,6 +2821,15 @@ var PgnList = PgnArray{
 	},
 
 	/* Fusion */
+	{"Fusion: Unknown (1)", "Entertainment", 130820, false, 13, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, "=1", "", 0},
+		{"A", 8, 1, false, 0, "", 0},
+		{"B", 32, 1, false, 0, "", 0}},
+	},
+
 	{"Fusion: Source Name", "Entertainment", 130820, false, 13, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
@@ -2829,9 +2838,30 @@ var PgnList = PgnArray{
 		{"A", 8, 1, false, 0, "", 0},
 		{"B", 8, 1, false, 0, "", 0},
 		{"C", 8, 1, false, 0, "", 0},
-		{"D", 8, 1, false, 0, "", 0},
+		{"Source", 8, 1, false, 0, "", 0},
 		{"E", 8, 1, false, 0, "", 0},
-		{"Source", 40, RES_STRINGLZ, false, 0, "", 0}},
+		{"Name", 40, RES_STRINGLZ, false, 0, "", 0}},
+	},
+
+	{"Fusion: Unknown (3)", "Entertainment", 130820, false, 13, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, "=3", "", 0},
+		{"A", 8, 1, false, 0, "", 0},
+		{"B", 8, 1, false, 0, "", 0}},
+	},
+
+	{"Fusion: Track Number", "Entertainment", 130820, false, 13, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, "=4", "", 0},
+		{"A", 32, 1, false, 0, "", 0},
+		{"Track Number", 32, 1, false, 0, "", 0},
+		{"Total Tracks", 32, 1, false, 0, "", 0},
+		{"Length", 32, 0.001, false, 0, "s", 0},
+		{"E", 32, 1, false, 0, "", 0}},
 	},
 
 	{"Fusion: Track", "Entertainment", 130820, false, 0x20, 0, []Field{
@@ -2841,7 +2871,7 @@ var PgnList = PgnArray{
 		{"Message ID", 8, 1, false, "=5", "", 0},
 		{"A", 8, 1, false, 0, "", 0},
 		{"B", 40, 1, false, 0, "", 0},
-		{"Track", 80, RES_STRINGLZ, false, 0, "", 0}},
+		{"Track", 800, RES_STRINGLZ, false, 0, "", 0}},
 	},
 
 	{"Fusion: Artist", "Entertainment", 130820, false, 0x20, 0, []Field{
@@ -2851,7 +2881,7 @@ var PgnList = PgnArray{
 		{"Message ID", 8, 1, false, "=6", "", 0},
 		{"A", 8, 1, false, 0, "", 0},
 		{"B", 40, 1, false, 0, "", 0},
-		{"Artist", 80, RES_STRINGLZ, false, 0, "", 0}},
+		{"Artist", 800, RES_STRINGLZ, false, 0, "", 0}},
 	},
 
 	{"Fusion: Album", "Entertainment", 130820, false, 0x20, 0, []Field{
@@ -2964,6 +2994,30 @@ var PgnList = PgnArray{
 		{"J", 8, 1, false, 0, "", 0}},
 	},
 
+	{"Fusion: Repeat", "Entertainment", 130820, false, 5, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, "=20", "", 0},
+		{"A", 8, 1, false, 0, "", 0},
+		{"Command ID", 8, 1, false, "=12", "", 0},
+		{"C", 24, 1, false, 0, "", 0},
+		{"Repeat Code", 8, 1, false, 0, "", 0},
+		{"E", 24, 1, false, 0, "", 0}},
+	},
+
+	{"Fusion: Shuffle", "Entertainment", 130820, false, 5, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, "=20", "", 0},
+		{"A", 8, 1, false, 0, "", 0},
+		{"Command ID", 8, 1, false, "=13", "", 0},
+		{"C", 24, 1, false, 0, "", 0},
+		{"Shuffle Code", 8, 1, false, 0, "", 0},
+		{"E", 24, 1, false, 0, "", 0}},
+	},
+
 	{"Fusion: Mute", "Entertainment", 130820, false, 5, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
@@ -2971,6 +3025,24 @@ var PgnList = PgnArray{
 		{"Message ID", 8, 1, false, "=23", "", 0},
 		{"A", 8, 1, false, 0, "", 0},
 		{"Mute", 8, RES_LOOKUP, false, ",1=Muted,2=Not Muted", "", 0}},
+	},
+
+	{"Fusion: Unknown (24)", "Entertainment", 130820, false, 5, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, "=24", "", 0},
+		{"A", 8, 1, false, 0, "", 0},
+		{"B", 80, 1, false, 0, "", 0}},
+	},
+
+	{"Fusion: Unknown (25)", "Entertainment", 130820, false, 5, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, "=25", "", 0},
+		{"A", 8, 1, false, 0, "", 0},
+		{"B", 80, 1, false, 0, "", 0}},
 	},
 
 	// Range: 0 to +24
@@ -3020,15 +3092,113 @@ var PgnList = PgnArray{
 		{"Transport", 8, RES_LOOKUP, false, ",1=Paused", "", 0}},
 	},
 
-	{"Furuno: Unknown", "Entertainment", 130820, false, 0x08, 0, []Field{
-		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1855", "Furuno", 0},
+	{"Fusion: Stereo ID", "Entertainment", 130820, false, 5, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
 		{"Reserved", 2, 1, false, 0, "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, "=33", "", 0},
 		{"A", 8, 1, false, 0, "", 0},
-		{"B", 8, 1, false, 0, "", 0},
-		{"C", 8, 1, false, 0, "", 0},
-		{"D", 8, 1, false, 0, "", 0},
-		{"E", 8, 1, false, 0, "", 0}},
+		{"Name", 80, RES_STRINGLZ, false, 0, "", 0}},
+	},
+
+	{"Fusion: Unknown (34)", "Entertainment", 130820, false, 5, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, "=34", "", 0},
+		{"A", 8, 1, false, 0, "", 0},
+		{"B", 48, 1, false, 0, "", 0}},
+	},
+
+	{"Fusion: SiriusXM Station", "Entertainment", 130820, false, 5, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, "=36", "", 0},
+		{"A", 16, 1, false, 0, "", 0},
+		{"Channel", 16, 1, false, 0, "", 0},
+		{"Station", 800, RES_STRINGLZ, false, 0, "", 0}},
+	},
+
+	{"Fusion: SiriusXM Track", "Entertainment", 130820, false, 5, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, "=37", "", 0},
+		{"A", 16, 1, false, 0, "", 0},
+		{"Channel", 16, 1, false, 0, "", 0},
+		{"Track", 800, RES_STRINGLZ, false, 0, "", 0}},
+	},
+
+	{"Fusion: SiriusXM Artist", "Entertainment", 130820, false, 5, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, "=38", "", 0},
+		{"A", 16, 1, false, 0, "", 0},
+		{"Channel", 16, 1, false, 0, "", 0},
+		{"Artist", 800, RES_STRINGLZ, false, 0, "", 0}},
+	},
+
+	{"Fusion: SiriusXM Channel", "Entertainment", 130820, false, 5, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, "=39", "", 0},
+		{"A", 16, 1, false, 0, "", 0},
+		{"Channel", 16, 1, false, 0, "", 0},
+		{"C", 16, 1, false, 0, "", 0}},
+	},
+	{"Fusion: SiriusXM Category", "Entertainment", 130820, false, 5, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, "=40", "", 0},
+		{"A", 16, 1, false, 0, "", 0},
+		{"Channel", 16, 1, false, 0, "", 0},
+		{"Category", 800, RES_STRINGLZ, false, 0, "", 0}},
+	},
+
+	{"Fusion: Unknown (41)", "Entertainment", 130820, false, 5, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, "=41", "", 0},
+		{"Text", 40, RES_STRINGLZ, false, 0, "", 0}},
+	},
+
+	{"Fusion: Unknown (44)", "Entertainment", 130820, false, 5, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, "=44", "", 0},
+		{"Text", 40, RES_STRINGLZ, false, 0, "", 0}},
+	},
+
+	{"Fusion: Zone Name", "Entertainment", 130820, false, 5, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, "=45", "", 0},
+		{"A", 8, 1, false, 0, "", 0},
+		{"Zone", 8, 1, false, 0, "", 0},
+		{"Name", 480, RES_STRINGLZ, false, 0, "", 0}},
+	},
+
+	{"Fusion: Unknown (51)", "Entertainment", 130820, false, 0x08, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, 0, "=51", 0},
+		{"A", 8, 1, false, 0, "", 0},
+		{"B", 104, 1, false, 0, "", 0}},
+	},
+
+	{"Fusion: Unknown", "Entertainment", 130820, false, 0x08, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=419", "Fusion", 0},
+		{"Reserved", 2, 1, false, 0, "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+		{"Message ID", 8, 1, false, 0, "", 0}},
 	},
 
 	// M/V Dirona
