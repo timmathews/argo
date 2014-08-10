@@ -14,6 +14,7 @@ if [ "$1" == "--build" ]; then
   go get github.com/schleibinger/sio
   go get -tags zmq_2_1 github.com/alecthomas/gozmq
   go get github.com/vmihailenco/msgpack
+  go get github.com/wsxiaoys/terminal
   go get github.com/gorilla/mux
   go get github.com/gorilla/websocket
   echo "# Compiling."
@@ -24,13 +25,17 @@ fi
 if [ "$1" == "--install" ]; then
   echo "# Installing argo."
   install -p -g root -o root -m 755 argo /usr/bin
-  install -p -g root -o root -m 644 actisense.rules /etc/udev/rules.d
-  install -p -g root -o root -m 755 actisense.sh /lib/udev/actisense
+  install -p -g root -o root -m 644 actisense/actisense.rules /etc/udev/rules.d
+  install -p -g root -o root -m 644 canusb/canusb.rules /etc/udev/rules.d
+  install -p -g root -o root -m 755 actisense/actisense.sh /lib/udev/actisense
+  install -p -g root -o root -m 755 canusb/canusb.sh /lib/udev/canusb
 fi
 
 if [ "$1" == "--uninstall" ]; then
   echo "# Removing argo."
   rm /usr/bin/argo
   rm /etc/udev/rules.d/actisense.rules
+  rm /etc/udev/rules.d/canusb.rules
   rm /lib/udev/actisense
+  rm /lib/udev/canusb
 fi
