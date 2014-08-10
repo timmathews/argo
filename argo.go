@@ -26,6 +26,7 @@ package main
 
 import (
 	"argo/actisense"
+	"argo/canusb"
 	"argo/nmea2k"
 	"flag"
 	"fmt"
@@ -58,9 +59,14 @@ func main() {
 	src := flag.Int("source", 255, "Display PGNs from this source only")
 	quiet := flag.Bool("q", false, "Don't display PGN data")
 	addr := flag.String("addr", ":8081", "http service address")
+	dev_type := flag.String("dev", "actisense", "Choose type of device: actisense, canusb")
 	device := "/dev/ttyUSB0"
 
 	flag.Parse()
+
+	if *dev_type != "canusb" && *dev_type != "actisense" {
+		log.Fatalln("expected either canusb or actisense, got", *dev_type)
+	}
 
 	switch flag.NArg() {
 	case 0:
@@ -80,20 +86,26 @@ func main() {
 		log.Println("opening", device)
 	}
 
-	port, err := sio.Open(device, syscall.B115200)
+	port, err := sio.Open(device, syscall.B230400)
 
 	if err != nil {
 		log.Fatalln("open: %s", err)
 	}
 
-	actisense.WriteMessage(port, actisense.NGT_MSG_SEND, NGT_STARTUP_SEQ)
+	if *dev_type == "canusb" {
+		if *debug {
+			log.Println("canusb.OpenChannel")
+		}
+		canusb.OpenChannel(port)
+	} else {
+		actisense.WriteMessage(port, actisense.NGT_MSG_SEND, NGT_STARTUP_SEQ)
+	}
 	time.Sleep(2)
 
 	rxbuf := []byte{0}
 	rxch := make(chan byte)
 	txch := make(chan nmea2k.ParsedMessage)
 
-	go actisense.ReadNGT1(port, rxch, txch)
 
 	// Start up the WebSockets hub
 	go h.run()
@@ -144,7 +156,6 @@ func main() {
 			rxch <- b
 		}
 	}
-
 }
 
 func PgnDefServer(context *zmq.Context) {

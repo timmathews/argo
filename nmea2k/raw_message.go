@@ -82,6 +82,11 @@ func (msg *RawMessage) ParsePacket() (pgnParsed *ParsedMessage) {
 		var data interface{}
 		var err error
 
+		// TODO: We should return an error
+		if int(start_byte) > len(msg.Data) || int(bytes) > len(msg.Data) {
+			return
+		}
+
 		// Special fields
 		if field.Resolution < 0.0 {
 			switch field.Resolution {
