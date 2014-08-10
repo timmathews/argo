@@ -33,8 +33,10 @@ import (
 	zmq "github.com/alecthomas/gozmq"
 	"github.com/schleibinger/sio"
 	msgpack "github.com/vmihailenco/msgpack"
+	"github.com/wsxiaoys/terminal"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -50,6 +52,12 @@ const layout = "2006-01-02-15:04:05.999"
  */
 var NGT_STARTUP_SEQ = []byte{0x11, 0x02, 0x00}
 
+type UintSlice []uint32
+
+func (p UintSlice) Len() int           { return len(p) }
+func (p UintSlice) Less(i, j int) bool { return p[i] < p[j] }
+func (p UintSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
 func main() {
 	// Command line flags are defined here
 	debug := flag.Bool("d", false, "Debug mode, extra logging information shown on stderr")
@@ -59,6 +67,7 @@ func main() {
 	src := flag.Int("source", 255, "Display PGNs from this source only")
 	quiet := flag.Bool("q", false, "Don't display PGN data")
 	addr := flag.String("addr", ":8081", "http service address")
+	stats := flag.Bool("s", false, "Display live statistics")
 	dev_type := flag.String("dev", "actisense", "Choose type of device: actisense, canusb")
 	device := "/dev/ttyUSB0"
 
@@ -106,6 +115,14 @@ func main() {
 	rxch := make(chan byte)
 	txch := make(chan nmea2k.ParsedMessage)
 
+	statLog := make(map[uint32]uint64)
+	var statPgns UintSlice
+
+	if *dev_type == "canusb" {
+		go canusb.ReadPort(rxch, txch)
+	} else {
+		go actisense.ReadNGT1(port, rxch, txch)
+	}
 
 	// Start up the WebSockets hub
 	go h.run()
@@ -129,11 +146,25 @@ func main() {
 
 			if (*pgn == 0 || int(res.Header.Pgn) == *pgn) &&
 				(*src == 255 || int(res.Header.Source) == *src) &&
-				(*quiet == false) {
+				(*quiet == false) && (*stats == false) {
 				if *debug {
 					fmt.Println(res.Header.Print(*verbose))
 				}
 				fmt.Println(res.Print(*verbose))
+			}
+
+			if *stats {
+				if _, ok := statLog[res.Header.Pgn]; ok {
+					statLog[res.Header.Pgn]++
+				} else {
+					statLog[res.Header.Pgn] = 1
+					statPgns = append(statPgns, res.Header.Pgn)
+					sort.Sort(statPgns)
+				}
+				terminal.Stdout.Clear()
+				for _, k := range statPgns {
+					fmt.Println(k, "=>", statLog[k])
+				}
 			}
 
 			bm := res.MsgPack()
