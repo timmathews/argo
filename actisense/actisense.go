@@ -1,7 +1,7 @@
 package actisense
 
 import (
-	"argo/nmea2k"
+	"github.com/timmathews/argo/nmea2k"
 	"fmt"
 	"github.com/schleibinger/sio"
 	"log"

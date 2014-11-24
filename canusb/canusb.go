@@ -1,7 +1,7 @@
 package canusb
 
 import (
-	"argo/nmea2k"
+	"github.com/timmathews/argo/nmea2k"
 	"github.com/schleibinger/sio"
 	"time"
 	"fmt"

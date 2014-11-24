@@ -25,9 +25,9 @@ Argo.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-	"argo/actisense"
-	"argo/canusb"
-	"argo/nmea2k"
+	"github.com/timmathews/argo/actisense"
+	"github.com/timmathews/argo/canusb"
+	"github.com/timmathews/argo/nmea2k"
 	"flag"
 	"fmt"
 	zmq "github.com/alecthomas/gozmq"

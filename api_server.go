@@ -1,7 +1,7 @@
 package main
 
 import (
-	"argo/nmea2k"
+	"github.com/timmathews/argo/nmea2k"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
