@@ -25,13 +25,13 @@ Argo.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-	"github.com/timmathews/argo/actisense"
-	"github.com/timmathews/argo/canusb"
-	"github.com/timmathews/argo/nmea2k"
 	"flag"
 	"fmt"
 	zmq "github.com/alecthomas/gozmq"
 	"github.com/schleibinger/sio"
+	"github.com/timmathews/argo/actisense"
+	"github.com/timmathews/argo/canusb"
+	"github.com/timmathews/argo/nmea2k"
 	msgpack "github.com/vmihailenco/msgpack"
 	"github.com/wsxiaoys/terminal"
 	"log"
@@ -69,6 +69,7 @@ func main() {
 	addr := flag.String("addr", ":8081", "http service address")
 	stats := flag.Bool("s", false, "Display live statistics")
 	dev_type := flag.String("dev", "actisense", "Choose type of device: actisense, canusb")
+	no_server := flag.Bool("no-server", false, "Don't start Web Sockets or ZeroMQ")
 	device := "/dev/ttyUSB0"
 
 	flag.Parse()
@@ -124,20 +125,24 @@ func main() {
 		go actisense.ReadNGT1(port, rxch, txch)
 	}
 
-	// Start up the WebSockets hub
-	go h.run()
+	socket := new(zmq.Socket)
+	if !*no_server {
 
-	context, _ := zmq.NewContext()
-	socket, _ := context.NewSocket(zmq.PUB)
-	defer context.Close()
-	defer socket.Close()
-	socket.Bind("tcp://*:5555")
+		// Start up the WebSockets hub
+		go h.run()
 
-	go PgnDefServer(context)
+		context, _ := zmq.NewContext()
+		socket, _ = context.NewSocket(zmq.PUB)
+		defer context.Close()
+		defer socket.Close()
+		socket.Bind("tcp://*:5555")
 
-	go WebSocketServer(addr)
+		go PgnDefServer(context)
 
-	go ApiServer()
+		go WebSocketServer(addr)
+
+		go ApiServer()
+	}
 
 	// Print and transmit received messages
 	go func() {
@@ -167,11 +172,13 @@ func main() {
 				}
 			}
 
-			bm := res.MsgPack()
-			bj := res.JSON()
+			if !*no_server {
+				bm := res.MsgPack()
+				bj := res.JSON()
 
-			socket.Send(bm, 0)
-			h.broadcast <- bj
+				socket.Send(bm, 0)
+				h.broadcast <- bj
+			}
 		}
 	}()
 
