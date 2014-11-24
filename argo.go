@@ -106,6 +106,7 @@ func main() {
 		if *debug {
 			log.Println("canusb.OpenChannel")
 		}
+		canusb.AddFastPacket(130820)
 		canusb.OpenChannel(port)
 	} else {
 		actisense.WriteMessage(port, actisense.NGT_MSG_SEND, NGT_STARTUP_SEQ)
