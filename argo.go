@@ -52,6 +52,8 @@ const layout = "2006-01-02-15:04:05.999"
  */
 var NGT_STARTUP_SEQ = []byte{0x11, 0x02, 0x00}
 
+var canport *canusb.CanPort
+
 type UintSlice []uint32
 
 func (p UintSlice) Len() int           { return len(p) }
@@ -107,7 +109,7 @@ func main() {
 			log.Println("canusb.OpenChannel")
 		}
 		canusb.AddFastPacket(130820)
-		canusb.OpenChannel(port)
+		canport, err = canusb.OpenChannel(port, 221)
 	} else {
 		actisense.WriteMessage(port, actisense.NGT_MSG_SEND, NGT_STARTUP_SEQ)
 	}
@@ -122,7 +124,23 @@ func main() {
 	var statPgns UintSlice
 
 	if *dev_type == "canusb" {
-		go canusb.ReadPort(rxch, txch)
+		go func() {
+			for {
+				frame, err := canport.Read()
+				if err != nil {
+					raw := nmea2k.RawMessage{
+						Timestamp:   time.Now(),
+						Priority:    frame.Pri,
+						Source:      frame.Src,
+						Destination: frame.Dst,
+						Pgn:         frame.Pgn,
+						Length:      frame.Length,
+						Data:        frame.Data,
+					}
+					txch <- *(raw.ParsePacket())
+				}
+			}
+		}()
 	} else {
 		go actisense.ReadNGT1(port, rxch, txch)
 	}
