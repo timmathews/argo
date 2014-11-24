@@ -116,6 +116,7 @@ func main() {
 	rxbuf := []byte{0}
 	rxch := make(chan byte)
 	txch := make(chan nmea2k.ParsedMessage)
+	cmdch := make(chan CommandRequest)
 
 	statLog := make(map[uint32]uint64)
 	var statPgns UintSlice
@@ -142,7 +143,7 @@ func main() {
 
 		go WebSocketServer(addr)
 
-		go ApiServer()
+		go ApiServer(cmdch)
 	}
 
 	// Print and transmit received messages
@@ -179,6 +180,20 @@ func main() {
 
 				socket.Send(bm, 0)
 				h.broadcast <- bj
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			req := <-cmdch
+
+			if req.RequestType == "iso" {
+				b0 := (byte)(req.RequestedPgn) & 0xFF
+				b1 := (byte)(req.RequestedPgn>>8) & 0xFF
+				b2 := (byte)(req.RequestedPgn>>16) & 0xFF
+				actisense.WriteMessage(port, actisense.N2K_MSG_SEND,
+					[]byte{0x03, 0x00, 0xEA, 0x00, 0xFF, 0x03, b0, b1, b2})
 			}
 		}
 	}()

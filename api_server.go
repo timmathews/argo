@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/timmathews/argo/nmea2k"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/timmathews/argo/nmea2k"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,6 +15,11 @@ type IndexEntry struct {
 	Pgn     uint32
 	Name    string
 	Details string `json:"@Details"`
+}
+
+type CommandRequest struct {
+	RequestType  string `json:"req_type"`
+	RequestedPgn uint32 `json:"req_pgn"`
 }
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
@@ -80,12 +85,29 @@ func MessageDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(b))
 }
 
-func ApiServer() {
+func SendMessageHandler(cmd chan CommandRequest) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			decoder := json.NewDecoder(r.Body)
+			var b CommandRequest
+			err := decoder.Decode(&b)
+			if err != nil {
+				fmt.Fprintf(w, "Invalid JSON")
+			}
+			fmt.Println("Request Type:", b.RequestType)
+			fmt.Println("Requested PGN:", b.RequestedPgn)
+			cmd <- b
+		}
+	}
+}
+
+func ApiServer(cmd chan CommandRequest) {
 	r := mux.NewRouter()
 	r.HandleFunc("/api/v1/", HomeHandler)
 	r.HandleFunc("/api/v1/messages", MessagesIndex)
 	r.HandleFunc("/api/v1/messages/", MessagesIndex)
 	r.HandleFunc("/api/v1/messages/{key}", MessageDetailsHandler)
+	r.HandleFunc("/api/v1/control/send", http.HandlerFunc(SendMessageHandler(cmd)))
 	http.Handle("/api/v1/", r)
 	http.ListenAndServe(":8082", nil)
 }
