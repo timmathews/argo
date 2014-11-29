@@ -4,8 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/schleibinger/sio"
-	"github.com/timmathews/argo/nmea2k"
-	"log"
+	"github.com/timmathews/argo/can"
 	"time"
 )
 
@@ -50,7 +49,11 @@ func OpenChannel(port *sio.Port) (p *ActisensePort, err error) {
 		IsOpen: true,
 	}
 
-	p.write(NGT_MSG_SEND, NGT_STARTUP_SEQ)
+	_, err = p.write(NGT_MSG_SEND, NGT_STARTUP_SEQ)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return p, nil
 }
@@ -74,15 +77,15 @@ func OpenChannel(port *sio.Port) (p *ActisensePort, err error) {
  * <CRC> is such that the sum of all unescaped data bytes plus the command byte
  * plus the length plus the checksum add up to zero, modulo 256.
  */
-func (p *ActisensePort) Write(payload []byte) {
-	p.write(N2K_MSG_SEND, payload)
+func (p *ActisensePort) Write(payload []byte) (int, error) {
+	return p.write(N2K_MSG_SEND, payload)
 }
 
-func (p *ActisensePort) Read() (*nmea2k.RawMessage, error) {
+func (p *ActisensePort) Read() (*can.RawMessage, error) {
 	var buf []byte
 	rxbuf := []byte{0}
 	state := MSG_START
-	var msg *nmea2k.RawMessage
+	var msg *can.RawMessage
 
 	for {
 		_, err := p.p.Read(rxbuf)
@@ -123,7 +126,7 @@ func (p *ActisensePort) Read() (*nmea2k.RawMessage, error) {
 	}
 }
 
-func (p *ActisensePort) write(command byte, payload []byte) {
+func (p *ActisensePort) write(command byte, payload []byte) (int, error) {
 	bst := []byte{DLE, STX}
 
 	bst = append(bst, command, byte(len(payload)))
@@ -144,18 +147,10 @@ func (p *ActisensePort) write(command byte, payload []byte) {
 
 	bst = append(bst, crc, DLE, ETX)
 
-	n, err := p.p.Write(bst)
-
-	if err != nil {
-		log.Fatalln("write: %s", err)
-	}
-
-	if n != len(bst) {
-		log.Fatalf("short write: %d %d", n, len(bst))
-	}
+	return p.p.Write(bst)
 }
 
-func messageReceived(msg []byte) (*nmea2k.RawMessage, error) {
+func messageReceived(msg []byte) (*can.RawMessage, error) {
 
 	if len(msg) < 3 {
 		return nil, errors.New(fmt.Sprintf("Ignore short command len = %v\n", len(msg)))
@@ -181,14 +176,14 @@ func messageReceived(msg []byte) (*nmea2k.RawMessage, error) {
 	}
 }
 
-func n2kMessageReceived(msg []byte) (*nmea2k.RawMessage, error) {
+func n2kMessageReceived(msg []byte) (*can.RawMessage, error) {
 
 	// Packet length from NGT1
 	if msg[0] < 11 {
 		return nil, errors.New(fmt.Sprintf("Ignore short msg", len(msg)))
 	}
 
-	raw := new(nmea2k.RawMessage)
+	raw := new(can.RawMessage)
 	raw.Timestamp = time.Now()
 	raw.Priority = msg[1]
 	raw.Pgn = uint32(msg[2]) | uint32(msg[3])<<8 | uint32(msg[4])<<16
@@ -208,7 +203,7 @@ func n2kMessageReceived(msg []byte) (*nmea2k.RawMessage, error) {
 	return raw, nil
 }
 
-func ngtMessageReceived(msg []byte) (*nmea2k.RawMessage, error) {
+func ngtMessageReceived(msg []byte) (*can.RawMessage, error) {
 
 	pLen := msg[0]
 
@@ -216,7 +211,7 @@ func ngtMessageReceived(msg []byte) (*nmea2k.RawMessage, error) {
 		return nil, errors.New(fmt.Sprintf("Ignore short msg", len(msg)))
 	}
 
-	raw := new(nmea2k.RawMessage)
+	raw := new(can.RawMessage)
 	raw.Timestamp = time.Now()
 	raw.Priority = 0
 	raw.Pgn = 0x40000 + uint32(msg[1])
