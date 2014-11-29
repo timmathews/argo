@@ -1,11 +1,12 @@
 package actisense
 
 import (
-	"github.com/timmathews/argo/nmea2k"
 	"fmt"
 	"github.com/schleibinger/sio"
+	"github.com/timmathews/argo/nmea2k"
 	"log"
 	"time"
+	"errors"
 )
 
 const (
@@ -24,6 +25,12 @@ const (
 	NGT_MSG_SEND     = 0xA1
 )
 
+/* The following startup command reverse engineered from Actisense NMEAreader.
+ * It instructs the NGT1 to clear its PGN message TX list, thus it starts
+ * sending all PGNs.
+ */
+var NGT_STARTUP_SEQ = []byte{0x11, 0x02, 0x00}
+
 type MsgState int
 
 const (
@@ -31,6 +38,22 @@ const (
 	MSG_ESCAPE
 	MSG_MESSAGE
 )
+
+type ActisensePort struct {
+	p      *sio.Port
+	IsOpen bool
+}
+
+func OpenChannel(port *sio.Port) (p *ActisensePort, err error) {
+	p = &ActisensePort{
+		p:      port,
+		IsOpen: true,
+	}
+
+	p.write(NGT_MSG_SEND, NGT_STARTUP_SEQ)
+
+	return p, nil
+}
 
 /*
  * Wrap the PGN or NGT message and send to NGT
@@ -51,8 +74,55 @@ const (
  * <CRC> is such that the sum of all unescaped data bytes plus the command byte
  * plus the length plus the checksum add up to zero, modulo 256.
  */
-func WriteMessage(port *sio.Port, command byte, payload []byte) {
+func (p *ActisensePort) Write(payload []byte) {
+	p.write(N2K_MSG_SEND, payload)
+}
 
+func (p *ActisensePort) Read() (*nmea2k.RawMessage, error) {
+	var buf []byte
+	var rxbuf []byte
+	state := MSG_START
+	var msg nmea2k.RawMessage
+
+	for {
+		_, err := p.p.Read(rxbuf)
+		if err != nil {
+			return nil, err
+		}
+		for _, b := range rxbuf {
+			if state == MSG_ESCAPE {
+				if b == ETX { // End of message
+					err =  messageReceived(buf, &msg)
+					buf = nil
+					state = MSG_START
+					if err != nil {
+						return &msg, nil
+					}
+				} else if b == STX { // Start of message
+					state = MSG_MESSAGE
+				} else if b == DLE { // Escaped DLE char
+					buf = append(buf, b)
+					state = MSG_MESSAGE
+				} else { // Unexpected character after DLE
+					buf = nil
+					state = MSG_START
+				}
+			} else if state == MSG_MESSAGE {
+				if b == DLE { // Escape char
+					state = MSG_ESCAPE
+				} else {
+					buf = append(buf, b)
+				}
+			} else {
+				if b == DLE { // Escape char
+					state = MSG_ESCAPE
+				}
+			}
+		}
+	}
+}
+
+func (p *ActisensePort) write(command byte, payload []byte) {
 	bst := []byte{DLE, STX}
 
 	bst = append(bst, command, byte(len(payload)))
@@ -73,7 +143,7 @@ func WriteMessage(port *sio.Port, command byte, payload []byte) {
 
 	bst = append(bst, crc, DLE, ETX)
 
-	n, err := port.Write(bst)
+	n, err := p.p.Write(bst)
 
 	if err != nil {
 		log.Fatalln("write: %s", err)
@@ -82,47 +152,12 @@ func WriteMessage(port *sio.Port, command byte, payload []byte) {
 	if n != len(bst) {
 		log.Fatalf("short write: %d %d", n, len(bst))
 	}
-
-	log.Printf("Wrote command %v len %d\n", bst, len(bst))
 }
 
-func ReadNGT1(port *sio.Port, data chan byte, result chan nmea2k.ParsedMessage) {
-	var buf []byte
-	state := MSG_START
-	for b := range data {
-		if state == MSG_ESCAPE {
-			if b == ETX { // End of message
-				messageReceived(buf, result)
-				buf = nil
-				state = MSG_START
-			} else if b == STX { // Start of message
-				state = MSG_MESSAGE
-			} else if b == DLE { // Escaped DLE char
-				buf = append(buf, b)
-				state = MSG_MESSAGE
-			} else { // Unexpected character after DLE
-				buf = nil
-				state = MSG_START
-			}
-		} else if state == MSG_MESSAGE {
-			if b == DLE { // Escape char
-				state = MSG_ESCAPE
-			} else {
-				buf = append(buf, b)
-			}
-		} else {
-			if b == DLE { // Escape char
-				state = MSG_ESCAPE
-			}
-		}
-	}
-}
-
-func messageReceived(msg []byte, res chan nmea2k.ParsedMessage) {
+func messageReceived(msg []byte, pgn *nmea2k.RawMessage) error {
 
 	if len(msg) < 3 {
-		fmt.Printf("Ignore short command len = %v\n", len(msg))
-		return
+		return errors.New(fmt.Sprintf("Ignore short command len = %v\n", len(msg)))
 	}
 
 	var checksum byte
@@ -131,29 +166,28 @@ func messageReceived(msg []byte, res chan nmea2k.ParsedMessage) {
 	}
 
 	if checksum != 0 {
-		fmt.Printf("Ignoring message with invalid checksum")
-		return
+		return errors.New("Ignoring message with invalid checksum")
 	}
 
 	command := msg[0]
 
-	//fmt.Printf("Message command = %v, %d\n", msg, len(msg))
-
+	var err error
 	if command == N2K_MSG_RECEIVED {
-		n2kMessageReceived(msg[1:], res)
+		pgn, err = n2kMessageReceived(msg[1:])
 	} else if command == NGT_MSG_RECEIVED {
-		ngtMessageReceived(msg[1:], res)
+		pgn, err = ngtMessageReceived(msg[1:])
 	} else {
-		fmt.Printf("Unknown message type (%02X) received", command)
+		err = errors.New(fmt.Sprintf("Unknown message type (%02X) received", command))
 	}
+
+	return err
 }
 
-func n2kMessageReceived(msg []byte, res chan nmea2k.ParsedMessage) {
+func n2kMessageReceived(msg []byte) (*nmea2k.RawMessage, error) {
 
 	// Packet length from NGT1
 	if msg[0] < 11 {
-		log.Println("Ignore short msg", len(msg))
-		return
+		return nil, errors.New(fmt.Sprintf("Ignore short msg", len(msg)))
 	}
 
 	raw := new(nmea2k.RawMessage)
@@ -166,26 +200,22 @@ func n2kMessageReceived(msg []byte, res chan nmea2k.ParsedMessage) {
 	lth := msg[11]
 
 	if lth > 223 {
-		log.Println("Ignore long msg", lth)
-		return
+		return nil, errors.New(fmt.Sprintf("Ignore long msg", lth))
 	}
 
 	raw.Length = lth
 	lth += 12
 	raw.Data = msg[12:lth]
 
-	parsed := raw.ParsePacket()
-
-	res <- *parsed
+	return raw, nil
 }
 
-func ngtMessageReceived(msg []byte, res chan nmea2k.ParsedMessage) {
+func ngtMessageReceived(msg []byte) (*nmea2k.RawMessage, error) {
 
 	pLen := msg[0]
 
 	if pLen < 12 {
-		log.Println("Ignore short msg", len(msg))
-		return
+		return nil, errors.New(fmt.Sprintf("Ignore short msg", len(msg)))
 	}
 
 	raw := new(nmea2k.RawMessage)
@@ -198,7 +228,5 @@ func ngtMessageReceived(msg []byte, res chan nmea2k.ParsedMessage) {
 	pLen++
 	raw.Data = msg[2:pLen]
 
-	parsed := raw.ParsePacket()
-
-	res <- *parsed
+	return raw, nil
 }

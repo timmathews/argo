@@ -41,18 +41,11 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"io"
 )
 
 // Timestamp format for printing
 const layout = "2006-01-02-15:04:05.999"
-
-/* The following startup command reverse engineered from Actisense NMEAreader.
- * It instructs the NGT1 to clear its PGN message TX list, thus it starts
- * sending all PGNs.
- */
-var NGT_STARTUP_SEQ = []byte{0x11, 0x02, 0x00}
-
-var canport *canusb.CanPort
 
 type UintSlice []uint32
 
@@ -98,34 +91,39 @@ func main() {
 		log.Println("opening", device)
 	}
 
-	port, err := sio.Open(device, syscall.B230400)
-
-	if err != nil {
-		log.Fatalln("open: %s", err)
-	}
-
-	if *dev_type == "canusb" {
-		if *debug {
-			log.Println("canusb.OpenChannel")
-		}
-		canusb.AddFastPacket(130820)
-		canport, err = canusb.OpenChannel(port, 221)
-	} else {
-		actisense.WriteMessage(port, actisense.NGT_MSG_SEND, NGT_STARTUP_SEQ)
-	}
-	time.Sleep(2)
-
-	rxbuf := []byte{0}
-	rxch := make(chan byte)
 	txch := make(chan nmea2k.ParsedMessage)
 	cmdch := make(chan CommandRequest)
 
 	statLog := make(map[uint32]uint64)
 	var statPgns UintSlice
 
-	if *dev_type == "canusb" {
-		go func() {
+	port, err := sio.Open(device, syscall.B230400)
+
+	if err != nil {
+		log.Fatalln("open: %s", err)
+	}
+
+	var canport io.ReadWriter
+
+	// Read from hardware
+	go func() {
+		if *debug {
+			fmt.Println(*dev_type)
+		}
+		if *dev_type == "canusb" {
+			if *debug {
+				fmt.Println("Adding Fast Packets")
+			}
+			canusb.AddFastPacket(130820)
+
+			if *debug {
+				fmt.Println("Opening Channel")
+			}
+			canport, _ := canusb.OpenChannel(port, 221)
 			for {
+				if *debug {
+					fmt.Println("Reading port")
+				}
 				frame, err := canport.Read()
 				if err == nil {
 					raw := nmea2k.RawMessage{
@@ -140,10 +138,18 @@ func main() {
 					txch <- *(raw.ParsePacket())
 				}
 			}
-		}()
-	} else {
-		go actisense.ReadNGT1(port, rxch, txch)
-	}
+		} else {
+			canport, _ := actisense.OpenChannel(port)
+			time.Sleep(2)
+			for {
+				raw, err := canport.Read()
+				if err == nil {
+					txch <- *(raw.ParsePacket())
+				}
+			}
+		}
+
+	}()
 
 	socket := new(zmq.Socket)
 	if !*no_server {
@@ -202,6 +208,7 @@ func main() {
 		}
 	}()
 
+	// Handle command requests
 	go func() {
 		for {
 			req := <-cmdch
@@ -210,24 +217,10 @@ func main() {
 				b0 := (byte)(req.RequestedPgn) & 0xFF
 				b1 := (byte)(req.RequestedPgn>>8) & 0xFF
 				b2 := (byte)(req.RequestedPgn>>16) & 0xFF
-				actisense.WriteMessage(port, actisense.N2K_MSG_SEND,
-					[]byte{0x03, 0x00, 0xEA, 0x00, 0xFF, 0x03, b0, b1, b2})
+				canport.Write([]byte{0x03, 0x00, 0xEA, 0x00, 0xFF, 0x03, b0, b1, b2})
 			}
 		}
 	}()
-
-	for {
-		n, err := port.Read(rxbuf)
-		if err != nil {
-			log.Fatalln("Read error: ", err)
-		}
-		if n != len(rxbuf) {
-			log.Fatalln("Short read ", n, len(rxbuf))
-		}
-		for _, b := range rxbuf {
-			rxch <- b
-		}
-	}
 }
 
 func PgnDefServer(context *zmq.Context) {
