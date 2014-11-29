@@ -113,10 +113,33 @@ func (p *CanPort) Read() (frame *can.RawMessage, err error) {
 
 func (p *CanPort) Write(b []byte) (int, error) {
 	data := "T"
-	for _, byt := range b {
+	pri := b[0]
+	pgn := b[1:4]
+	dst := b[4]
+	len := b[5]
+	pld := b[6:]
+
+	data += fmt.Sprintf("%.2X", pri<<2+pgn[0]&0x1)
+	if pgn[1] < 240 {
+		pgn[2] = dst
+	}
+
+	for _, byt := range pgn[1:] {
 		data += fmt.Sprintf("%.2X", byt)
 	}
-	data += "/r"
+
+	data += fmt.Sprintf("%.2X", 0) // Source
+
+	if len > 8 {
+		return 0, errors.New("Does not support long writes currently!")
+	}
+
+	data += fmt.Sprintf("%.1X", len)
+
+	for _, byt := range pld {
+		data += fmt.Sprintf("%.2X", byt)
+	}
+	data += "\r"
 	return p.p.Write([]byte(data))
 }
 
