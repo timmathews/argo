@@ -86,6 +86,10 @@ func ParseFrame(p []byte) (*CanFrame, error) {
 	var err error
 	var offset int
 
+	if p == nil || len(p) == 0 {
+		return nil, errors.New("Empty byte array")
+	}
+
 	switch p[0] {
 	case 't':
 		{

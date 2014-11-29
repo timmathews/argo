@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/schleibinger/sio"
-	"log"
 )
 
 type CanPort struct {
@@ -24,7 +23,7 @@ func OpenChannel(port *sio.Port, address uint8) (p *CanPort, err error) {
 
 	defer func() {
 		if err != nil && p != nil {
-			port.Close()
+			p.CloseChannel()
 		}
 	}()
 
@@ -51,8 +50,6 @@ func OpenChannel(port *sio.Port, address uint8) (p *CanPort, err error) {
 		tx:     make(chan *CanFrame),
 	}
 
-	go p.run()
-
 	return p, nil
 }
 
@@ -68,6 +65,7 @@ func (p *CanPort) CloseChannel() error {
 
 	close(p.tx)
 	close(p.rx)
+	p.p.Close()
 
 	return err
 }
@@ -78,30 +76,26 @@ func (p *CanPort) Read() (frame *CanFrame, err error) {
 	sof := false
 
 	if p.IsOpen {
-		_, err := p.p.Read(rxbuf)
-		if err != nil {
-			return nil, err
-		}
-		for _, b := range rxbuf {
-			if b == 't' || b == 'T' || b == 'r' || b == 'R' {
-				msg = nil
-				msg = append(msg, b)
-				sof = true
-			} else if b == '\r' && sof == true {
-				p.rx <- msg
-				msg = nil
-				sof = false
-			} else if sof == true {
-				msg = append(msg, b)
+		for {
+			_, err := p.p.Read(rxbuf)
+			if err != nil {
+				return nil, err
+			}
+			for _, b := range rxbuf {
+				if b == 't' || b == 'T' || b == 'r' || b == 'R' {
+					msg = nil
+					msg = append(msg, b)
+					sof = true
+				} else if b == '\r' && sof == true {
+					return p.frameReceived(msg)
+				} else if sof == true {
+					msg = append(msg, b)
+				}
 			}
 		}
 	} else {
 		return nil, errors.New("canusb.Read: CAN port is closed")
 	}
-
-	frame = <-p.tx
-
-	return frame, nil
 }
 
 func (p *CanPort) Write(b []byte) (int, error) {
@@ -113,20 +107,10 @@ func (p *CanPort) Write(b []byte) (int, error) {
 	return p.p.Write([]byte(data))
 }
 
-func (p *CanPort) run() {
-	for {
-		select {
-		case c := <-p.rx:
-			p.frameReceived(c)
-		}
-	}
-}
-
-func (p *CanPort) frameReceived(msg []byte) {
-
+func (p *CanPort) frameReceived(msg []byte) (*CanFrame, error) {
 	frame, err := ParseFrame(msg)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 
 	// data[0] bits 7-5: group ID ... i.e. all of these belong together, unless
@@ -148,7 +132,6 @@ func (p *CanPort) frameReceived(msg []byte) {
 	// Should we bail if we see a byte count > 223?
 
 	if isFastPacket(frame.Pgn) {
-
 		frame.seq = frame.Data[0] & 0x1F
 		frame.grp = (frame.Data[0] & 0x70) >> 5
 
@@ -161,9 +144,10 @@ func (p *CanPort) frameReceived(msg []byte) {
 			frame.Data = frame.Data[2:]
 
 			if len(frame.Data) >= int(frame.Length) {
-				p.tx <- frame
+				return frame, nil
 			} else {
 				partial_messages[uid] = *frame
+				return nil, errors.New("Partial PGN")
 			}
 		} else {
 			partial, ok := partial_messages[uid]
@@ -171,14 +155,15 @@ func (p *CanPort) frameReceived(msg []byte) {
 				partial.Data = append(partial.Data, frame.Data[1:]...)
 				partial.seq = frame.seq
 				if len(partial.Data) >= int(partial.Length) {
-					p.tx <- &partial
 					delete(partial_messages, uid)
+					return &partial, nil
 				} else {
 					partial_messages[uid] = partial
+					return nil, errors.New("Partial PGN")
 				}
 			} // If we have a frame out of sequence, should probably warn
 		}
-	} else {
-		p.tx <- frame
 	}
+
+	return frame, nil
 }

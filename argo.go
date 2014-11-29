@@ -127,7 +127,7 @@ func main() {
 		go func() {
 			for {
 				frame, err := canport.Read()
-				if err != nil {
+				if err == nil {
 					raw := nmea2k.RawMessage{
 						Timestamp:   time.Now(),
 						Priority:    frame.Pri,
