@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/schleibinger/sio"
+	"github.com/timmathews/argo/can"
+	"time"
 )
 
 type CanPort struct {
@@ -70,7 +72,7 @@ func (p *CanPort) CloseChannel() error {
 	return err
 }
 
-func (p *CanPort) Read() (frame *CanFrame, err error) {
+func (p *CanPort) Read() (frame *can.RawMessage, err error) {
 	rxbuf := []byte{0}
 	msg := []byte{0}
 	sof := false
@@ -87,7 +89,18 @@ func (p *CanPort) Read() (frame *CanFrame, err error) {
 					msg = append(msg, b)
 					sof = true
 				} else if b == '\r' && sof == true {
-					return p.frameReceived(msg)
+					rec, err := p.frameReceived(msg)
+					if err == nil {
+						return &can.RawMessage{
+							Timestamp:   time.Now(),
+							Priority:    rec.Priority,
+							Pgn:         rec.Pgn,
+							Source:      rec.Source,
+							Destination: rec.Destination,
+							Length:      rec.Length,
+							Data:        rec.Data,
+						}, nil
+					}
 				} else if sof == true {
 					msg = append(msg, b)
 				}
@@ -136,7 +149,7 @@ func (p *CanPort) frameReceived(msg []byte) (*CanFrame, error) {
 		frame.grp = (frame.Data[0] & 0x70) >> 5
 
 		// PGN, source and group ID make a unique identifier for the frame group
-		uid := uint32(frame.grp<<28) + uint32(frame.Pgn<<8) + uint32(frame.Src)
+		uid := uint32(frame.grp<<28) + uint32(frame.Pgn<<8) + uint32(frame.Source)
 
 		if frame.seq == 0 { // First in the series
 			delete(partial_messages, uid) // Delete any existing scraps, should probably warn

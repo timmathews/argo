@@ -3,6 +3,7 @@ package canusb
 import (
 	"errors"
 	"fmt"
+	"github.com/timmathews/argo/can"
 	"strconv"
 )
 
@@ -51,24 +52,16 @@ func isFastPacket(pgn uint32) bool {
 }
 
 type CanFrame struct {
+	*can.RawMessage
 	msgType msgType // Standard or extended or request message
 	id      uint32  // Full ID of frame, may be removed in future releases
-	Pgn     uint32  // Parameter group number/name id [(id & 0x3FFFFFF) >> 8]
-	Pri     uint8   // Message priority, 0 is highest priority [id >> 26]
-	Src     uint8   // Sender ID [id & 0xFF]
-	Dst     uint8   /* Destination of message. If the PF field (bits 24:17 of the
-								   * ID) are >= 0xF0, than dst is 255 (broadcast). Otherwise
-	                 * use the FS field (bits 16:9 of the ID) as the destination
-	                 * address */
-	Length uint8 // number of bytes which make up the frame
-	grp    uint8 // group for fast packet
-	seq    uint8 // sequence of the frame in a fast packet
-	Data   []byte
+	grp     uint8   // group for fast packet
+	seq     uint8   // sequence of the frame in a fast packet
 }
 
 func (frm *CanFrame) String() string {
-	str := fmt.Sprintf("%v: %d %d %d %d %d %d: ", frm.msgType, frm.Pri, frm.Src,
-		frm.Dst, frm.Pgn, frm.Length, frm.seq)
+	str := fmt.Sprintf("%v: %d %d %d %d %d %d: ", frm.msgType, frm.Priority,
+		frm.Source, frm.Destination, frm.Pgn, frm.Length, frm.seq)
 
 	for _, b := range frm.Data {
 		str += fmt.Sprintf("[%.2x]", b)
@@ -118,14 +111,14 @@ func ParseFrame(p []byte) (*CanFrame, error) {
 	n, err = strconv.ParseUint(string(p[1:offset]), 16, offset*4)
 	if err == nil {
 		frame.id = uint32(n)
-		frame.Pri = uint8(frame.id >> 26)
+		frame.Priority = uint8(frame.id >> 26)
 		frame.Pgn = (frame.id & 0x3FFFFFF) >> 8
-		frame.Src = uint8(frame.id & 0xFF)
+		frame.Source = uint8(frame.id & 0xFF)
 		pf := (frame.id & 0xFFFFFF) >> 16
 		if pf >= 240 {
-			frame.Dst = 255
+			frame.Destination = 255
 		} else {
-			frame.Dst = uint8(pf)
+			frame.Destination = uint8(pf)
 		}
 	} else {
 		return nil, errors.New(fmt.Sprintf("canusb.ParseFrame: Unable to parse message ID: %s", err))
