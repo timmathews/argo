@@ -1,12 +1,12 @@
 package actisense
 
 import (
+	"errors"
 	"fmt"
 	"github.com/schleibinger/sio"
 	"github.com/timmathews/argo/nmea2k"
 	"log"
 	"time"
-	"errors"
 )
 
 const (
@@ -80,23 +80,24 @@ func (p *ActisensePort) Write(payload []byte) {
 
 func (p *ActisensePort) Read() (*nmea2k.RawMessage, error) {
 	var buf []byte
-	var rxbuf []byte
+	rxbuf := []byte{0}
 	state := MSG_START
-	var msg nmea2k.RawMessage
+	var msg *nmea2k.RawMessage
 
 	for {
 		_, err := p.p.Read(rxbuf)
 		if err != nil {
 			return nil, err
 		}
+
 		for _, b := range rxbuf {
 			if state == MSG_ESCAPE {
 				if b == ETX { // End of message
-					err =  messageReceived(buf, &msg)
+					msg, err = messageReceived(buf)
 					buf = nil
 					state = MSG_START
-					if err != nil {
-						return &msg, nil
+					if err == nil {
+						return msg, nil
 					}
 				} else if b == STX { // Start of message
 					state = MSG_MESSAGE
@@ -154,10 +155,10 @@ func (p *ActisensePort) write(command byte, payload []byte) {
 	}
 }
 
-func messageReceived(msg []byte, pgn *nmea2k.RawMessage) error {
+func messageReceived(msg []byte) (*nmea2k.RawMessage, error) {
 
 	if len(msg) < 3 {
-		return errors.New(fmt.Sprintf("Ignore short command len = %v\n", len(msg)))
+		return nil, errors.New(fmt.Sprintf("Ignore short command len = %v\n", len(msg)))
 	}
 
 	var checksum byte
@@ -166,21 +167,18 @@ func messageReceived(msg []byte, pgn *nmea2k.RawMessage) error {
 	}
 
 	if checksum != 0 {
-		return errors.New("Ignoring message with invalid checksum")
+		return nil, errors.New("Ignoring message with invalid checksum")
 	}
 
 	command := msg[0]
 
-	var err error
 	if command == N2K_MSG_RECEIVED {
-		pgn, err = n2kMessageReceived(msg[1:])
+		return n2kMessageReceived(msg[1:])
 	} else if command == NGT_MSG_RECEIVED {
-		pgn, err = ngtMessageReceived(msg[1:])
+		return ngtMessageReceived(msg[1:])
 	} else {
-		err = errors.New(fmt.Sprintf("Unknown message type (%02X) received", command))
+		return nil, errors.New(fmt.Sprintf("Unknown message type (%02X) received", command))
 	}
-
-	return err
 }
 
 func n2kMessageReceived(msg []byte) (*nmea2k.RawMessage, error) {
