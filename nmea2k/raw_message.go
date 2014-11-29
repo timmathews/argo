@@ -2,6 +2,7 @@ package nmea2k
 
 import (
 	"fmt"
+	"github.com/timmathews/argo/can"
 	"math"
 	"strconv"
 	"time"
@@ -14,18 +15,12 @@ type DecodeError struct {
 	Where string
 }
 
-func (e *DecodeError) Error() string {
-	return fmt.Sprintf("%v is not valid data for %s", e.Data, e.Where)
+type RawMessage struct {
+	*can.RawMessage
 }
 
-type RawMessage struct {
-	Timestamp   time.Time
-	Priority    uint8
-	Source      uint8
-	Destination uint8
-	Pgn         uint32
-	Length      uint8
-	Data        []byte
+func (e *DecodeError) Error() string {
+	return fmt.Sprintf("%v is not valid data for %s", e.Data, e.Where)
 }
 
 func min(x, y uint32) uint32 {
@@ -44,7 +39,8 @@ func max(x, y uint32) uint32 {
 	return y
 }
 
-func (msg *RawMessage) ParsePacket() (pgnParsed *ParsedMessage) {
+func ParsePacket(cmsg *can.RawMessage) (pgnParsed *ParsedMessage) {
+	msg := &RawMessage{cmsg}
 
 	i, pgnDefinition := PgnList.First(msg.Pgn)
 	j, _ := PgnList.Last(msg.Pgn)
