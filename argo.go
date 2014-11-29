@@ -30,11 +30,11 @@ import (
 	zmq "github.com/alecthomas/gozmq"
 	"github.com/schleibinger/sio"
 	"github.com/timmathews/argo/actisense"
+	"github.com/timmathews/argo/can"
 	"github.com/timmathews/argo/canusb"
 	"github.com/timmathews/argo/nmea2k"
 	msgpack "github.com/vmihailenco/msgpack"
 	"github.com/wsxiaoys/terminal"
-	"io"
 	"log"
 	"net/http"
 	"sort"
@@ -103,7 +103,7 @@ func main() {
 		log.Fatalln("open: %s", err)
 	}
 
-	var canport io.ReadWriter
+	var canport can.ReadWriter
 
 	socket := new(zmq.Socket)
 	if !*no_server {
@@ -162,21 +162,7 @@ func main() {
 		}
 	}()
 
-	// Handle command requests
-	go func() {
-		for {
-			req := <-cmdch
-
-			if req.RequestType == "iso" {
-				b0 := (byte)(req.RequestedPgn) & 0xFF
-				b1 := (byte)(req.RequestedPgn>>8) & 0xFF
-				b2 := (byte)(req.RequestedPgn>>16) & 0xFF
-				canport.Write([]byte{0x03, 0x00, 0xEA, 0x00, 0xFF, 0x03, b0, b1, b2})
-			}
-		}
-	}()
-
-	// Read from hardware
+	// Set up hardware
 	if *debug {
 		fmt.Println(*dev_type)
 	}
@@ -189,32 +175,43 @@ func main() {
 		if *debug {
 			fmt.Println("Opening Channel")
 		}
-		canport, _ := canusb.OpenChannel(port, 221)
+		canport, _ = canusb.OpenChannel(port, 221)
+	} else {
+		canport, _ = actisense.OpenChannel(port)
+		time.Sleep(2)
+	}
+
+	// Handle command requests
+	go func() {
 		for {
-			if *debug {
-				fmt.Println("Reading port")
-			}
-			frame, err := canport.Read()
-			if err == nil {
-				raw := nmea2k.RawMessage{
-					Timestamp:   time.Now(),
-					Priority:    frame.Pri,
-					Source:      frame.Src,
-					Destination: frame.Dst,
-					Pgn:         frame.Pgn,
-					Length:      frame.Length,
-					Data:        frame.Data,
+			req := <-cmdch
+
+			if req.RequestType == "iso" {
+				b0 := (byte)(req.RequestedPgn) & 0xFF
+				b1 := (byte)(req.RequestedPgn>>8) & 0xFF
+				b2 := (byte)(req.RequestedPgn>>16) & 0xFF
+				if canport != nil {
+					canport.Write([]byte{0x03, 0x00, 0xEA, 0x00, 0xFF, 0x03, b0, b1, b2})
+				} else {
+					log.Println("canport is nil")
 				}
-				txch <- *(raw.ParsePacket())
 			}
 		}
-	} else {
-		canport, _ := actisense.OpenChannel(port)
-		time.Sleep(2)
+	}()
+
+	// Read from hardware
+	if *dev_type == "canusb" {
 		for {
 			raw, err := canport.Read()
 			if err == nil {
-				txch <- *(raw.ParsePacket())
+				txch <- *(nmea2k.ParsePacket(raw))
+			}
+		}
+	} else {
+		for {
+			raw, err := canport.Read()
+			if err == nil {
+				txch <- *(nmea2k.ParsePacket(raw))
 			}
 		}
 	}
