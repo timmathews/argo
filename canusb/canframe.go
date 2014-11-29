@@ -52,7 +52,7 @@ func isFastPacket(pgn uint32) bool {
 }
 
 type CanFrame struct {
-	*can.RawMessage
+	can.RawMessage
 	msgType msgType // Standard or extended or request message
 	id      uint32  // Full ID of frame, may be removed in future releases
 	grp     uint8   // group for fast packet
