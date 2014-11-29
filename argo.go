@@ -34,6 +34,7 @@ import (
 	"github.com/timmathews/argo/nmea2k"
 	msgpack "github.com/vmihailenco/msgpack"
 	"github.com/wsxiaoys/terminal"
+	"io"
 	"log"
 	"net/http"
 	"sort"
@@ -41,7 +42,6 @@ import (
 	"strings"
 	"syscall"
 	"time"
-	"io"
 )
 
 // Timestamp format for printing
@@ -104,52 +104,6 @@ func main() {
 	}
 
 	var canport io.ReadWriter
-
-	// Read from hardware
-	go func() {
-		if *debug {
-			fmt.Println(*dev_type)
-		}
-		if *dev_type == "canusb" {
-			if *debug {
-				fmt.Println("Adding Fast Packets")
-			}
-			canusb.AddFastPacket(130820)
-
-			if *debug {
-				fmt.Println("Opening Channel")
-			}
-			canport, _ := canusb.OpenChannel(port, 221)
-			for {
-				if *debug {
-					fmt.Println("Reading port")
-				}
-				frame, err := canport.Read()
-				if err == nil {
-					raw := nmea2k.RawMessage{
-						Timestamp:   time.Now(),
-						Priority:    frame.Pri,
-						Source:      frame.Src,
-						Destination: frame.Dst,
-						Pgn:         frame.Pgn,
-						Length:      frame.Length,
-						Data:        frame.Data,
-					}
-					txch <- *(raw.ParsePacket())
-				}
-			}
-		} else {
-			canport, _ := actisense.OpenChannel(port)
-			time.Sleep(2)
-			for {
-				raw, err := canport.Read()
-				if err == nil {
-					txch <- *(raw.ParsePacket())
-				}
-			}
-		}
-
-	}()
 
 	socket := new(zmq.Socket)
 	if !*no_server {
@@ -221,6 +175,49 @@ func main() {
 			}
 		}
 	}()
+
+	// Read from hardware
+	if *debug {
+		fmt.Println(*dev_type)
+	}
+	if *dev_type == "canusb" {
+		if *debug {
+			fmt.Println("Adding Fast Packets")
+		}
+		canusb.AddFastPacket(130820)
+
+		if *debug {
+			fmt.Println("Opening Channel")
+		}
+		canport, _ := canusb.OpenChannel(port, 221)
+		for {
+			if *debug {
+				fmt.Println("Reading port")
+			}
+			frame, err := canport.Read()
+			if err == nil {
+				raw := nmea2k.RawMessage{
+					Timestamp:   time.Now(),
+					Priority:    frame.Pri,
+					Source:      frame.Src,
+					Destination: frame.Dst,
+					Pgn:         frame.Pgn,
+					Length:      frame.Length,
+					Data:        frame.Data,
+				}
+				txch <- *(raw.ParsePacket())
+			}
+		}
+	} else {
+		canport, _ := actisense.OpenChannel(port)
+		time.Sleep(2)
+		for {
+			raw, err := canport.Read()
+			if err == nil {
+				txch <- *(raw.ParsePacket())
+			}
+		}
+	}
 }
 
 func PgnDefServer(context *zmq.Context) {
