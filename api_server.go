@@ -12,9 +12,14 @@ import (
 )
 
 type IndexEntry struct {
-	Pgn     uint32
-	Name    string
-	Details string `json:"@Details"`
+	Pgn             uint32
+	Name            string
+	Category        string
+	Verified        bool
+	Size            uint32
+	RepeatingFields uint32
+	Type            string
+	Details         string `json:"@Details"`
 }
 
 type CommandRequest struct {
@@ -31,16 +36,44 @@ func MessagesIndex(w http.ResponseWriter, r *http.Request) {
 	var pgns []IndexEntry
 
 	category := r.URL.Query().Get("category")
+	typ := r.URL.Query().Get("type")
 
 	for i, pgn := range nmea2k.PgnList {
 		if category != "" && !strings.EqualFold(category, pgn.Category) {
 			continue
 		}
+
 		p := IndexEntry{}
 		p.Pgn = pgn.Pgn
 		p.Name = pgn.Description
+		p.Size = pgn.Size
+		p.Category = pgn.Category
+		p.Verified = pgn.IsKnown
+		if pgn.Size <= 8 {
+			p.Type = "Single Frame"
+		} else if pgn.Size > 8 && pgn.Size <= 223 {
+			p.Type = "Fast Packet"
+		} else if pgn.Size > 223 && pgn.Size <= 1785 {
+			p.Type = "ISO 11783 Multi-Packet"
+		} else {
+			p.Type = "Invalid"
+		}
+		p.RepeatingFields = pgn.RepeatingFields
 		p.Details = fmt.Sprintf("/api/v1/messages/%d", i)
-		pgns = append(pgns, p)
+
+		if typ != "" {
+			if typ == "s" && p.Size <= 8 {
+				pgns = append(pgns, p)
+			} else if typ == "f" && p.Size > 8 && p.Size <= 223 {
+				pgns = append(pgns, p)
+			} else if typ == "i" && p.Size > 223 && p.Size <= 1785 {
+				pgns = append(pgns, p)
+			} else if typ == "o" && p.Size > 1785 {
+				pgns = append(pgns, p)
+			}
+		} else {
+			pgns = append(pgns, p)
+		}
 	}
 
 	b, err := json.MarshalIndent(pgns, "", "  ")
