@@ -63,13 +63,9 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", 405)
 		return
 	}
-	// Origin is the URL that the client connects to
-	// This shouldn't be hard-coded, but needs to be
-	// defined somewhere. Add a flag?
-	if r.Header.Get("Origin") != "http://pyxis.openseasproject.org" {
-		http.Error(w, "Origin not allowed", 403)
-		return
-	}
+
+	// TODO: Add origin check / CORS support
+
 	ws, err := websocket.Upgrade(w, r, nil, 1024, 1024)
 	if _, ok := err.(websocket.HandshakeError); ok {
 		http.Error(w, "Not a websocket handshake", 400)
