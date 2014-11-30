@@ -170,7 +170,14 @@ func main() {
 		if *debug {
 			fmt.Println("Adding Fast Packets")
 		}
-		canusb.AddFastPacket(130820)
+		for _, p := range nmea2k.PgnList {
+			if p.Size > 8 {
+				if *debug {
+					log.Println("Adding PGN:", p.Pgn)
+				}
+				canusb.AddFastPacket(p.Pgn)
+			}
+		}
 
 		if *debug {
 			fmt.Println("Opening Channel")
