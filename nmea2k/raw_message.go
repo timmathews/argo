@@ -434,8 +434,8 @@ func (msg *RawMessage) extractLookupField(f *Field, start, end, startBit, bits u
 		return
 	}
 
-	if _, ok := f.Units.(map[int]string); ok {
-		v := f.Units.(map[int]string)[int(n.(uint64))]
+	if _, ok := f.Units.(PgnLookup); ok {
+		v := f.Units.(PgnLookup)[int(n.(uint64))]
 		if v == "" {
 			ret = n
 		} else {
