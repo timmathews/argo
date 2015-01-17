@@ -3,7 +3,7 @@ package nmea2k
 import (
 	"encoding/json"
 	"fmt"
-	msgpack "github.com/vmihailenco/msgpack"
+	"gopkg.in/vmihailenco/msgpack.v2"
 	"strconv"
 )
 
