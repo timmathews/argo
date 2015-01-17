@@ -27,13 +27,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	zmq "github.com/alecthomas/gozmq"
 	"github.com/schleibinger/sio"
 	"github.com/timmathews/argo/actisense"
 	"github.com/timmathews/argo/can"
 	"github.com/timmathews/argo/canusb"
 	"github.com/timmathews/argo/nmea2k"
 	"github.com/wsxiaoys/terminal"
+	zmq "gopkg.in/pebbe/zmq2.v0"
 	"gopkg.in/vmihailenco/msgpack.v2"
 	"log"
 	"net/http"
@@ -111,13 +111,12 @@ func main() {
 		// Start up the WebSockets hub
 		go h.run()
 
-		context, _ := zmq.NewContext()
-		socket, _ = context.NewSocket(zmq.PUB)
-		defer context.Close()
+		socket, _ = zmq.NewSocket(zmq.PUB)
 		defer socket.Close()
 		socket.Bind("tcp://*:5555")
 
-		go PgnDefServer(context)
+		// PgnDefServer causes invalid heap pointer error
+		//go PgnDefServer()
 
 		go WebSocketServer(addr)
 
@@ -156,7 +155,7 @@ func main() {
 				bm := res.MsgPack()
 				bj := res.JSON()
 
-				socket.Send(bm, 0)
+				socket.SendBytes(bm, 0)
 				h.broadcast <- bj
 			}
 		}
@@ -224,8 +223,8 @@ func main() {
 	}
 }
 
-func PgnDefServer(context *zmq.Context) {
-	socket, _ := context.NewSocket(zmq.REP)
+func PgnDefServer() {
+	socket, _ := zmq.NewSocket(zmq.REP)
 	defer socket.Close()
 	socket.Bind("tcp://*:5556")
 
@@ -238,7 +237,7 @@ func PgnDefServer(context *zmq.Context) {
 			pgn, _ := strconv.ParseUint(tok[1], 10, 32)
 			pgnDef := nmea2k.PgnList[pgn]
 			b, _ := msgpack.Marshal(pgnDef)
-			socket.Send(b, 0)
+			socket.SendBytes(b, 0)
 		}
 	}
 }

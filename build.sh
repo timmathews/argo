@@ -12,7 +12,7 @@ if [ "$1" == "--build" ]; then
   echo "# Building argo."
   echo "# Installing dependencies."
   go get github.com/schleibinger/sio
-  go get -tags zmq_2_1 github.com/alecthomas/gozmq
+  go get gopkg.in/pebbe/zmq2.v0
   go get gopkg.in/vmihailenco/msgpack.v2
   go get github.com/wsxiaoys/terminal
   go get github.com/gorilla/mux
