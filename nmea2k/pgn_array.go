@@ -1357,14 +1357,14 @@ var PgnList = PgnArray{
 	// Lengths observed from Simrad RC42
 	{"Rate of Turn", "Steering", 127251, true, 5, 0, []Field{
 		{"SID", 8, 1, false, nil, "", "", 0},
-		{"Rate", 32, RES_ROTATION * 0.0001, true, "deg/s", "", "", 0}},
+		{"Rate", 32, RES_ROTATION * 0.0001, true, "deg/s", "", "navigation.rateOfTurn", 0}},
 	},
 
 	{"Attitude", "Steering", 127257, true, 7, 0, []Field{
 		{"SID", 8, 1, false, nil, "", "", 0},
-		{"Yaw", 16, RES_ROTATION, true, "deg/s", "", "", 0},
-		{"Pitch", 16, RES_ROTATION, true, "deg/s", "", "", 0},
-		{"Roll", 16, RES_ROTATION, true, "deg/s", "", "", 0}},
+		{"Yaw", 16, RES_ROTATION, true, "deg/s", "", "navigation.yaw", 0},
+		{"Pitch", 16, RES_ROTATION, true, "deg/s", "", "navigation.pitch", 0},
+		{"Roll", 16, RES_ROTATION, true, "deg/s", "", "navigation.roll", 0}},
 	},
 
 	// NMEA + Simrad AT10
@@ -1374,7 +1374,7 @@ var PgnList = PgnArray{
 		{"Source", 4, RES_LOOKUP, false, lookupMagneticVariation, "", "", 0},
 		{"Reserved", 4, RES_BINARY, false, nil, "Reserved", "", 0},
 		{"Age of service", 16, RES_DATE, false, "days", "Days since January 1, 1970", "", 0},
-		{"Variation", 16, RES_DEGREES, true, "deg", "", "", 0}},
+		{"Variation", 16, RES_DEGREES, true, "deg", "", "navigation.magneticVariation", 0}},
 	},
 
 	// Engine group PGNs all derived PGN Numbers from
@@ -1580,15 +1580,15 @@ var PgnList = PgnArray{
 	// http://www.maretron.com/support/manuals/DST100UM_1.2.pdf
 	{"Speed", "Propulsion", 128259, true, 6, 0, []Field{
 		{"SID", 8, 1, false, nil, "", "", 0},
-		{"Speed Water Referenced", 16, 0.01, false, "m/s", "", "", 0},
-		{"Speed Ground Referenced", 16, 0.01, false, "m/s", "", "", 0},
+		{"Speed Water Referenced", 16, 0.01, false, "m/s", "", "navigation.speedThroughWater", 0},
+		{"Speed Ground Referenced", 16, 0.01, false, "m/s", "", "navigation.speedOverGround", 0},
 		{"Speed Water Referenced Type", 4, RES_LOOKUP, false, nil, "", "", 0}},
 	},
 
 	// http://www.maretron.com/support/manuals/DST100UM_1.2.pdf
 	{"Water Depth", "Navigation", 128267, true, 5, 0, []Field{
 		{"SID", 8, 1, false, nil, "", "", 0},
-		{"Depth", 32, 0.01, false, "m", "Depth below transducer", "", 0},
+		{"Depth", 32, 0.01, false, "m", "Depth below transducer", "environment.depth.belowTransducer", 0},
 		{"Offset", 16, 0.001, true, "m", "Distance between transducer and surface (positive) or keel (negative)", "", 0}},
 	},
 
@@ -1596,8 +1596,8 @@ var PgnList = PgnArray{
 	{"Distance Log", "Navigation", 128275, true, 14, 0, []Field{
 		{"Date", 16, RES_DATE, false, "days", "Days since January 1, 1970", "", 0},
 		{"Time", 32, RES_TIME, false, "s", "Seconds since midnight", "", 0},
-		{"Log", 32, 1, false, "m", "Total cumulative distance", "", 0},
-		{"Trip Log", 32, 1, false, "m", "Distance since last reset", "", 0}},
+		{"Log", 32, 1, false, "m", "Total cumulative distance", "navigation.log", 0},
+		{"Trip Log", 32, 1, false, "m", "Distance since last reset", "navigation.logTrip", 0}},
 	},
 
 	{"Tracked Target Data", "Navigation", 128520, true, 27, 0, []Field{
@@ -1619,8 +1619,8 @@ var PgnList = PgnArray{
 	},
 
 	{"Position, Rapid Update", "Navigation", 129025, true, 8, 0, []Field{
-		{"Latitude", 32, RES_LATITUDE, true, "deg", "", "", 0},
-		{"Longitude", 32, RES_LONGITUDE, true, "deg", "", "", 0}},
+		{"Latitude", 32, RES_LATITUDE, true, "deg", "", "navigation.position.latitude", 0},
+		{"Longitude", 32, RES_LONGITUDE, true, "deg", "", "navigation.position.longitude", 0}},
 	},
 
 	// http://www.maretron.com/support/manuals/GPS100UM_1.2.pdf
@@ -2431,9 +2431,9 @@ var PgnList = PgnArray{
 	// Water temperature, Transducer Measurement
 	{"Environmental Parameters", "Environmental", 130310, true, 7, 0, []Field{
 		{"SID", 8, 1, false, nil, "", "", 0},
-		{"Water Temperature", 16, RES_TEMPERATURE, false, "K", "", "", 0},
-		{"Outside Ambient Air Temperature", 16, RES_TEMPERATURE, false, "K", "", "", 0},
-		{"Atmospheric Pressure", 16, RES_PRESSURE, false, "hPa", "", "", 0}},
+		{"Water Temperature", 16, RES_TEMPERATURE, false, "K", "", "environment.waterTemp", 0},
+		{"Outside Ambient Air Temperature", 16, RES_TEMPERATURE, false, "K", "", "environment.airTemp", 0},
+		{"Atmospheric Pressure", 16, RES_PRESSURE, false, "hPa", "", "environment.airPressure", 0}},
 	},
 
 	{"Environmental Parameters", "Environmental", 130311, true, 8, 0, []Field{
