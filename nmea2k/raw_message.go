@@ -162,32 +162,43 @@ func ParsePacket(cmsg *can.RawMessage) (pgnParsed *ParsedMessage) {
 	return
 }
 
-func (msg *RawMessage) extractLatLon(start, end uint32) (v float64, e error) {
-	var value uint64
-
+func (msg *RawMessage) extractLatLon(start, end uint32) (v interface{}, e error) {
 	data := msg.Data[start:end]
 	bytes := len(data)
 
-	for i := 0; i < bytes; i++ {
-		value |= uint64(data[i]) << uint(8*i)
-	}
-
-	if value == 0xFFFF || value == 0xFFFFFFFF {
-		v = math.NaN()
-		e = &DecodeError{data, "Data not present"}
-	}
-
 	if bytes == 4 {
-		v = float64(math.Float32frombits(uint32(value)))
+		var value int32
+		for i, b := range data {
+			value |= int32(b) << uint(8*i)
+		}
+		if value > 0x7FFFFFFD {
+			v = math.NaN()
+			e = &DecodeError{data, "Data not present"}
+		} else {
+			v = float32(value) / 1e+7
+		}
+		// v, e = msg.extractNumber(1e-7, start, end, 0, 32)
 	} else if bytes == 8 {
-		v = math.Float64frombits(value)
+		var value int64
+		for i, b := range data {
+			value |= int64(b) << uint(8*i)
+		}
+		if value > 0x7FFFFFFFFFFFFFFD {
+			v = math.NaN()
+			e = &DecodeError{data, "Data not present"}
+		} else {
+			v = float64(value) / 1e+16
+		}
+		// v, e = msg.extractNumber(1e-16, start, end, 0, 64)
 	} else {
 		v = math.NaN()
 		e = &DecodeError{data, "Invalid float"}
 	}
 
+	if e != nil {
+		fmt.Println(e)
+	}
 	return
-
 }
 
 // Date values are 16 bits and represent number of days since the Unix Epoch
