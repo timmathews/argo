@@ -177,7 +177,6 @@ func (msg *RawMessage) extractLatLon(start, end uint32) (v interface{}, e error)
 		} else {
 			v = float32(value) / 1e+7
 		}
-		// v, e = msg.extractNumber(1e-7, start, end, 0, 32)
 	} else if bytes == 8 {
 		var value int64
 		for i, b := range data {
@@ -189,7 +188,6 @@ func (msg *RawMessage) extractLatLon(start, end uint32) (v interface{}, e error)
 		} else {
 			v = float64(value) / 1e+16
 		}
-		// v, e = msg.extractNumber(1e-16, start, end, 0, 64)
 	} else {
 		v = math.NaN()
 		e = &DecodeError{data, "Invalid float"}
