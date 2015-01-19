@@ -152,11 +152,13 @@ func main() {
 			}
 
 			if !*no_server {
-				bm := res.MsgPack()
-				bj := res.JSON()
+				//bm := res.MsgPack()
+				//socket.SendBytes(bm, 0)
 
-				socket.SendBytes(bm, 0)
-				h.broadcast <- bj
+				bj, _ := Delta(res)
+				if bj != nil {
+					h.broadcast <- bj
+				}
 			}
 		}
 	}()
