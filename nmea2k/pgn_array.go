@@ -783,181 +783,181 @@ var PgnList = PgnArray{
 	// Maretron ACM 100 manual documents PGN 65001-65030
 
 	{"Bus #1 Phase C Basic AC Quantities", "Power", 65001, false, 8, 0, []Field{
-		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "", 0}},
+		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.bus1.phaseC.lineLineVoltage", 0},
+		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "electrical.ac.bus1.phaseC.lineNeutralVoltage", "", 0},
+		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "electrical.ac.bus1.phaseC.frequency", 0}},
 	},
 
 	{"Bus #1 Phase B Basic AC Quantities", "Power", 65002, false, 8, 0, []Field{
-		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "", 0}},
+		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.bus1.phaseB.lineLineVoltage", 0},
+		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.bus1.phaseB.lineNeutralVoltage", 0},
+		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "electrical.ac.bus1.phaseB.frequency", 0}},
 	},
 
 	{"Bus #1 Phase A Basic AC Quantities", "Power", 65003, false, 8, 0, []Field{
-		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "", 0}},
+		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.bus1.phaseA.lineLineVoltage", 0},
+		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.bus1.phaseA.lineNeutralVoltage", 0},
+		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "electrical.ac.bus1.phaseA.frequency", 0}},
 	},
 
 	{"Bus #1 Average Basic AC Quantities", "Power", 65004, false, 8, 0, []Field{
-		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "", 0}},
+		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.bus1.lineLineVoltage", 0},
+		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.bus1.lineNeutralVoltage", 0},
+		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "electrical.ac.bus1.frequency", 0}},
 	},
 
 	{"Utility Total AC Energy", "Power", 65005, false, 8, 0, []Field{
-		{"Total Energy Export", 32, 1, false, "kWh", "", "", 0},
-		{"Total Energy Import", 32, 1, false, "kWh", "", "", 0}},
+		{"Total Energy Export", 32, 1, false, "kWh", "", "electrical.ac.utility.totalExport", 0},
+		{"Total Energy Import", 32, 1, false, "kWh", "", "electrical.ac.utility.totalImport", 0}},
 	},
 
 	{"Utility Phase C AC Reactive Power", "Power", 65006, false, 8, 0, []Field{
-		{"Reactive Power", 32, RES_INTEGER, false, "VAr", "", "", -2000000000},
-		{"Power Factor", 16, 1.0 / 16384, false, nil, "", "", 0},
-		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", "", 0}},
+		{"Reactive Power", 32, RES_INTEGER, false, "VAr", "", "electrical.ac.utility.phaseC.reactivePower", -2000000000},
+		{"Power Factor", 16, 1.0 / 16384, false, nil, "", "electrical.ac.utility.phaseC.powerFactor", 0},
+		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", "electrical.ac.utility.phaseC.powerFactorLagging", 0}},
 	},
 
 	{"Utility Phase C AC Power", "Power", 65007, false, 8, 0, []Field{
-		{"Real Power", 32, 1, true, "W", "", "", -2000000000},
-		{"Apparent Power", 32, 1, true, "VA", "", "", -2000000000}},
+		{"Real Power", 32, 1, true, "W", "", "electrical.ac.utility.phaseC.realPower", -2000000000},
+		{"Apparent Power", 32, 1, true, "VA", "", "electrical.ac.utility.phaseC.apparentPower", -2000000000}},
 	},
 
 	{"Utility Phase C Basic AC Quantities", "Power", 65008, false, 8, 0, []Field{
-		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "", 0},
-		{"AC RMS Current", 16, 1, false, "A", "", "", 0}},
+		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.utility.phaseC.lineLineVoltage", 0},
+		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.utility.phaseC.lineNeutralVoltage", 0},
+		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "electrical.ac.utility.phaseC.frequency", 0},
+		{"AC RMS Current", 16, 1, false, "A", "", "electrical.ac.utility.phaseC.current", 0}},
 	},
 
 	{"Utility Phase B AC Reactive Power", "Power", 65009, false, 8, 0, []Field{
-		{"Reactive Power", 32, RES_INTEGER, false, "VAr", "", "", -2000000000},
-		{"Power Factor", 16, 1.0 / 16384, false, nil, "", "", 0},
-		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", "", 0}},
+		{"Reactive Power", 32, RES_INTEGER, false, "VAr", "", "electrical.ac.utility.phaseB.reactivePower", -2000000000},
+		{"Power Factor", 16, 1.0 / 16384, false, nil, "", "electrical.ac.utility.phaseB.powerFactor", 0},
+		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", "electrical.ac.utility.phaseB.powerFactorLagging", 0}},
 	},
 
 	{"Utility Phase B AC Power", "Power", 65010, false, 8, 0, []Field{
-		{"Real Power", 32, 1, true, "W", "", "", -2000000000},
-		{"Apparent Power", 32, 1, true, "VA", "", "", -2000000000}},
+		{"Real Power", 32, 1, true, "W", "", "electrical.ac.utility.phaseB.realPower", -2000000000},
+		{"Apparent Power", 32, 1, true, "VA", "", "electrical.ac.utility.phaseB.apparentPower", -2000000000}},
 	},
 
 	{"Utility Phase B Basic AC Quantities", "Power", 65011, false, 8, 0, []Field{
-		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "", 0},
-		{"AC RMS Current", 16, 1, false, "A", "", "", 0}},
+		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.utility.phaseB.lineLineVoltage", 0},
+		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.utility.phaseB.lineNeutralVoltage", 0},
+		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "electrical.ac.utility.phaseB.frequency", 0},
+		{"AC RMS Current", 16, 1, false, "A", "", "electrical.ac.utility.phaseB.current", 0}},
 	},
 
 	{"Utility Phase A AC Reactive Power", "Power", 65012, false, 8, 0, []Field{
-		{"Reactive Power", 32, RES_INTEGER, false, "VAr", "", "", -2000000000},
-		{"Power Factor", 16, 1.0 / 16384, true, nil, "", "", 0},
-		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", "", 0}},
+		{"Reactive Power", 32, RES_INTEGER, false, "VAr", "", "electrical.ac.utility.phaseA.reactivePower", -2000000000},
+		{"Power Factor", 16, 1.0 / 16384, true, nil, "", "electrical.ac.utility.phaseA.powerFactor", 0},
+		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", "electrical.ac.utility.phaseA.powerFactorLagging", 0}},
 	},
 
 	{"Utility Phase A AC Power", "Power", 65013, false, 8, 0, []Field{
-		{"Real Power", 32, 1, true, "W", "", "", -2000000000},
-		{"Apparent Power", 32, 1, true, "VA", "", "", -2000000000}},
+		{"Real Power", 32, 1, true, "W", "", "electrical.ac.utility.phaseA.realPower", -2000000000},
+		{"Apparent Power", 32, 1, true, "VA", "", "electrical.ac.utility.phaseA.apparentPower", -2000000000}},
 	},
 
 	{"Utility Phase A Basic AC Quantities", "Power", 65014, false, 8, 0, []Field{
-		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "", 0},
-		{"AC RMS Current", 16, 1, false, "A", "", "", 0}},
+		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.utility.phaseA.lineLineVoltage", 0},
+		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.utility.phaseA.lineNeutralVoltage", 0},
+		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "electrical.ac.utility.phaseA.frequency", 0},
+		{"AC RMS Current", 16, 1, false, "A", "", "electrical.ac.utility.phaseA.current", 0}},
 	},
 
 	{"Utility Total AC Reactive Power", "Power", 65015, false, 8, 0, []Field{
-		{"Reactive Power", 32, RES_INTEGER, false, "VAr", "", "", -2000000000},
-		{"Power Factor", 16, 1.0 / 16384, false, nil, "", "", 0},
-		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", "", 0}},
+		{"Reactive Power", 32, RES_INTEGER, false, "VAr", "", "electrical.ac.utility.reactivePower", -2000000000},
+		{"Power Factor", 16, 1.0 / 16384, false, nil, "", "electrical.ac.utility.powerFactor", 0},
+		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", "electrical.ac.utility.powerFactorLagging", 0}},
 	},
 
 	{"Utility Total AC Power", "Power", 65016, false, 8, 0, []Field{
-		{"Real Power", 32, 1, true, "W", "", "", -2000000000},
-		{"Apparent Power", 32, 1, true, "VA", "", "", -2000000000}},
+		{"Real Power", 32, 1, true, "W", "", "electrical.ac.utility.realPower", -2000000000},
+		{"Apparent Power", 32, 1, true, "VA", "", "electrical.ac.utility.apparentPower", -2000000000}},
 	},
 
 	{"Utility Average Basic AC Quantities", "Power", 65017, false, 8, 0, []Field{
-		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "", 0},
-		{"AC RMS Current", 16, 1, false, "A", "", "", 0}},
+		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.utility.lineLineVoltage", 0},
+		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.utility.lineNeutralVoltage", 0},
+		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "electrical.ac.utility.frequency", 0},
+		{"AC RMS Current", 16, 1, false, "A", "", "electrical.ac.utility.current", 0}},
 	},
 
 	{"Generator Total AC Energy", "Power", 65018, false, 8, 0, []Field{
-		{"Total Energy Export", 32, 1, false, "kWh", "", "", 0},
-		{"Total Energy Import", 32, 1, false, "kWh", "", "", 0}},
+		{"Total Energy Export", 32, 1, false, "kWh", "", "electrical.ac.generator.totalExport", 0},
+		{"Total Energy Import", 32, 1, false, "kWh", "", "electrical.ac.generator.totalImport", 0}},
 	},
 
 	{"Generator Phase C AC Reactive Power", "Power", 65019, false, 8, 0, []Field{
-		{"Reactive Power", 32, RES_INTEGER, false, "VAr", "", "", -2000000000},
-		{"Power Factor", 16, 1.0 / 16384, false, nil, "", "", 0},
-		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", "", 0}},
+		{"Reactive Power", 32, RES_INTEGER, false, "VAr", "", "electrical.ac.generator.phaseC.reactivePower", -2000000000},
+		{"Power Factor", 16, 1.0 / 16384, false, nil, "", "electrical.ac.generator.phaseC.powerFactor", 0},
+		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", "electrical.ac.generator.phase", 0}},
 	},
 
 	{"Generator Phase C AC Power", "Power", 65020, false, 8, 0, []Field{
-		{"Real Power", 32, 1, false, "W", "", "", -2000000000},
-		{"Apparent Power", 32, 1, false, "VA", "", "", -2000000000}},
+		{"Real Power", 32, 1, false, "W", "", "electrical.ac.generator.phaseC.realPower", -2000000000},
+		{"Apparent Power", 32, 1, false, "VA", "", "electrical.ac.generator.phaseC.apparentPower", -2000000000}},
 	},
 
 	{"Generator Phase C Basic AC Quantities", "Power", 65021, false, 8, 0, []Field{
-		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "", 0},
-		{"AC RMS Current", 16, 1, false, "A", "", "", 0}},
+		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.generator.phaseC.lineLineVoltage", 0},
+		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.generator.phaseC.lineNeutralVoltage", 0},
+		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "electrical.ac.generator.phaseC.frequency", 0},
+		{"AC RMS Current", 16, 1, false, "A", "", "electrical.ac.generator.phaseC.current", 0}},
 	},
 
 	{"Generator Phase B AC Reactive Power", "Power", 65022, false, 8, 0, []Field{
-		{"Reactive Power", 32, RES_INTEGER, false, "VAr", "", "", -2000000000},
-		{"Power Factor", 16, 1.0 / 16384, false, nil, "", "", 0},
-		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", "", 0}},
+		{"Reactive Power", 32, RES_INTEGER, false, "VAr", "", "electrical.ac.generator.phaseB.reactivePower", -2000000000},
+		{"Power Factor", 16, 1.0 / 16384, false, nil, "", "electrical.ac.generator.phaseB.powerFactor", 0},
+		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", "electrical.ac.generator.phaseB.powerFactorLagging", 0}},
 	},
 
 	{"Generator Phase B AC Power", "Power", 65023, false, 8, 0, []Field{
-		{"Real Power", 32, 1, false, "W", "", "", -2000000000},
-		{"Apparent Power", 32, 1, false, "VA", "", "", -2000000000}},
+		{"Real Power", 32, 1, false, "W", "", "electrical.ac.generator.phaseB.realPower", -2000000000},
+		{"Apparent Power", 32, 1, false, "VA", "", "electrical.ac.generator.phaseB.apparentPower", -2000000000}},
 	},
 
 	{"Generator Phase B Basic AC Quantities", "Power", 65024, false, 8, 0, []Field{
-		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "", 0},
-		{"AC RMS Current", 16, 1, false, "A", "", "", 0}},
+		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.generator.phaseB.lineLineVoltage", 0},
+		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.generator.phaseB.lineNeutralVoltage", 0},
+		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "electrical.ac.generator.phaseB.frequency", 0},
+		{"AC RMS Current", 16, 1, false, "A", "", "electrical.ac.generator.phaseB.current", 0}},
 	},
 
 	{"Generator Phase A AC Reactive Power", "Power", 65025, false, 8, 0, []Field{
-		{"Reactive Power", 32, RES_INTEGER, false, "VAr", "", "", -2000000000},
-		{"Power Factor", 16, 1.0 / 16384, false, nil, "", "", 0},
-		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", "", 0}},
+		{"Reactive Power", 32, RES_INTEGER, false, "VAr", "", "electrical.ac.generator.phaseA.reactivePower", -2000000000},
+		{"Power Factor", 16, 1.0 / 16384, false, nil, "", "electrical.ac.generator.phaseA.powerFactor", 0},
+		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", "electrical.ac.generator.phaseA.powerFactorLagging", 0}},
 	},
 
 	{"Generator Phase A AC Power", "Power", 65026, false, 8, 0, []Field{
-		{"Real Power", 32, 1, false, "W", "", "", -2000000000},
-		{"Apparent Power", 32, 1, false, "VA", "", "", -2000000000}},
+		{"Real Power", 32, 1, false, "W", "", "electrical.ac.generator.phaseA.realPower", -2000000000},
+		{"Apparent Power", 32, 1, false, "VA", "", "electrical.ac.generator.phaseA.apparentPower", -2000000000}},
 	},
 
 	{"Generator Phase A Basic AC Quantities", "Power", 65027, false, 8, 0, []Field{
-		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "", 0},
-		{"AC RMS Current", 16, 1, false, "A", "", "", 0}},
+		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.generator.phaseA.lineLineVoltage", 0},
+		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.generator.phaseA.lineNeutralVoltage", 0},
+		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "electrical.ac.generator.phaseA.frequency", 0},
+		{"AC RMS Current", 16, 1, false, "A", "", "electrical.ac.generator.phaseA.current", 0}},
 	},
 
 	{"Generator Total AC Reactive Power", "Power", 65028, false, 8, 0, []Field{
-		{"Reactive Power", 32, RES_INTEGER, false, "VAr", "", "", -2000000000},
-		{"Power Factor", 16, 1.0 / 16384, false, nil, "", "", 0},
-		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", "", 0}},
+		{"Reactive Power", 32, RES_INTEGER, false, "VAr", "", "electrical.ac.generator.reactivePower", -2000000000},
+		{"Power Factor", 16, 1.0 / 16384, false, nil, "", "electrical.ac.generator.powerFactor", 0},
+		{"Power Factor Lagging", 2, RES_LOOKUP, false, lookupPowerFactor, "", "electrical.ac.generator.powerFactorLagging", 0}},
 	},
 
 	{"Generator Total AC Power", "Power", 65029, false, 8, 0, []Field{
-		{"Real Power", 32, 1, false, "W", "", "", -2000000000},
-		{"Apparent Power", 32, 1, false, "VA", "", "", -2000000000}},
+		{"Real Power", 32, 1, false, "W", "", "electrical.ac.generator.realPower", -2000000000},
+		{"Apparent Power", 32, 1, false, "VA", "", "electrical.ac.generator.apparentPower", -2000000000}},
 	},
 
 	{"Generator Average Basic AC Quantities", "Power", 65030, false, 8, 0, []Field{
-		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "", 0},
-		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "", 0},
-		{"AC RMS Current", 16, 1, false, "A", "", "", 0}},
+		{"Line-Line AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.generator.lineLineVoltage", 0},
+		{"Line-Neutral AC RMS Voltage", 16, 1, false, "V", "", "electrical.ac.generator.lineNeutralVoltage", 0},
+		{"AC Frequency", 16, 1.0 / 128, false, "Hz", "", "electrical.ac.generator.frequency", 0},
+		{"AC RMS Current", 16, 1, false, "A", "", "electrical.ac.generator.current", 0}},
 	},
 
 	// ISO 11783 defined this message to provide a mechanism for assigning a
