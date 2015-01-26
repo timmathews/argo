@@ -112,13 +112,15 @@ func ParseFrame(p []byte) (*CanFrame, error) {
 	if err == nil {
 		frame.id = uint32(n)
 		frame.Priority = uint8(frame.id >> 26)
-		frame.Pgn = (frame.id & 0x3FFFFFF) >> 8
 		frame.Source = uint8(frame.id & 0xFF)
-		pf := (frame.id & 0xFFFFFF) >> 16
+		pf := (frame.id >> 16) & 0xFF
+		ps := (frame.id >> 8) & 0xFF
 		if pf >= 240 {
 			frame.Destination = 255
+			frame.Pgn = (frame.id >> 8) & 0x03FFFF
 		} else {
-			frame.Destination = uint8(pf)
+			frame.Destination = uint8(ps)
+			frame.Pgn = (frame.id >> 8) & 0x03FF00
 		}
 	} else {
 		return nil, errors.New(fmt.Sprintf("canusb.ParseFrame: Unable to parse message ID: %s", err))
