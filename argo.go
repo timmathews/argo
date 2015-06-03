@@ -25,6 +25,8 @@ Argo.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
+	"encoding/json"
+	"encoding/xml"
 	"flag"
 	"fmt"
 	"github.com/schleibinger/sio"
@@ -35,6 +37,7 @@ import (
 	"github.com/wsxiaoys/terminal"
 	zmq "gopkg.in/pebbe/zmq2.v0"
 	"gopkg.in/vmihailenco/msgpack.v2"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"sort"
@@ -65,6 +68,7 @@ func main() {
 	stats := flag.Bool("s", false, "Display live statistics")
 	dev_type := flag.String("dev", "actisense", "Choose type of device: actisense, canusb")
 	no_server := flag.Bool("no-server", false, "Don't start Web Sockets or ZeroMQ")
+	map_file := flag.String("map", "map.xml", "File to use for mapping between input and Signal K")
 	device := "/dev/ttyUSB0"
 
 	flag.Parse()
@@ -79,7 +83,7 @@ func main() {
 	case 1:
 		device = flag.Arg(0)
 	default:
-		log.Fatalln("expected max 1 arg for the serial port device, default is %s", device)
+		log.Fatalln("expected max 1 arg for the serial port device, default is", device)
 	}
 
 	if *help {
@@ -96,6 +100,18 @@ func main() {
 
 	statLog := make(map[uint32]uint64)
 	var statPgns UintSlice
+
+	data, err := ioutil.ReadFile(*map_file)
+	if err != nil {
+		log.Fatalln("could not read XML map file:", err, *map_file)
+	}
+
+	map_data := Mappings{}
+
+	err = xml.Unmarshal(data, &map_data)
+	if err != nil {
+		log.Fatalln("could not parse XML map file:", err, *map_file)
+	}
 
 	port, err := sio.Open(device, syscall.B230400)
 
@@ -155,9 +171,12 @@ func main() {
 				//bm := res.MsgPack()
 				//socket.SendBytes(bm, 0)
 
-				bj, _ := Delta(res)
-				if bj != nil {
-					h.broadcast <- bj
+				bj, err := map_data.Delta(&res)
+				if err == nil {
+					bytes, err := json.Marshal(bj)
+					if err == nil {
+						h.broadcast <- bytes
+					}
 				}
 			}
 		}
