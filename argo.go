@@ -1,9 +1,9 @@
 /*
 Argo collects data from NMEA-2000 and NMEA-0813[1] sensors and resends that
-data over a LAN via ZeroMQ to be consumed by subscribers. Argo also calculates
-additional data such as true wind speed, leeway, set, and drift. These values
-are also sent over the network. Additionally, Argo can log data to a database
-for later analysis.
+data over a LAN via an MQTT broker to be consumed by subscribers. Argo also
+provides a WebSockets server Argo calculates additional data such as true wind
+speed, leeway, set, and drift. These values are also sent over the network.
+Additionally, Argo can log data to a database for later analysis.
 
 Argo borrows heavily from the CANboat project which was written in C and is
 copyright 2009-2012, Kees Verruijt, Harlingen, The Netherlands.
@@ -35,14 +35,10 @@ import (
 	"github.com/timmathews/argo/canusb"
 	"github.com/timmathews/argo/nmea2k"
 	"github.com/wsxiaoys/terminal"
-	zmq "gopkg.in/pebbe/zmq2.v0"
-	"gopkg.in/vmihailenco/msgpack.v2"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"sort"
-	"strconv"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -121,18 +117,9 @@ func main() {
 
 	var canport can.ReadWriter
 
-	socket := new(zmq.Socket)
 	if !*no_server {
-
 		// Start up the WebSockets hub
 		go h.run()
-
-		socket, _ = zmq.NewSocket(zmq.PUB)
-		defer socket.Close()
-		socket.Bind("tcp://*:5555")
-
-		// PgnDefServer causes invalid heap pointer error
-		//go PgnDefServer()
 
 		go WebSocketServer(addr)
 
@@ -168,9 +155,6 @@ func main() {
 			}
 
 			if !*no_server {
-				//bm := res.MsgPack()
-				//socket.SendBytes(bm, 0)
-
 				bj, err := map_data.Delta(&res)
 				if err == nil {
 					bytes, err := json.Marshal(bj)
@@ -240,25 +224,6 @@ func main() {
 			if err == nil {
 				txch <- *(nmea2k.ParsePacket(raw))
 			}
-		}
-	}
-}
-
-func PgnDefServer() {
-	socket, _ := zmq.NewSocket(zmq.REP)
-	defer socket.Close()
-	socket.Bind("tcp://*:5556")
-
-	for {
-		msg, _ := socket.Recv(0)
-
-		tok := strings.Split(string(msg), ":")
-
-		if tok[0] == "get" {
-			pgn, _ := strconv.ParseUint(tok[1], 10, 32)
-			pgnDef := nmea2k.PgnList[pgn]
-			b, _ := msgpack.Marshal(pgnDef)
-			socket.SendBytes(b, 0)
 		}
 	}
 }
