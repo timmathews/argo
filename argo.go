@@ -26,7 +26,6 @@ package main
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
 	"encoding/xml"
 	"flag"
@@ -55,28 +54,6 @@ func (p UintSlice) Len() int           { return len(p) }
 func (p UintSlice) Less(i, j int) bool { return p[i] < p[j] }
 func (p UintSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-// We shouldn't effing need to do this!
-// Copied shamelessy from the Go source (unix_roots.go)
-func initMyRoots() *x509.CertPool {
-	directory := "/etc/ssl/certs"
-	roots := x509.NewCertPool()
-	fis, _ := ioutil.ReadDir(directory)
-
-	rootsAdded := false
-
-	for _, fi := range fis {
-		data, err := ioutil.ReadFile(directory + "/" + fi.Name())
-
-		if err == nil && roots.AppendCertsFromPEM(data) {
-			rootsAdded = true
-		}
-	}
-	if rootsAdded {
-		return roots
-	} else {
-		return nil
-	}
-}
 
 func main() {
 	// Command line flags are defined here
@@ -147,7 +124,7 @@ func main() {
 	mqtt_opts.SetClientID("argo") // TODO: This needs to be moved to config file
 	mqtt_opts.SetUsername("signalk")
 	mqtt_opts.SetPassword("signalk")
-	mqtt_opts.SetTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12, RootCAs: initMyRoots()})
+	mqtt_opts.SetTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12})
 	mqtt_client := mqtt.NewClient(mqtt_opts)
 	if token := mqtt_client.Connect(); token.Wait() && token.Error() != nil {
 		log.Fatalln("MQTT", token.Error())
