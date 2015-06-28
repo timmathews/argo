@@ -25,10 +25,13 @@ Argo.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"encoding/xml"
 	"flag"
 	"fmt"
+	mqtt "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
 	"github.com/schleibinger/sio"
 	"github.com/timmathews/argo/actisense"
 	"github.com/timmathews/argo/can"
@@ -52,6 +55,29 @@ func (p UintSlice) Len() int           { return len(p) }
 func (p UintSlice) Less(i, j int) bool { return p[i] < p[j] }
 func (p UintSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
+// We shouldn't effing need to do this!
+// Copied shamelessy from the Go source (unix_roots.go)
+func initMyRoots() *x509.CertPool {
+	directory := "/etc/ssl/certs"
+	roots := x509.NewCertPool()
+	fis, _ := ioutil.ReadDir(directory)
+
+	rootsAdded := false
+
+	for _, fi := range fis {
+		data, err := ioutil.ReadFile(directory + "/" + fi.Name())
+
+		if err == nil && roots.AppendCertsFromPEM(data) {
+			rootsAdded = true
+		}
+	}
+	if rootsAdded {
+		return roots
+	} else {
+		return nil
+	}
+}
+
 func main() {
 	// Command line flags are defined here
 	debug := flag.Bool("d", false, "Debug mode, extra logging information shown on stderr")
@@ -65,6 +91,7 @@ func main() {
 	dev_type := flag.String("dev", "actisense", "Choose type of device: actisense, canusb")
 	no_server := flag.Bool("no-server", false, "Don't start Web Sockets or ZeroMQ")
 	map_file := flag.String("map", "map.xml", "File to use for mapping between input and Signal K")
+	mqtt_server := flag.String("mqtt", "localhost", "Defaults to MQTT broker on localhost")
 	device := "/dev/ttyUSB0"
 
 	flag.Parse()
@@ -115,6 +142,17 @@ func main() {
 		log.Fatalln("open: %s", err)
 	}
 
+	// Set up MQTT Client
+	mqtt_opts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("ssl://%v:8883", *mqtt_server))
+	mqtt_opts.SetClientID("argo") // TODO: This needs to be moved to config file
+	mqtt_opts.SetUsername("signalk")
+	mqtt_opts.SetPassword("signalk")
+	mqtt_opts.SetTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12, RootCAs: initMyRoots()})
+	mqtt_client := mqtt.NewClient(mqtt_opts)
+	if token := mqtt_client.Connect(); token.Wait() && token.Error() != nil {
+		log.Fatalln("MQTT", token.Error())
+	}
+
 	var canport can.ReadWriter
 
 	if !*no_server {
@@ -154,13 +192,14 @@ func main() {
 				}
 			}
 
-			if !*no_server {
-				bj, err := map_data.Delta(&res)
+			bj, err := map_data.Delta(&res)
+			if err == nil {
+				bytes, err := json.Marshal(bj)
 				if err == nil {
-					bytes, err := json.Marshal(bj)
-					if err == nil {
+					if !*no_server {
 						h.broadcast <- bytes
 					}
+					mqtt_client.Publish("signalk/argo", 0, false, bytes) // TODO: This should be in config file
 				}
 			}
 		}
