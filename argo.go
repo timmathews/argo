@@ -31,6 +31,7 @@ import (
 	"flag"
 	"fmt"
 	mqtt "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
+	"github.com/op/go-logging"
 	"github.com/schleibinger/sio"
 	"github.com/timmathews/argo/actisense"
 	"github.com/timmathews/argo/can"
@@ -38,8 +39,8 @@ import (
 	"github.com/timmathews/argo/nmea2k"
 	"github.com/wsxiaoys/terminal"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"os"
 	"sort"
 	"syscall"
 	"time"
@@ -54,6 +55,10 @@ func (p UintSlice) Len() int           { return len(p) }
 func (p UintSlice) Less(i, j int) bool { return p[i] < p[j] }
 func (p UintSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
+var log = logging.MustGetLogger("argo")
+var log_format = logging.MustStringFormatter(
+	"%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:-8s} %{id:03x}%{color:reset} %{message}",
+)
 
 func main() {
 	// Command line flags are defined here
@@ -73,8 +78,20 @@ func main() {
 
 	flag.Parse()
 
+	log_backend := logging.NewLogBackend(os.Stderr, "", 0)
+	log_formatter := logging.NewBackendFormatter(log_backend, log_format)
+	log_filter := logging.AddModuleLevel(log_formatter)
+
+	if *debug {
+		log_filter.SetLevel(logging.DEBUG, "")
+	} else {
+		log_filter.SetLevel(logging.WARNING, "")
+	}
+
+	logging.SetBackend(log_filter)
+
 	if *dev_type != "canusb" && *dev_type != "actisense" {
-		log.Fatalln("expected either canusb or actisense, got", *dev_type)
+		log.Fatal("expected either canusb or actisense, got ", *dev_type)
 	}
 
 	switch flag.NArg() {
@@ -83,7 +100,7 @@ func main() {
 	case 1:
 		device = flag.Arg(0)
 	default:
-		log.Fatalln("expected max 1 arg for the serial port device, default is", device)
+		log.Fatal("expected max 1 arg for the serial port device, default is ", device)
 	}
 
 	if *help {
@@ -91,8 +108,26 @@ func main() {
 		return
 	}
 
-	if *debug {
-		log.Println("opening", device)
+	log.Debug("opening %v", device)
+
+	var stat syscall.Stat_t
+	var port *sio.Port
+	err := syscall.Stat(device, &stat)
+
+	if err != nil {
+		log.Fatalf("failure to stat %v: %v", device, err)
+	}
+
+	if stat.Mode&syscall.S_IFMT == syscall.S_IFCHR {
+		log.Debug("%v is a serial port", device)
+		port, err = sio.Open(device, syscall.B230400)
+	} else {
+		log.Debug("%v is a file", device)
+		*dev_type = "file"
+	}
+
+	if err != nil {
+		log.Fatal("failure to ", err)
 	}
 
 	txch := make(chan nmea2k.ParsedMessage)
@@ -103,20 +138,14 @@ func main() {
 
 	data, err := ioutil.ReadFile(*map_file)
 	if err != nil {
-		log.Fatalln("could not read XML map file:", err, *map_file)
+		log.Fatalf("could not read XML map file: %v, %v", err, *map_file)
 	}
 
 	map_data := Mappings{}
 
 	err = xml.Unmarshal(data, &map_data)
 	if err != nil {
-		log.Fatalln("could not parse XML map file:", err, *map_file)
-	}
-
-	port, err := sio.Open(device, syscall.B230400)
-
-	if err != nil {
-		log.Fatalln("open: %s", err)
+		log.Fatalf("could not parse XML map file: %v, %v", err, *map_file)
 	}
 
 	// Set up MQTT Client
@@ -127,7 +156,7 @@ func main() {
 	mqtt_opts.SetTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12})
 	mqtt_client := mqtt.NewClient(mqtt_opts)
 	if token := mqtt_client.Connect(); token.Wait() && token.Error() != nil {
-		log.Fatalln("MQTT", token.Error())
+		log.Fatal("MQTT: ", token.Error())
 	}
 
 	var canport can.ReadWriter
@@ -149,9 +178,7 @@ func main() {
 			if (*pgn == 0 || int(res.Header.Pgn) == *pgn) &&
 				(*src == 255 || int(res.Header.Source) == *src) &&
 				(*quiet == false) && (*stats == false) {
-				if *debug {
-					fmt.Println(res.Header.Print(*verbose))
-				}
+				log.Debug(res.Header.Print(*verbose))
 				fmt.Println(res.Print(*verbose))
 			}
 
@@ -183,29 +210,25 @@ func main() {
 	}()
 
 	// Set up hardware
-	if *debug {
-		fmt.Println(*dev_type)
-	}
+	log.Debug(*dev_type)
 	if *dev_type == "canusb" {
 		if *debug {
-			fmt.Println("Adding Fast Packets")
+			fmt.Println("adding Fast Packets")
 		}
 		for _, p := range nmea2k.PgnList {
 			if p.Size > 8 {
-				if *debug {
-					log.Println("Adding PGN:", p.Pgn)
-				}
+				log.Debug("adding PGN: ", p.Pgn)
 				canusb.AddFastPacket(p.Pgn)
 			}
 		}
-
-		if *debug {
-			fmt.Println("Opening Channel")
-		}
+		log.Debug("opening channel")
 		canport, _ = canusb.OpenChannel(port, 221)
-	} else {
+	} else if *dev_type == "actisense" {
+		log.Debug("opening channel")
 		canport, _ = actisense.OpenChannel(port)
 		time.Sleep(2)
+	} else if *dev_type == "file" {
+		log.Fatal("got a file ... don't know what to do with it")
 	}
 
 	// Handle command requests
@@ -220,7 +243,7 @@ func main() {
 				if canport != nil {
 					canport.Write([]byte{0x03, 0x00, 0xEA, 0x00, 0xFF, 0x03, b0, b1, b2})
 				} else {
-					log.Println("canport is nil")
+					log.Warning("canport is nil")
 				}
 			}
 		}
@@ -244,16 +267,16 @@ func main() {
 	}
 }
 
-func Log(handler http.Handler) http.Handler {
+func Log(handler http.Handler, log *logging.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+		log.Info("%v %v %v", r.RemoteAddr, r.Method, r.URL)
 		handler.ServeHTTP(w, r)
 	})
 }
 
 func WebSocketServer(addr *string) {
 	http.HandleFunc("/ws/v1/", serveWs)
-	err := http.ListenAndServe(*addr, Log(http.DefaultServeMux))
+	err := http.ListenAndServe(*addr, Log(http.DefaultServeMux, log))
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
