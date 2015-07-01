@@ -17,6 +17,7 @@ if [ "$1" == "--build" ]; then
   go get github.com/wsxiaoys/terminal
   go get github.com/gorilla/mux
   go get github.com/gorilla/websocket
+  go get github.com/burntsushi/toml
   echo "# Compiling."
   go build
   echo "# Done."

@@ -74,6 +74,7 @@ func main() {
 	no_server := flag.Bool("no-server", false, "Don't start Web Sockets or ZeroMQ")
 	map_file := flag.String("map", "map.xml", "File to use for mapping between input and Signal K")
 	mqtt_server := flag.String("mqtt", "localhost", "Defaults to MQTT broker on localhost")
+	config_file := flag.String("config", "argo.conf", "Path to config file")
 	device := "/dev/ttyUSB0"
 
 	flag.Parse()
@@ -89,6 +90,20 @@ func main() {
 	}
 
 	logging.SetBackend(log_filter)
+
+	config, err := ReadConfig(*config_file)
+	if err != nil {
+		log.Fatal("could not read config file %v: %v", *config_file, err)
+	}
+
+	lvl, err := logging.LogLevel(config.LogLevel)
+	if err == nil {
+		log_filter.SetLevel(lvl, "")
+	} else {
+		log.Warning("Could not set log level to %v: %v", config.LogLevel, err)
+	}
+
+	log.Info("%v", config)
 
 	if *dev_type != "canusb" && *dev_type != "actisense" {
 		log.Fatal("expected either canusb or actisense, got ", *dev_type)
@@ -112,7 +127,7 @@ func main() {
 
 	var stat syscall.Stat_t
 	var port *sio.Port
-	err := syscall.Stat(device, &stat)
+	err = syscall.Stat(device, &stat)
 
 	if err != nil {
 		log.Fatalf("failure to stat %v: %v", device, err)
