@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gopkg.in/vmihailenco/msgpack.v2"
 	"strconv"
+	"time"
 )
 
 type DataMap map[int]interface{}
@@ -23,6 +24,38 @@ type ParsedMessage struct {
 	Header RawMessage
 	Index  int
 	Data   DataMap
+}
+
+type CanBoatMessage struct {
+	Timestamp   time.Time `json:"timestamp"`
+	Priority    uint8     `json:"prio"`
+	Source      uint8     `json:"src"`
+	Destination uint8     `json:"dst"`
+	Pgn         uint32    `json:"pgn"`
+	Fields      DataMap   `json:"fields"`
+}
+
+func FromCanBoat(data string) *ParsedMessage {
+	var cbm CanBoatMessage
+	json.Unmarshal(([]byte)(data), &cbm)
+	fmt.Println("CBM", cbm)
+
+	hdr := new(RawMessage)
+	hdr.Timestamp = cbm.Timestamp
+	hdr.Priority = cbm.Priority
+	hdr.Pgn = cbm.Pgn
+	hdr.Source = cbm.Source
+	hdr.Destination = cbm.Destination
+
+	i, _ := PgnList.First(cbm.Pgn)
+
+	var p = ParsedMessage{
+		*hdr,
+		i,
+		cbm.Fields,
+	}
+
+	return &p
 }
 
 func (msg *ParsedMessage) Print(verbose bool) string {

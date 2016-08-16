@@ -25,6 +25,7 @@ Argo.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
+	"bufio"
 	"crypto/tls"
 	"encoding/json"
 	"encoding/xml"
@@ -105,10 +106,6 @@ func main() {
 
 	log.Info("%v", config)
 
-	if *dev_type != "canusb" && *dev_type != "actisense" {
-		log.Fatal("expected either canusb or actisense, got ", *dev_type)
-	}
-
 	switch flag.NArg() {
 	case 0:
 		// Use default device
@@ -164,17 +161,21 @@ func main() {
 	}
 
 	// Set up MQTT Client
-	mqtt_opts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("ssl://%v:8883", *mqtt_server))
-	mqtt_opts.SetClientID("argo") // TODO: This needs to be moved to config file
-	mqtt_opts.SetUsername("signalk")
-	mqtt_opts.SetPassword("signalk")
-	mqtt_opts.SetTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12})
-	mqtt_client := mqtt.NewClient(mqtt_opts)
-	if token := mqtt_client.Connect(); token.Wait() && token.Error() != nil {
-		log.Fatal("MQTT: ", token.Error())
+	var mqtt_client *mqtt.Client
+	if config.Mqtt.Enabled {
+		mqtt_opts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("ssl://%v:8883", *mqtt_server))
+		mqtt_opts.SetClientID("argo") // TODO: This needs to be moved to config file
+		mqtt_opts.SetUsername("signalk")
+		mqtt_opts.SetPassword("signalk")
+		mqtt_opts.SetTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12})
+		mqtt_client = mqtt.NewClient(mqtt_opts)
+		if token := mqtt_client.Connect(); token.Wait() && token.Error() != nil {
+			log.Fatal("MQTT: ", token.Error())
+		}
 	}
 
 	var canport can.ReadWriter
+	var fileScanner *bufio.Scanner
 
 	if !*no_server {
 		// Start up the WebSockets hub
@@ -218,7 +219,10 @@ func main() {
 					if !*no_server {
 						h.broadcast <- bytes
 					}
-					mqtt_client.Publish("signalk/argo", 0, false, bytes) // TODO: This should be in config file
+
+					if config.Mqtt.Enabled {
+						mqtt_client.Publish("signalk/argo", 0, false, bytes) // TODO: This should be in config file
+					}
 				}
 			}
 		}
@@ -243,7 +247,10 @@ func main() {
 		canport, _ = actisense.OpenChannel(port)
 		time.Sleep(2)
 	} else if *dev_type == "file" {
-		log.Fatal("got a file ... don't know what to do with it")
+		file, _ := os.Open(device)
+		fileScanner = bufio.NewScanner(file)
+	} else {
+		log.Fatal("unknown device type %s. Expected one of: canusb, actisense, file", *dev_type)
 	}
 
 	// Handle command requests
@@ -272,12 +279,21 @@ func main() {
 				txch <- *(nmea2k.ParsePacket(raw))
 			}
 		}
-	} else {
+	} else if *dev_type == "actisense" {
 		for {
 			raw, err := canport.Read()
 			if err == nil {
 				txch <- *(nmea2k.ParsePacket(raw))
 			}
+		}
+	} else { // it's a file
+		for fileScanner.Scan() {
+			txt := fileScanner.Text()
+			fmt.Println(txt)
+			pm := nmea2k.FromCanBoat(txt)
+			fmt.Println(pm)
+			txch <- *pm
+			time.Sleep(1000 * time.Millisecond)
 		}
 	}
 }
