@@ -40,7 +40,6 @@ import (
 	"github.com/timmathews/argo/nmea2k"
 	"github.com/wsxiaoys/terminal"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"sort"
 	"syscall"
@@ -76,6 +75,7 @@ func main() {
 	map_file := flag.String("map", "map.xml", "File to use for mapping between input and Signal K")
 	mqtt_server := flag.String("mqtt", "localhost", "Defaults to MQTT broker on localhost")
 	config_file := flag.String("config", "argo.conf", "Path to config file")
+	explain := flag.Bool("explain", false, "Dump PGNs as JSON")
 	device := "/dev/ttyUSB0"
 
 	flag.Parse()
@@ -91,6 +91,21 @@ func main() {
 	}
 
 	logging.SetBackend(log_filter)
+
+	if *help {
+		flag.PrintDefaults()
+		return
+	}
+
+	if *explain {
+		bytes, err := json.MarshalIndent(nmea2k.PgnList, "", "  ")
+		if err == nil {
+			fmt.Println(bytes)
+		} else {
+			log.Fatal(err)
+		}
+		return
+	}
 
 	config, err := ReadConfig(*config_file)
 	if err != nil {
@@ -113,11 +128,6 @@ func main() {
 		device = flag.Arg(0)
 	default:
 		log.Fatal("expected max 1 arg for the serial port device, default is ", device)
-	}
-
-	if *help {
-		flag.PrintDefaults()
-		return
 	}
 
 	log.Debug("opening %v", device)
@@ -179,9 +189,9 @@ func main() {
 
 	if !*no_server {
 		// Start up the WebSockets hub
-		go h.run()
+		go websocket_hub.run()
 
-		go WebSocketServer(addr)
+		go WebSocketServer(addr, log)
 
 		go ApiServer(cmdch)
 	}
@@ -217,7 +227,7 @@ func main() {
 				bytes, err := json.Marshal(bj)
 				if err == nil {
 					if !*no_server {
-						h.broadcast <- bytes
+						websocket_hub.broadcast <- bytes
 					}
 
 					if config.Mqtt.Enabled {
@@ -295,20 +305,5 @@ func main() {
 			txch <- *pm
 			time.Sleep(1000 * time.Millisecond)
 		}
-	}
-}
-
-func Log(handler http.Handler, log *logging.Logger) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Info("%v %v %v", r.RemoteAddr, r.Method, r.URL)
-		handler.ServeHTTP(w, r)
-	})
-}
-
-func WebSocketServer(addr *string) {
-	http.HandleFunc("/ws/v1/", serveWs)
-	err := http.ListenAndServe(*addr, Log(http.DefaultServeMux, log))
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
 	}
 }

@@ -76,7 +76,7 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Path == "/ws/v1/data" {
 		c := &connection{send: make(chan []byte, 256), ws: ws}
-		h.register <- c
+		websocket_hub.register <- c
 		go c.writePump()
 	} else if r.URL.Path == "/ws/v1/control" {
 		fmt.Println("Got registration")

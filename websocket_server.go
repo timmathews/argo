@@ -1,5 +1,10 @@
 package main
 
+import (
+	"github.com/op/go-logging"
+	"net/http"
+)
+
 type hub struct {
 	// Known connections
 	connections map[*connection]bool
@@ -14,7 +19,7 @@ type hub struct {
 	unregister chan *connection
 }
 
-var h = hub{
+var websocket_hub = hub{
 	broadcast:   make(chan []byte),
 	register:    make(chan *connection),
 	unregister:  make(chan *connection),
@@ -39,5 +44,20 @@ func (h *hub) run() {
 				}
 			}
 		}
+	}
+}
+
+func loggingHandler(handler http.Handler, log *logging.Logger) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Info("%v %v %v", r.RemoteAddr, r.Method, r.URL)
+		handler.ServeHTTP(w, r)
+	})
+}
+
+func WebSocketServer(addr *string, log *logging.Logger) {
+	http.HandleFunc("/ws/v1/", serveWs)
+	err := http.ListenAndServe(*addr, loggingHandler(http.DefaultServeMux, log))
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err)
 	}
 }
