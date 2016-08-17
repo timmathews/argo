@@ -33,6 +33,7 @@ import (
 	"github.com/timmathews/argo/can"
 	"github.com/timmathews/argo/canusb"
 	"github.com/timmathews/argo/nmea2k"
+	"github.com/timmathews/argo/signalk"
 	"github.com/wsxiaoys/terminal"
 	"io/ioutil"
 	"os"
@@ -161,7 +162,7 @@ func main() {
 		log.Fatalf("could not read XML map file: %v, %v", err, *map_file)
 	}
 
-	map_data := Mappings{}
+	map_data := signalk.Mappings{}
 
 	err = xml.Unmarshal(data, &map_data)
 	if err != nil {

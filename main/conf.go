@@ -20,7 +20,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/burntsushi/toml"
 	"github.com/imdario/mergo"
 )
@@ -80,15 +79,9 @@ func ReadConfig(path string) (tomlConfig, error) {
 		return defaultConfig, err
 	}
 
-	fmt.Println("Config: ", config)
-
-	fmt.Println("Default:", defaultConfig)
-
 	if err := mergo.Merge(&config, defaultConfig); err != nil {
 		return defaultConfig, err
 	}
-
-	fmt.Println("Merged: ", config)
 
 	return config, nil
 }

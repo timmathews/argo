@@ -1,14 +1,6 @@
 #!/bin/bash
 
-if [ "$#" == 0 ]; then
-  echo "Usage: ./build.sh <flag>"
-  echo "  --build     Builds argo."
-  echo "  --install   Installs argo. Must be run as root."
-  echo "  --uninstall Removes argo. Must be run as root."
-  exit 1
-fi
-
-if [ "$1" == "--build" ]; then
+build () {
   echo "# Building argo."
   echo "# Installing dependencies."
   go get github.com/schleibinger/sio
@@ -21,8 +13,26 @@ if [ "$1" == "--build" ]; then
   go get github.com/burntsushi/toml
   go get github.com/imdario/mergo
   echo "# Compiling."
-  go build
+  cd main
+  go build -o ../argo
   echo "# Done."
+}
+
+if [ "$#" == 0 ]; then
+  build
+fi
+
+if [ "$1" == "--help" ]; then
+  echo "Usage: ./build.sh <flag>"
+  echo "  --help      This message."
+  echo "  --build     Builds argo."
+  echo "  --install   Installs argo. Must be run as root."
+  echo "  --uninstall Removes argo. Must be run as root."
+  exit 0
+fi
+
+if [ "$1" == "--build" ]; then
+  build
 fi
 
 if [ "$1" == "--install" ]; then
@@ -42,3 +52,4 @@ if [ "$1" == "--uninstall" ]; then
   rm /lib/udev/actisense
   rm /lib/udev/canusb
 fi
+
