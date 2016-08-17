@@ -3,7 +3,7 @@ package main
 import "github.com/burntsushi/toml"
 
 type tomlConfig struct {
-	LogLevel   string
+	LogLevel   string `toml:"log_level"`
 	MapFile    string
 	WebSockets webSocketsConfig
 	Mqtt       mqttConfig

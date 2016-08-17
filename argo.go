@@ -70,7 +70,7 @@ func main() {
 	quiet := flag.Bool("q", false, "Don't display PGN data")
 	addr := flag.String("addr", ":8081", "http service address")
 	stats := flag.Bool("s", false, "Display live statistics")
-	dev_type := flag.String("dev", "actisense", "Choose type of device: actisense, canusb")
+	dev_type := flag.String("dev", "actisense", "Choose type of device: actisense, canusb, file")
 	no_server := flag.Bool("no-server", false, "Don't start Web Sockets or ZeroMQ")
 	map_file := flag.String("map", "map.xml", "File to use for mapping between input and Signal K")
 	mqtt_server := flag.String("mqtt", "localhost", "Defaults to MQTT broker on localhost")
@@ -109,17 +109,15 @@ func main() {
 
 	config, err := ReadConfig(*config_file)
 	if err != nil {
-		log.Fatal("could not read config file %v: %v", *config_file, err)
+		log.Fatalf("could not read config file %v: %v", *config_file, err)
 	}
 
 	lvl, err := logging.LogLevel(config.LogLevel)
 	if err == nil {
 		log_filter.SetLevel(lvl, "")
 	} else {
-		log.Warning("Could not set log level to %v: %v", config.LogLevel, err)
+		log.Warningf("Could not set log level to %v: %v", config.LogLevel, err)
 	}
-
-	log.Info("%v", config)
 
 	switch flag.NArg() {
 	case 0:
@@ -127,10 +125,10 @@ func main() {
 	case 1:
 		device = flag.Arg(0)
 	default:
-		log.Fatal("expected max 1 arg for the serial port device, default is ", device)
+		log.Fatal("expected max 1 arg for the serial port device, default is", device)
 	}
 
-	log.Debug("opening %v", device)
+	log.Debug("opening", device)
 
 	var stat syscall.Stat_t
 	var port *sio.Port
@@ -141,15 +139,15 @@ func main() {
 	}
 
 	if stat.Mode&syscall.S_IFMT == syscall.S_IFCHR {
-		log.Debug("%v is a serial port", device)
+		log.Debugf("%v is a serial port", device)
 		port, err = sio.Open(device, syscall.B230400)
 	} else {
-		log.Debug("%v is a file", device)
+		log.Debugf("%v is a file", device)
 		*dev_type = "file"
 	}
 
 	if err != nil {
-		log.Fatal("failure to ", err)
+		log.Fatal("failure to", err)
 	}
 
 	txch := make(chan nmea2k.ParsedMessage)
@@ -180,7 +178,7 @@ func main() {
 		mqtt_opts.SetTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12})
 		mqtt_client = mqtt.NewClient(mqtt_opts)
 		if token := mqtt_client.Connect(); token.Wait() && token.Error() != nil {
-			log.Fatal("MQTT: ", token.Error())
+			log.Fatal("MQTT:", token.Error())
 		}
 	}
 
@@ -239,14 +237,12 @@ func main() {
 	}()
 
 	// Set up hardware
-	log.Debug(*dev_type)
+	log.Debug("configuring", *dev_type)
 	if *dev_type == "canusb" {
-		if *debug {
-			fmt.Println("adding Fast Packets")
-		}
+		log.Debug("adding Fast Packets")
 		for _, p := range nmea2k.PgnList {
 			if p.Size > 8 {
-				log.Debug("adding PGN: ", p.Pgn)
+				log.Debug("adding PGN:", p.Pgn)
 				canusb.AddFastPacket(p.Pgn)
 			}
 		}
