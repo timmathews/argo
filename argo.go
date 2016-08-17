@@ -112,11 +112,15 @@ func main() {
 		log.Fatalf("could not read config file %v: %v", *config_file, err)
 	}
 
-	lvl, err := logging.LogLevel(config.LogLevel)
-	if err == nil {
-		log_filter.SetLevel(lvl, "")
+	if config.LogLevel == "NONE" {
+		log_filter = logging.AddModuleLevel(logging.NewLogBackend(ioutil.Discard, "", 0))
 	} else {
-		log.Warningf("Could not set log level to %v: %v", config.LogLevel, err)
+		lvl, err := logging.LogLevel(config.LogLevel)
+		if err == nil {
+			log_filter.SetLevel(lvl, "")
+		} else {
+			log.Warningf("Could not set log level to %v: %v", config.LogLevel, err)
+		}
 	}
 
 	switch flag.NArg() {
