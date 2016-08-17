@@ -3,6 +3,7 @@ package nmea2k
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/timmathews/argo/can"
 	"gopkg.in/vmihailenco/msgpack.v2"
 	"strconv"
 	"time"
@@ -27,32 +28,47 @@ type ParsedMessage struct {
 }
 
 type CanBoatMessage struct {
-	Timestamp   time.Time `json:"timestamp"`
-	Priority    uint8     `json:"prio"`
-	Source      uint8     `json:"src"`
-	Destination uint8     `json:"dst"`
-	Pgn         uint32    `json:"pgn"`
-	Fields      DataMap   `json:"fields"`
+	Timestamp   string                 `json:"timestamp"`
+	Priority    uint8                  `json:"prio"`
+	Source      uint8                  `json:"src"`
+	Destination uint8                  `json:"dst"`
+	Pgn         uint32                 `json:"pgn"`
+	Fields      map[string]interface{} `json:"fields"`
 }
 
 func FromCanBoat(data string) *ParsedMessage {
 	var cbm CanBoatMessage
 	json.Unmarshal(([]byte)(data), &cbm)
-	fmt.Println("CBM", cbm)
 
-	hdr := new(RawMessage)
-	hdr.Timestamp = cbm.Timestamp
+	hdr := RawMessage{new(can.RawMessage)}
+
+	hdr.Timestamp, _ = time.Parse("2006-01-02T15:04:05.999", cbm.Timestamp)
 	hdr.Priority = cbm.Priority
 	hdr.Pgn = cbm.Pgn
 	hdr.Source = cbm.Source
 	hdr.Destination = cbm.Destination
 
-	i, _ := PgnList.First(cbm.Pgn)
+	f, fpgn := PgnList.First(cbm.Pgn)
+	l, _ := PgnList.Last(cbm.Pgn)
+
+	if f != l {
+		fmt.Printf("f (%v) != l (%v)\n", f, l)
+	}
+
+	dd := make(map[int]interface{})
+
+	for k, v := range cbm.Fields {
+		for kk, vv := range fpgn.FieldList {
+			if vv.Name == k {
+				dd[kk] = v
+			}
+		}
+	}
 
 	var p = ParsedMessage{
-		*hdr,
-		i,
-		cbm.Fields,
+		hdr,
+		f,
+		dd,
 	}
 
 	return &p
