@@ -1,10 +1,14 @@
 package main
 
-import "github.com/burntsushi/toml"
+import (
+	"fmt"
+	"github.com/burntsushi/toml"
+	"github.com/imdario/mergo"
+)
 
 type tomlConfig struct {
 	LogLevel   string `toml:"log_level"`
-	MapFile    string
+	MapFile    string `toml:"map_file"`
 	WebSockets webSocketsConfig
 	Mqtt       mqttConfig
 	Interfaces map[string]interfaceConfig
@@ -28,11 +32,44 @@ type interfaceConfig struct {
 	Speed int
 }
 
+var defaultConfig = tomlConfig{
+	LogLevel: "NONE",
+	MapFile:  "map.xml",
+	WebSockets: webSocketsConfig{
+		Enabled: true,
+		Port:    8082,
+	},
+	Mqtt: mqttConfig{
+		Enabled: true,
+		UseSSL:  true,
+		Host:    "localhost",
+		Port:    8883,
+	},
+	Interfaces: map[string]interfaceConfig{
+		"actisense1": {
+			Path:  "/dev/ttyUSB0",
+			Type:  "actisense",
+			Speed: 115200,
+		},
+	},
+}
+
 func ReadConfig(path string) (tomlConfig, error) {
 	var config tomlConfig
+
 	if _, err := toml.DecodeFile(path, &config); err != nil {
-		return config, err
+		return defaultConfig, err
 	}
+
+	fmt.Println("Config: ", config)
+
+	fmt.Println("Default:", defaultConfig)
+
+	if err := mergo.Merge(&config, defaultConfig); err != nil {
+		return defaultConfig, err
+	}
+
+	fmt.Println("Merged: ", config)
 
 	return config, nil
 }

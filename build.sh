@@ -19,6 +19,7 @@ if [ "$1" == "--build" ]; then
   go get github.com/gorilla/websocket
   go get git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git
   go get github.com/burntsushi/toml
+  go get github.com/imdario/mergo
   echo "# Compiling."
   go build
   echo "# Done."
