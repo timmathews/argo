@@ -1,26 +1,21 @@
 /*
-Argo collects data from NMEA-2000 and NMEA-0813[1] sensors and resends that
-data over a LAN via an MQTT broker to be consumed by subscribers. Argo also
-provides a WebSockets server Argo calculates additional data such as true wind
-speed, leeway, set, and drift. These values are also sent over the network.
-Additionally, Argo can log data to a database for later analysis.
-
-Argo borrows heavily from the CANboat project which was written in C and is
-copyright 2009-2012, Kees Verruijt, Harlingen, The Netherlands.
-
-This file is part of Argo.
-
-Argo is free software: you can redistribute it and/or modify it under the terms
-of the GNU General Public License as published by the Free Software Foundation,
-either version 3 of the License, or (at your option) any later version.
-
-Argo is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with
-Argo.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (C) 2016 Tim Mathews <tim@signalk.org>
+ *
+ * This file is part of Argo.
+ *
+ * Argo is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+ *
+ * Argo is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 package main
 
@@ -93,6 +88,7 @@ func main() {
 	logging.SetBackend(log_filter)
 
 	if *help {
+		fmt.Println("Argo Copyright (C) 2016 Tim Mathews <tim@signalk.org>\n")
 		flag.PrintDefaults()
 		return
 	}
