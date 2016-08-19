@@ -22,8 +22,8 @@ package actisense
 import (
 	"errors"
 	"fmt"
-	"github.com/schleibinger/sio"
 	"github.com/timmathews/argo/can"
+	"io"
 	"time"
 )
 
@@ -58,11 +58,11 @@ const (
 )
 
 type ActisensePort struct {
-	p      *sio.Port
+	p      io.ReadWriteCloser
 	IsOpen bool
 }
 
-func OpenChannel(port *sio.Port) (p *ActisensePort, err error) {
+func OpenChannel(port io.ReadWriteCloser) (p *ActisensePort, err error) {
 	p = &ActisensePort{
 		p:      port,
 		IsOpen: true,

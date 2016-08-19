@@ -27,14 +27,15 @@ import (
 	"flag"
 	"fmt"
 	mqtt "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
+	"github.com/jacobsa/go-serial/serial"
 	"github.com/op/go-logging"
-	"github.com/schleibinger/sio"
 	"github.com/timmathews/argo/actisense"
 	"github.com/timmathews/argo/can"
 	"github.com/timmathews/argo/canusb"
 	"github.com/timmathews/argo/nmea2k"
 	"github.com/timmathews/argo/signalk"
 	"github.com/wsxiaoys/terminal"
+	"io"
 	"io/ioutil"
 	"os"
 	"sort"
@@ -132,7 +133,7 @@ func main() {
 	log.Debug("opening", device)
 
 	var stat syscall.Stat_t
-	var port *sio.Port
+	var port io.ReadWriteCloser
 	err = syscall.Stat(device, &stat)
 
 	if err != nil {
@@ -141,7 +142,14 @@ func main() {
 
 	if stat.Mode&syscall.S_IFMT == syscall.S_IFCHR {
 		log.Debugf("%v is a serial port", device)
-		port, err = sio.Open(device, syscall.B230400)
+		options := serial.OpenOptions{
+			PortName:        device,
+			BaudRate:        230400,
+			DataBits:        8,
+			StopBits:        1,
+			MinimumReadSize: 4,
+		}
+		port, err = serial.Open(options)
 	} else {
 		log.Debugf("%v is a file", device)
 		*dev_type = "file"

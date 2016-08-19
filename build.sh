@@ -3,7 +3,7 @@
 build () {
   echo "# Building argo."
   echo "# Installing dependencies."
-  go get github.com/schleibinger/sio
+  go get github.com/jacobsa/go-serial/serial
   go get github.com/op/go-logging
   go get gopkg.in/vmihailenco/msgpack.v2
   go get github.com/wsxiaoys/terminal

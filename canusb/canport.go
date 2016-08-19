@@ -22,13 +22,13 @@ package canusb
 import (
 	"errors"
 	"fmt"
-	"github.com/schleibinger/sio"
 	"github.com/timmathews/argo/can"
+	"io"
 	"time"
 )
 
 type CanPort struct {
-	p      *sio.Port
+	p      io.ReadWriteCloser
 	a      uint8
 	IsOpen bool
 	rx     chan []byte
@@ -39,7 +39,7 @@ type CanPort struct {
 // This must be called after opening the serial port, but before beginning
 // communication with the CAN bus network. No harm will come from calling this
 // function multiple times. CloseChannel is its counterpart.
-func OpenChannel(port *sio.Port, address uint8) (p *CanPort, err error) {
+func OpenChannel(port io.ReadWriteCloser, address uint8) (p *CanPort, err error) {
 	var s string
 
 	defer func() {
