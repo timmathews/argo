@@ -33,15 +33,15 @@ type tomlConfig struct {
 }
 
 type webSocketsConfig struct {
-	Enabled bool
-	Port    int
+	Disabled bool
+	Port     int
 }
 
 type mqttConfig struct {
-	Enabled bool
-	UseSSL  bool
-	Port    int
-	Host    string
+	Disabled     bool
+	UseCleartext bool
+	Port         int
+	Host         string
 }
 
 type interfaceConfig struct {
@@ -54,14 +54,14 @@ var defaultConfig = tomlConfig{
 	LogLevel: "NONE",
 	MapFile:  "map.xml",
 	WebSockets: webSocketsConfig{
-		Enabled: true,
-		Port:    8082,
+		Disabled: false,
+		Port:     8082,
 	},
 	Mqtt: mqttConfig{
-		Enabled: true,
-		UseSSL:  true,
-		Host:    "localhost",
-		Port:    8883,
+		Disabled:     false,
+		UseCleartext: false,
+		Host:         "localhost",
+		Port:         8883,
 	},
 	Interfaces: map[string]interfaceConfig{
 		"actisense1": {
