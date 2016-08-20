@@ -57,11 +57,14 @@ var log_format = logging.MustStringFormatter(
 	"%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:-8s} %{id:03x}%{color:reset} %{message}",
 )
 
+var config tomlConfig
+
 func main() {
 	// Command line flags are defined here
 	debug := flag.Bool("d", false, "Debug mode, extra logging information shown on stderr")
 	verbose := flag.Bool("v", false, "Verbose mode, be chatty")
 	help := flag.Bool("h", false, "This help message")
+	explain := flag.Bool("explain", false, "Dump PGNs as JSON")
 	pgn := flag.Int("pgn", 0, "Display only this PGN")
 	src := flag.Int("source", 255, "Display PGNs from this source only")
 	quiet := flag.Bool("q", false, "Don't display PGN data")
@@ -72,7 +75,6 @@ func main() {
 	map_file := flag.String("map", "map.xml", "File to use for mapping between input and Signal K")
 	mqtt_server := flag.String("mqtt", "localhost", "Defaults to MQTT broker on localhost")
 	config_file := flag.String("config", "argo.conf", "Path to config file")
-	explain := flag.Bool("explain", false, "Dump PGNs as JSON")
 	device := "/dev/ttyUSB0"
 
 	flag.Parse()
@@ -179,7 +181,7 @@ func main() {
 
 	// Set up MQTT Client
 	var mqtt_client *mqtt.Client
-	if config.Mqtt.Enabled {
+	if !config.Mqtt.Disabled {
 		mqtt_opts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("ssl://%v:8883", *mqtt_server))
 		mqtt_opts.SetClientID("argo") // TODO: This needs to be moved to config file
 		mqtt_opts.SetUsername("signalk")

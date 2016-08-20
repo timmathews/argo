@@ -132,7 +132,7 @@ func MessageDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		fmt.Println("error:", err)
+		log.Error(err)
 	}
 	fmt.Fprintf(w, string(b))
 }
@@ -146,8 +146,8 @@ func SendMessageHandler(cmd chan CommandRequest) http.HandlerFunc {
 			if err != nil {
 				fmt.Fprintf(w, "Invalid JSON")
 			}
-			fmt.Println("Request Type:", b.RequestType)
-			fmt.Println("Requested PGN:", b.RequestedPgn)
+			log.Debug("Request Type:", b.RequestType)
+			log.Debug("Requested PGN:", b.RequestedPgn)
 			cmd <- b
 		}
 	}
@@ -161,5 +161,5 @@ func ApiServer(cmd chan CommandRequest) {
 	r.HandleFunc("/api/v1/messages/{key}", MessageDetailsHandler)
 	r.HandleFunc("/api/v1/control/send", http.HandlerFunc(SendMessageHandler(cmd)))
 	http.Handle("/api/v1/", r)
-	http.ListenAndServe(":8082", nil)
+	http.ListenAndServe(fmt.Sprint(":", config.WebSockets.Port), nil)
 }
