@@ -206,6 +206,7 @@ func main() {
 	}
 
 	go ApiServer(&addr, cmdch)
+	go UiServer(&addr, cmdch)
 
 	// Print and transmit received messages
 	go func() {
