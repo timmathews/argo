@@ -153,7 +153,7 @@ func SendMessageHandler(cmd chan CommandRequest) http.HandlerFunc {
 	}
 }
 
-func ApiServer(cmd chan CommandRequest) {
+func ApiServer(addr *string, cmd chan CommandRequest) {
 	r := mux.NewRouter()
 	r.HandleFunc("/api/v1/", HomeHandler)
 	r.HandleFunc("/api/v1/messages", MessagesIndex)
@@ -161,5 +161,5 @@ func ApiServer(cmd chan CommandRequest) {
 	r.HandleFunc("/api/v1/messages/{key}", MessageDetailsHandler)
 	r.HandleFunc("/api/v1/control/send", http.HandlerFunc(SendMessageHandler(cmd)))
 	http.Handle("/api/v1/", r)
-	http.ListenAndServe(fmt.Sprint(":", config.WebSockets.Port), nil)
+	http.ListenAndServe(*addr, nil)
 }

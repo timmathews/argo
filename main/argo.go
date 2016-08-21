@@ -68,10 +68,8 @@ func main() {
 	pgn := flag.Int("pgn", 0, "Display only this PGN")
 	src := flag.Int("source", 255, "Display PGNs from this source only")
 	quiet := flag.Bool("q", false, "Don't display PGN data")
-	addr := flag.String("addr", ":8081", "http service address")
 	stats := flag.Bool("s", false, "Display live statistics")
 	dev_type := flag.String("dev", "actisense", "Choose type of device: actisense, canusb, file")
-	no_server := flag.Bool("no-server", false, "Don't start Web Sockets or ZeroMQ")
 	map_file := flag.String("map", "map.xml", "File to use for mapping between input and Signal K")
 	mqtt_server := flag.String("mqtt", "localhost", "Defaults to MQTT broker on localhost")
 	config_file := flag.String("config", "argo.conf", "Path to config file")
@@ -196,14 +194,18 @@ func main() {
 	var canport can.ReadWriter
 	var fileScanner *bufio.Scanner
 
-	if !*no_server {
+	// Convert the port int to a string starting with :
+	// TODO: specify interfaces to listen on
+	addr := fmt.Sprintf(":%v", config.WebSockets.Port)
+
+	if !config.WebSockets.Disabled {
 		// Start up the WebSockets hub
 		go websocket_hub.run()
 
-		go WebSocketServer(addr, log)
-
-		go ApiServer(cmdch)
+		go WebSocketServer(&addr, log)
 	}
+
+	go ApiServer(&addr, cmdch)
 
 	// Print and transmit received messages
 	go func() {
@@ -214,7 +216,7 @@ func main() {
 				(*src == 255 || int(res.Header.Source) == *src) &&
 				(*quiet == false) && (*stats == false) {
 				log.Debug(res.Header.Print(*verbose))
-				fmt.Println(res.Print(*verbose))
+				log.Info(res.Print(*verbose))
 			}
 
 			if *stats {
@@ -235,11 +237,11 @@ func main() {
 			if err == nil {
 				bytes, err := json.Marshal(bj)
 				if err == nil {
-					if !*no_server {
+					if !config.WebSockets.Disabled {
 						websocket_hub.broadcast <- bytes
 					}
 
-					if config.Mqtt.Enabled {
+					if !config.Mqtt.Disabled {
 						mqtt_client.Publish("signalk/argo", 0, false, bytes) // TODO: This should be in config file
 					}
 				}
