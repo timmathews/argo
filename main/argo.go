@@ -309,8 +309,13 @@ func main() {
 	} else { // it's a file
 		for fileScanner.Scan() {
 			txt := fileScanner.Text()
-			txch <- *(nmea2k.FromCanBoat(txt))
-			time.Sleep(500 * time.Millisecond)
+			pgn, err := nmea2k.FromCanBoat(txt)
+			if err == nil {
+				txch <- *pgn
+			} else {
+				log.Warning("FromCanBoat:", err)
+			}
+			time.Sleep(10 * time.Millisecond)
 		}
 	}
 }

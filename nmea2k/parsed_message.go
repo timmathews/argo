@@ -55,7 +55,7 @@ type CanBoatMessage struct {
 	Fields      map[string]interface{} `json:"fields"`
 }
 
-func FromCanBoat(data string) *ParsedMessage {
+func FromCanBoat(data string) (*ParsedMessage, error) {
 	var cbm CanBoatMessage
 	json.Unmarshal(([]byte)(data), &cbm)
 
@@ -71,7 +71,7 @@ func FromCanBoat(data string) *ParsedMessage {
 	l, _ := PgnList.Last(cbm.Pgn)
 
 	if f != l {
-		fmt.Printf("f (%v) != l (%v)\n", f, l)
+		return nil, fmt.Errorf("(%v): f (%v) != l (%v)\n", cbm.Pgn, f, l)
 	}
 
 	dd := make(map[int]interface{})
@@ -90,7 +90,7 @@ func FromCanBoat(data string) *ParsedMessage {
 		dd,
 	}
 
-	return &p
+	return &p, nil
 }
 
 func (msg *ParsedMessage) Print(verbose bool) string {
