@@ -47,7 +47,7 @@ type CommandRequest struct {
 }
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "<html><head><title>Pyxis API</title></head><body><h1>Pyxis API</h1></body></html>")
+	fmt.Fprintf(w, "<html><head><title>Pyxis API</title></head><body><h1>Pyxis API</h1><a href=\"messages\">Messages</a></body></html>")
 }
 
 func MessagesIndex(w http.ResponseWriter, r *http.Request) {
@@ -155,11 +155,11 @@ func SendMessageHandler(cmd chan CommandRequest) http.HandlerFunc {
 
 func ApiServer(addr *string, cmd chan CommandRequest) {
 	r := mux.NewRouter()
-	r.HandleFunc("/api/v1/", HomeHandler)
-	r.HandleFunc("/api/v1/messages", MessagesIndex)
-	r.HandleFunc("/api/v1/messages/", MessagesIndex)
-	r.HandleFunc("/api/v1/messages/{key}", MessageDetailsHandler)
-	r.HandleFunc("/api/v1/control/send", http.HandlerFunc(SendMessageHandler(cmd)))
-	http.Handle("/api/v1/", r)
-	http.ListenAndServe(*addr, nil)
+	s := r.PathPrefix("/signalk/v1/api").Subrouter()
+	s.HandleFunc("/", HomeHandler)
+	s.HandleFunc("/messages", MessagesIndex)
+	s.HandleFunc("/messages/", MessagesIndex)
+	s.HandleFunc("/messages/{key}", MessageDetailsHandler)
+	s.HandleFunc("/control/send", http.HandlerFunc(SendMessageHandler(cmd)))
+	http.Handle("/signalk/v1/api/", r)
 }
