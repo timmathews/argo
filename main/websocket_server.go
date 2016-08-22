@@ -68,6 +68,13 @@ var websocket_hub = hub{
 	connections: make(map[*connection]bool),
 }
 
+var statistics_hub = hub{
+	broadcast:   make(chan []byte),
+	register:    make(chan *connection),
+	unregister:  make(chan *connection),
+	connections: make(map[*connection]bool),
+}
+
 func (c *connection) write(mt int, payload []byte) error {
 	c.ws.SetWriteDeadline(time.Now().Add(writeWait))
 	return c.ws.WriteMessage(mt, payload)
@@ -145,15 +152,36 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func handleStats(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+
+	ws, err := websocket.Upgrade(w, r, nil, 1024, 1024)
+	if _, ok := err.(websocket.HandshakeError); ok {
+		http.Error(w, "Not a websocket handshake", 400)
+		return
+	} else if err != nil {
+		log.Error("%v", err)
+		return
+	}
+
+	c := &connection{send: make(chan []byte, 256), ws: ws}
+	statistics_hub.register <- c
+	go c.writePump()
+}
+
 func loggingHandler(handler http.Handler, log *logging.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Infof("%v %v %v", r.RemoteAddr, r.Method, r.URL)
+		log.Noticef("%v %v %v", r.RemoteAddr, r.Method, r.URL)
 		handler.ServeHTTP(w, r)
 	})
 }
 
 func WebSocketServer(addr *string, log *logging.Logger) {
 	http.HandleFunc("/ws/v1/", serveWs)
+	http.HandleFunc("/ws/stats", handleStats)
 	err := http.ListenAndServe(*addr, loggingHandler(http.DefaultServeMux, log))
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
