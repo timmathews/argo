@@ -20,10 +20,78 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
+	"github.com/burntsushi/toml"
 	"github.com/gorilla/mux"
+	"github.com/satori/go.uuid"
 	"html/template"
+	"io"
 	"net/http"
+	"strings"
 )
+
+type Uuid struct {
+	Uuid []string `json:"uuid"`
+}
+
+type Vessel struct {
+	Name         string
+	Manufacturer string
+	Model        string
+	Year         int
+	Registration string
+	Mmsi         string
+	Callsign     string
+	Uuid         []string
+}
+
+type Connection struct {
+	ListenOn string `json:"listen"`
+	Port     int
+}
+
+type FormData struct {
+	Vessel     Vessel
+	Connection Connection
+}
+
+func uuidHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+
+	uuid := Uuid{
+		Uuid: strings.Split(uuid.NewV4().String(), "-"),
+	}
+
+	b, err := json.Marshal(uuid)
+
+	if err != nil {
+		log.Error(err)
+		http.Error(w, "Could not generate UUID", 500)
+	} else {
+		io.WriteString(w, string(b))
+	}
+}
+
+func adminHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		decoder := json.NewDecoder(r.Body)
+		var data FormData
+		err := decoder.Decode(&data)
+		if err != nil {
+			log.Error(err)
+			http.Error(w, "Could not parse data", 500) // What's the correct error here?
+		} else {
+			buf := new(bytes.Buffer)
+			if err = toml.NewEncoder(buf).Encode(data); err != nil {
+				log.Error(err)
+			} else {
+				log.Notice("\n", buf.String())
+			}
+		}
+	}
+}
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
@@ -36,7 +104,9 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 func UiServer(addr *string, cmd chan CommandRequest) {
 	r := mux.NewRouter()
+	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("assets/"))))
+	r.HandleFunc("/admin/uuid", uuidHandler)
+	r.HandleFunc("/admin", adminHandler)
 	r.HandleFunc("/", indexHandler)
 	http.Handle("/", r)
-	http.ListenAndServe(*addr, nil)
 }

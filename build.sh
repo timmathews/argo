@@ -12,6 +12,7 @@ build () {
   go get git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git
   go get github.com/burntsushi/toml
   go get github.com/imdario/mergo
+  go get github.com/satori/go.uuid
   echo "# Compiling."
   cd main
   go build -o ../argo

@@ -39,6 +39,7 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
+	"strconv"
 	"syscall"
 	"time"
 )
@@ -52,12 +53,19 @@ func (p UintSlice) Len() int           { return len(p) }
 func (p UintSlice) Less(i, j int) bool { return p[i] < p[j] }
 func (p UintSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
+type StringSlice []string
+
+func (p StringSlice) Len() int           { return len(p) }
+func (p StringSlice) Less(i, j int) bool { return p[i] < p[j] }
+func (p StringSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
 var log = logging.MustGetLogger("argo")
 var log_format = logging.MustStringFormatter(
 	"%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:-8s} %{id:03x}%{color:reset} %{message}",
 )
 
 var config tomlConfig
+var statLog map[string]uint64
 
 func main() {
 	// Command line flags are defined here
@@ -162,8 +170,8 @@ func main() {
 	txch := make(chan nmea2k.ParsedMessage)
 	cmdch := make(chan CommandRequest)
 
-	statLog := make(map[uint32]uint64)
-	var statPgns UintSlice
+	statLog := make(map[string]uint64)
+	var statPgns StringSlice
 
 	data, err := ioutil.ReadFile(*map_file)
 	if err != nil {
@@ -202,6 +210,8 @@ func main() {
 		// Start up the WebSockets hub
 		go websocket_hub.run()
 
+		go statistics_hub.run()
+
 		go WebSocketServer(&addr, log)
 	}
 
@@ -220,14 +230,25 @@ func main() {
 				log.Info(res.Print(*verbose))
 			}
 
-			if *stats {
-				if _, ok := statLog[res.Header.Pgn]; ok {
-					statLog[res.Header.Pgn]++
+			pgn := strconv.Itoa(int(res.Header.Pgn))
+
+			if _, ok := statLog[pgn]; ok {
+				statLog[pgn]++
+			} else {
+				statLog[pgn] = 1
+				statPgns = append(statPgns, pgn)
+				sort.Sort(statPgns)
+			}
+
+			if !config.WebSockets.Disabled {
+				if b, err := json.Marshal(statLog); err == nil {
+					statistics_hub.broadcast <- b
 				} else {
-					statLog[res.Header.Pgn] = 1
-					statPgns = append(statPgns, res.Header.Pgn)
-					sort.Sort(statPgns)
+					log.Error(err)
 				}
+			}
+
+			if *stats {
 				terminal.Stdout.Clear()
 				for _, k := range statPgns {
 					fmt.Println(k, "=>", statLog[k])
