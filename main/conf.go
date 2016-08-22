@@ -27,6 +27,7 @@ import (
 type tomlConfig struct {
 	LogLevel   string `toml:"log_level"`
 	MapFile    string `toml:"map_file"`
+	AssetPath  string `timp:"asset_path"`
 	WebSockets webSocketsConfig
 	Mqtt       mqttConfig
 	Interfaces map[string]interfaceConfig
@@ -51,8 +52,9 @@ type interfaceConfig struct {
 }
 
 var defaultConfig = tomlConfig{
-	LogLevel: "NONE",
-	MapFile:  "map.xml",
+	LogLevel:  "NONE",
+	MapFile:   "map.xml",
+	AssetPath: "./assets",
 	WebSockets: webSocketsConfig{
 		Disabled: false,
 		Port:     8082,
