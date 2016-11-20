@@ -139,7 +139,7 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not a websocket handshake", 400)
 		return
 	} else if err != nil {
-		log.Error("%v", err)
+		log.Error(err)
 		return
 	}
 
@@ -163,7 +163,7 @@ func handleStats(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not a websocket handshake", 400)
 		return
 	} else if err != nil {
-		log.Error("%v", err)
+		log.Error(err)
 		return
 	}
 

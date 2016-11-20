@@ -291,7 +291,7 @@ func main() {
 		file, _ := os.Open(device)
 		fileScanner = bufio.NewScanner(file)
 	} else {
-		log.Fatal("unknown device type %s. Expected one of: canusb, actisense, file", *dev_type)
+		log.Fatalf("unknown device type %s. Expected one of: canusb, actisense, file", *dev_type)
 	}
 
 	// Handle command requests
