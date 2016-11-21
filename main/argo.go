@@ -24,7 +24,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"encoding/xml"
-	"flag"
 	"fmt"
 	mqtt "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
 	"github.com/jacobsa/go-serial/serial"
@@ -60,50 +59,27 @@ func (p StringSlice) Less(i, j int) bool { return p[i] < p[j] }
 func (p StringSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 var log = logging.MustGetLogger("argo")
-var log_format = logging.MustStringFormatter(
-	"%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:-8s} %{id:03x}%{color:reset} %{message}",
+var logFormat = logging.MustStringFormatter(
+	"%{color}%{time:15:04:05.000} ▶ %{level:4s} %{id:04d} %{message}%{color:reset}",
 )
 
 var config tomlConfig
 var statLog map[string]uint64
 
 func main() {
-	// Command line flags are defined here
-	debug := flag.Bool("d", false, "Debug mode, extra logging information shown on stderr")
-	verbose := flag.Bool("v", false, "Verbose mode, be chatty")
-	help := flag.Bool("h", false, "This help message")
-	explain := flag.Bool("explain", false, "Dump PGNs as JSON")
-	pgn := flag.Int("pgn", 0, "Display only this PGN")
-	src := flag.Int("source", 255, "Display PGNs from this source only")
-	quiet := flag.Bool("q", false, "Don't display PGN data")
-	stats := flag.Bool("s", false, "Display live statistics")
-	dev_type := flag.String("dev", "actisense", "Choose type of device: actisense, canusb, file")
-	map_file := flag.String("map", "map.xml", "File to use for mapping between input and Signal K")
-	mqtt_server := flag.String("mqtt", "localhost", "Defaults to MQTT broker on localhost")
-	config_file := flag.String("config", "argo.conf", "Path to config file")
-	device := "/dev/ttyUSB0"
+	logBackend := logging.NewLogBackend(os.Stderr, "", 0)
+	logFormatter := logging.NewBackendFormatter(logBackend, logFormat)
+	logFilter := logging.AddModuleLevel(logFormatter)
+	logging.SetBackend(logFilter)
 
-	flag.Parse()
+	opts := GetCommandLineOptions()
 
-	log_backend := logging.NewLogBackend(os.Stderr, "", 0)
-	log_formatter := logging.NewBackendFormatter(log_backend, log_format)
-	log_filter := logging.AddModuleLevel(log_formatter)
-
-	if *debug {
-		log_filter.SetLevel(logging.DEBUG, "")
-	} else {
-		log_filter.SetLevel(logging.WARNING, "")
-	}
-
-	logging.SetBackend(log_filter)
-
-	if *help {
-		fmt.Println("Argo Copyright (C) 2016 Tim Mathews <tim@signalk.org>\n")
-		flag.PrintDefaults()
+	if opts.Help {
+		opts.PrintHelp()
 		return
 	}
 
-	if *explain {
+	if opts.Explain {
 		bytes, err := json.MarshalIndent(nmea2k.PgnList, "", "  ")
 		if err == nil {
 			fmt.Println(bytes)
@@ -113,45 +89,46 @@ func main() {
 		return
 	}
 
-	config, err := ReadConfig(*config_file)
+	config, err := ReadConfig(opts.ConfigFile)
 	if err != nil {
-		log.Fatalf("could not read config file %v: %v", *config_file, err)
+		log.Fatalf("could not read config file %v: %v", opts.ConfigFile, err)
 	}
 
-	if config.LogLevel == "NONE" {
-		log_filter = logging.AddModuleLevel(logging.NewLogBackend(ioutil.Discard, "", 0))
+	if (config.LogLevel == "NONE" && opts.LogLevel == "") || opts.LogLevel == "NONE" {
+		logFilter = logging.AddModuleLevel(logging.NewLogBackend(ioutil.Discard, "", 0))
+		logging.SetBackend(logFilter)
 	} else {
-		lvl, err := logging.LogLevel(config.LogLevel)
+		requestedLogLevel := config.LogLevel
+		if opts.LogLevel != "" {
+			requestedLogLevel = opts.LogLevel
+		}
+
+		lvl, err := logging.LogLevel(requestedLogLevel)
 		if err == nil {
-			log_filter.SetLevel(lvl, "")
+			logFilter.SetLevel(lvl, "")
 		} else {
-			log.Warningf("Could not set log level to %v: %v", config.LogLevel, err)
+			log.Warningf("Could not set log level to %v: %v", requestedLogLevel, err)
 		}
 	}
 
-	switch flag.NArg() {
-	case 0:
-		// Use default device
-	case 1:
-		device = flag.Arg(0)
-	default:
-		log.Fatal("expected max 1 arg for the serial port device, default is", device)
-	}
+	log.Debug("config log level", config.LogLevel)
+	log.Debug("command opt log level", opts.LogLevel)
+	log.Debug("log level set to", logging.GetLevel(""))
 
-	log.Debug("opening", device)
+	log.Debug("opening", opts.DevicePath)
 
 	var stat syscall.Stat_t
 	var port io.ReadWriteCloser
-	err = syscall.Stat(device, &stat)
+	err = syscall.Stat(opts.DevicePath, &stat)
 
 	if err != nil {
-		log.Fatalf("failure to stat %v: %v", device, err)
+		log.Fatalf("failure to stat %v: %v", opts.DevicePath, err)
 	}
 
 	if stat.Mode&syscall.S_IFMT == syscall.S_IFCHR {
-		log.Debugf("%v is a serial port", device)
+		log.Debugf("%v is a serial port", opts.DevicePath)
 		options := serial.OpenOptions{
-			PortName:        device,
+			PortName:        opts.DevicePath,
 			BaudRate:        230400,
 			DataBits:        8,
 			StopBits:        1,
@@ -159,8 +136,8 @@ func main() {
 		}
 		port, err = serial.Open(options)
 	} else {
-		log.Debugf("%v is a file", device)
-		*dev_type = "file"
+		log.Debugf("%v is a file", opts.DevicePath)
+		opts.DeviceType = "file"
 	}
 
 	if err != nil {
@@ -173,28 +150,28 @@ func main() {
 	statLog := make(map[string]uint64)
 	var statPgns StringSlice
 
-	data, err := ioutil.ReadFile(*map_file)
+	data, err := ioutil.ReadFile(opts.MapFile)
 	if err != nil {
-		log.Fatalf("could not read XML map file: %v, %v", err, *map_file)
+		log.Fatalf("could not read XML map file: %v, %v", err, opts.MapFile)
 	}
 
-	map_data := signalk.Mappings{}
+	mapData := signalk.Mappings{}
 
-	err = xml.Unmarshal(data, &map_data)
+	err = xml.Unmarshal(data, &mapData)
 	if err != nil {
-		log.Fatalf("could not parse XML map file: %v, %v", err, *map_file)
+		log.Fatalf("could not parse XML map file: %v, %v", err, opts.MapFile)
 	}
 
 	// Set up MQTT Client
-	var mqtt_client *mqtt.Client
+	var mqttClient *mqtt.Client
 	if !config.Mqtt.Disabled {
-		mqtt_opts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("ssl://%v:8883", *mqtt_server))
-		mqtt_opts.SetClientID("argo") // TODO: This needs to be moved to config file
-		mqtt_opts.SetUsername("signalk")
-		mqtt_opts.SetPassword("signalk")
-		mqtt_opts.SetTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12})
-		mqtt_client = mqtt.NewClient(mqtt_opts)
-		if token := mqtt_client.Connect(); token.Wait() && token.Error() != nil {
+		mqttOpts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("ssl://%v:%v", config.Mqtt.Host, config.Mqtt.Port))
+		mqttOpts.SetClientID("argo") // TODO: This needs to be moved to config file
+		mqttOpts.SetUsername("signalk")
+		mqttOpts.SetPassword("signalk")
+		mqttOpts.SetTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12})
+		mqttClient = mqtt.NewClient(mqttOpts)
+		if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
 			log.Fatal("MQTT:", token.Error())
 		}
 	}
@@ -223,11 +200,13 @@ func main() {
 		for {
 			res := <-txch
 
-			if (*pgn == 0 || int(res.Header.Pgn) == *pgn) &&
-				(*src == 255 || int(res.Header.Source) == *src) &&
-				(*quiet == false) && (*stats == false) {
-				log.Debug(res.Header.Print(*verbose))
-				log.Info(res.Print(*verbose))
+			verbose := logging.GetLevel("") == logging.DEBUG
+
+			if (opts.Pgn == 0 || int(res.Header.Pgn) == opts.Pgn) &&
+				(opts.Src == 255 || int(res.Header.Source) == opts.Src) &&
+				!opts.Stats {
+				log.Debug(res.Header.Print(verbose))
+				log.Info(res.Print(verbose))
 			}
 
 			pgn := strconv.Itoa(int(res.Header.Pgn))
@@ -248,14 +227,14 @@ func main() {
 				}
 			}
 
-			if *stats {
+			if opts.Stats {
 				terminal.Stdout.Clear()
 				for _, k := range statPgns {
 					fmt.Println(k, "=>", statLog[k])
 				}
 			}
 
-			bj, err := map_data.Delta(&res)
+			bj, err := mapData.Delta(&res)
 			if err == nil {
 				bytes, err := json.Marshal(bj)
 				if err == nil {
@@ -264,7 +243,7 @@ func main() {
 					}
 
 					if !config.Mqtt.Disabled {
-						mqtt_client.Publish("signalk/argo", 0, false, bytes) // TODO: This should be in config file
+						mqttClient.Publish("signalk/argo", 0, false, bytes) // TODO: This should be in config file
 					}
 				}
 			}
@@ -272,8 +251,8 @@ func main() {
 	}()
 
 	// Set up hardware
-	log.Debug("configuring", *dev_type)
-	if *dev_type == "canusb" {
+	log.Debug("configuring", opts.DeviceType)
+	if opts.DeviceType == "canusb" {
 		log.Debug("adding Fast Packets")
 		for _, p := range nmea2k.PgnList {
 			if p.Size > 8 {
@@ -283,15 +262,15 @@ func main() {
 		}
 		log.Debug("opening channel")
 		canport, _ = canusb.OpenChannel(port, 221)
-	} else if *dev_type == "actisense" {
+	} else if opts.DeviceType == "actisense" {
 		log.Debug("opening channel")
 		canport, _ = actisense.OpenChannel(port)
 		time.Sleep(2)
-	} else if *dev_type == "file" {
-		file, _ := os.Open(device)
+	} else if opts.DeviceType == "file" {
+		file, _ := os.Open(opts.DevicePath)
 		fileScanner = bufio.NewScanner(file)
 	} else {
-		log.Fatalf("unknown device type %s. Expected one of: canusb, actisense, file", *dev_type)
+		log.Fatalf("unknown device type %s. Expected one of: canusb, actisense, file", opts.DeviceType)
 	}
 
 	// Handle command requests
@@ -313,14 +292,14 @@ func main() {
 	}()
 
 	// Read from hardware
-	if *dev_type == "canusb" {
+	if opts.DeviceType == "canusb" {
 		for {
 			raw, err := canport.Read()
 			if err == nil {
 				txch <- *(nmea2k.ParsePacket(raw))
 			}
 		}
-	} else if *dev_type == "actisense" {
+	} else if opts.DeviceType == "actisense" {
 		for {
 			raw, err := canport.Read()
 			if err == nil {
