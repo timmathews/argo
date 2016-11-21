@@ -20,8 +20,11 @@
 package can
 
 import (
+	"fmt"
 	"time"
 )
+
+const layout = "2006-01-02-15:04:05.999"
 
 type RawMessage struct {
 	Timestamp   time.Time // Timestamp of receipt of CAN Message
@@ -51,4 +54,10 @@ type Writer interface {
 type ReadWriter interface {
 	Reader
 	Writer
+}
+
+func (msg *RawMessage) Print(verbose bool) (s string) {
+	// Timestamp Priority Pgn Source Destination Length Data
+	s = fmt.Sprintf("%s %v %v %v %v %v: % x", msg.Timestamp.Format(layout), msg.Priority, msg.Source, msg.Destination, msg.Pgn, msg.Length, msg.Data)
+	return
 }
