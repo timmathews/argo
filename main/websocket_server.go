@@ -143,11 +143,11 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.URL.Path == "/ws/v1/data" {
+	if r.URL.Path == "/signalk/v1/stream" {
 		c := &connection{send: make(chan []byte, 256), ws: ws}
 		websocket_hub.register <- c
 		go c.writePump()
-	} else if r.URL.Path == "/ws/v1/control" {
+	} else if r.URL.Path == "/signalk/v1/control" {
 		fmt.Println("Got registration")
 	}
 }
@@ -180,7 +180,7 @@ func loggingHandler(handler http.Handler, log *logging.Logger) http.Handler {
 }
 
 func WebSocketServer(addr *string, log *logging.Logger) {
-	http.HandleFunc("/ws/v1/", serveWs)
+	http.HandleFunc("/signalk/v1/", serveWs)
 	http.HandleFunc("/ws/stats", handleStats)
 	err := http.ListenAndServe(*addr, loggingHandler(http.DefaultServeMux, log))
 	if err != nil {
