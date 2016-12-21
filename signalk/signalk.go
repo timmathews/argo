@@ -23,6 +23,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/timmathews/argo/nmea2k"
+	"io/ioutil"
 	"strconv"
 	"strings"
 	"time"
@@ -82,10 +83,9 @@ type Mappings struct {
 }
 
 type source struct {
-	Pgn       uint32    `json:"pgn"`
-	Device    string    `json:"device"`
-	Timestamp time.Time `json:"timestamp"`
-	Src       uint8     `json:"src"`
+	Pgn    uint32 `json:"pgn"`
+	Device string `json:"device"`
+	Src    uint8  `json:"src"`
 }
 
 type value struct {
@@ -94,8 +94,9 @@ type value struct {
 }
 
 type update struct {
-	Source source  `json:"source"`
-	Values []value `json:"values"`
+	Source    source    `json:"source"`
+	Timestamp time.Time `json:"timestamp"`
+	Values    []value   `json:"values"`
 }
 
 type delta struct {
@@ -103,25 +104,31 @@ type delta struct {
 	Updates []update `json:"updates"`
 }
 
-func GenerateMappings(mappingData []byte) (Mappings, error) {
+func ParseMappings(filename string) (Mappings, error) {
 	output := Mappings{}
 
-	err := xml.Unmarshal(mappingData, &output)
+	data, err := ioutil.ReadFile(filename)
+
+	if err == nil {
+		err = xml.Unmarshal(data, &output)
+	}
 
 	return output, err
 }
 
-func (m *Mappings) Delta(msg *nmea2k.ParsedMessage) (update, error) {
+func (m *Mappings) Delta(msg *nmea2k.ParsedMessage) (delta, error) {
+	context := "vessels.urn:mrn:signalk:uuid:c0d79334-4e25-4245-8892-54e8ccc8021d"
+
 	src := source{
-		Pgn:       msg.Header.Pgn,
-		Device:    "/dev/actisense",
-		Timestamp: time.Now(),
-		Src:       msg.Header.Source,
+		Pgn:    msg.Header.Pgn,
+		Device: "/dev/actisense",
+		Src:    msg.Header.Source,
 	}
 
-	update := update{
-		Source: src,
-		Values: *new([]value),
+	upd := update{
+		Source:    src,
+		Timestamp: time.Now(),
+		Values:    *new([]value),
 	}
 
 	var usedFields = make(map[int]bool, len(msg.Data))
@@ -130,7 +137,7 @@ func (m *Mappings) Delta(msg *nmea2k.ParsedMessage) (update, error) {
 		for _, mapping := range m.Mappings {
 			for _, parameterGroup := range mapping.ParameterGroups {
 				if parameterGroup.Pgn == msg.Header.Pgn {
-					path := mapping.Path
+					path := toDotNotation(mapping.Path)
 					mlt := int64(-1)
 
 					rpt := int64(nmea2k.PgnList[msg.Index].RepeatingFields)
@@ -161,18 +168,18 @@ func (m *Mappings) Delta(msg *nmea2k.ParsedMessage) (update, error) {
 								Value: field,
 							}
 							if val.Path != "" && val.Value != nil {
-								update.Values = append(update.Values, val)
+								upd.Values = append(upd.Values, val)
 							}
 						}
 					} else if len(parameterGroup.Fieldset.Fields) > 0 {
 						if parameterGroup.Fieldset.hasAll(msg.Data, usedFields) {
 							s, u := parameterGroup.Fieldset.parse(msg.Data)
 							val := value{
-								Path:  mapping.Path,
+								Path:  toDotNotation(mapping.Path),
 								Value: s,
 							}
 							if val.Path != "" && val.Value != nil {
-								update.Values = append(update.Values, val)
+								upd.Values = append(upd.Values, val)
 							}
 							usedFields = merge(usedFields, u)
 						}
@@ -182,10 +189,17 @@ func (m *Mappings) Delta(msg *nmea2k.ParsedMessage) (update, error) {
 		}
 	}
 
-	if len(update.Values) > 0 {
-		return update, nil
+	if len(upd.Values) > 0 {
+		updates := []update{upd}
+		delta := delta{
+			Context: context,
+			Updates: updates,
+		}
+
+		return delta, nil
+
 	} else {
-		return update, fmt.Errorf("unknown PGN %v from %v on %v", update.Source.Pgn, update.Source.Src, update.Source.Device)
+		return delta{}, fmt.Errorf("unknown PGN %v from %v on %v", upd.Source.Pgn, upd.Source.Src, upd.Source.Device)
 	}
 }
 
@@ -291,4 +305,8 @@ func conditionsMatch(conditions []condition, fields nmea2k.DataMap) bool {
 	}
 
 	return true
+}
+
+func toDotNotation(in string) string {
+	return strings.Replace(in, "/", ".", -1)[2:]
 }

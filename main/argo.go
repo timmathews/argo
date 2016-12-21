@@ -23,7 +23,6 @@ import (
 	"bufio"
 	"crypto/tls"
 	"encoding/json"
-	"encoding/xml"
 	"fmt"
 	mqtt "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
 	"github.com/jacobsa/go-serial/serial"
@@ -64,7 +63,7 @@ var logFormat = logging.MustStringFormatter(
 )
 
 var config tomlConfig
-var statLog map[string]uint64
+var statLog map[int]uint64
 
 func main() {
 	logBackend := logging.NewLogBackend(os.Stderr, "", 0)
@@ -135,13 +134,13 @@ func main() {
 			MinimumReadSize: 4,
 		}
 		port, err = serial.Open(options)
+
+		if err != nil {
+			log.Fatal("error opening port:", err)
+		}
 	} else {
 		log.Debugf("%v is a file", opts.DevicePath)
 		opts.DeviceType = "file"
-	}
-
-	if err != nil {
-		log.Fatal("failure to", err)
 	}
 
 	txch := make(chan nmea2k.ParsedMessage)
@@ -150,16 +149,9 @@ func main() {
 	statLog := make(map[string]uint64)
 	var statPgns StringSlice
 
-	data, err := ioutil.ReadFile(opts.MapFile)
+	mapData, err := signalk.ParseMappings(opts.MapFile)
 	if err != nil {
-		log.Fatalf("could not read XML map file: %v, %v", err, opts.MapFile)
-	}
-
-	mapData := signalk.Mappings{}
-
-	err = xml.Unmarshal(data, &mapData)
-	if err != nil {
-		log.Fatalf("could not parse XML map file: %v, %v", err, opts.MapFile)
+		log.Fatalf("could not read XML map file %v: %v", opts.MapFile, err)
 	}
 
 	// Set up MQTT Client
@@ -175,9 +167,6 @@ func main() {
 			log.Fatal("MQTT:", token.Error())
 		}
 	}
-
-	var canport can.ReadWriter
-	var fileScanner *bufio.Scanner
 
 	// Convert the port int to a string starting with :
 	// TODO: specify interfaces to listen on
@@ -250,28 +239,7 @@ func main() {
 		}
 	}()
 
-	// Set up hardware
-	log.Debug("configuring", opts.DeviceType)
-	if opts.DeviceType == "canusb" {
-		log.Debug("adding Fast Packets")
-		for _, p := range nmea2k.PgnList {
-			if p.Size > 8 {
-				log.Debug("adding PGN:", p.Pgn)
-				canusb.AddFastPacket(p.Pgn)
-			}
-		}
-		log.Debug("opening channel")
-		canport, _ = canusb.OpenChannel(port, 221)
-	} else if opts.DeviceType == "actisense" {
-		log.Debug("opening channel")
-		canport, _ = actisense.OpenChannel(port)
-		time.Sleep(2)
-	} else if opts.DeviceType == "file" {
-		file, _ := os.Open(opts.DevicePath)
-		fileScanner = bufio.NewScanner(file)
-	} else {
-		log.Fatalf("unknown device type %s. Expected one of: canusb, actisense, file", opts.DeviceType)
-	}
+	var canport can.ReadWriter
 
 	// Handle command requests
 	go func() {
@@ -291,31 +259,56 @@ func main() {
 		}
 	}()
 
-	// Read from hardware
+	// Set up hardware and start reading data
+	log.Debug("configuring", opts.DeviceType)
 	if opts.DeviceType == "canusb" {
+		log.Debug("adding Fast Packets")
+		for _, p := range nmea2k.PgnList {
+			if p.Size > 8 {
+				log.Debug("adding PGN:", p.Pgn)
+				canusb.AddFastPacket(p.Pgn)
+			}
+		}
+
+		// Read from hardware
+		log.Debug("opening channel")
+		canport, _ = canusb.OpenChannel(port, 221)
 		for {
 			raw, err := canport.Read()
 			if err == nil {
 				txch <- *(nmea2k.ParsePacket(raw))
+			} else {
+				log.Warning("canport:", err)
 			}
 		}
 	} else if opts.DeviceType == "actisense" {
+		// Read from hardware
+		log.Debug("opening channel")
+		canport, _ = actisense.OpenChannel(port)
+		time.Sleep(2)
 		for {
 			raw, err := canport.Read()
 			if err == nil {
 				txch <- *(nmea2k.ParsePacket(raw))
+			} else {
+				log.Warning("canport:", err)
 			}
 		}
-	} else { // it's a file
+	} else if opts.DeviceType == "file" {
+		// Read from file
+		file, _ := os.Open(opts.DevicePath)
+		fileScanner := bufio.NewScanner(file)
 		for fileScanner.Scan() {
 			txt := fileScanner.Text()
 			pgn, err := nmea2k.FromCanBoat(txt)
 			if err == nil {
 				txch <- *pgn
 			} else {
-				log.Warning("FromCanBoat:", err)
+				log.Warning("filescanner:", err)
 			}
-			time.Sleep(10 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		}
+	} else {
+		log.Fatalf("unknown device type %s. Expected one of: canusb, actisense, file", opts.DeviceType)
 	}
 }
