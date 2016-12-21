@@ -31,6 +31,7 @@ type tomlConfig struct {
 	WebSockets webSocketsConfig
 	Mqtt       mqttConfig
 	Interfaces map[string]interfaceConfig
+	Vessel     vesselConfig
 }
 
 type webSocketsConfig struct {
@@ -51,8 +52,19 @@ type interfaceConfig struct {
 	Speed int
 }
 
+type vesselConfig struct {
+	Name         string
+	Make         string
+	Model        string
+	Year         int
+	Mmsi         int
+	Callsign     string
+	Registration string
+	Uuid         string
+}
+
 var defaultConfig = tomlConfig{
-	LogLevel:  "NONE",
+	LogLevel:  "INFO",
 	MapFile:   "map.xml",
 	AssetPath: "./assets",
 	WebSockets: webSocketsConfig{
