@@ -50,7 +50,7 @@ $(function() {
     $('#file-select').removeClass('hidden');
   }
 
-  var ws = new WebSocket("ws://localhost:8080/ws/stats");
+  var ws = new WebSocket("ws://localhost:8082/ws/stats");
   ws.onmessage = function(data) {
     var stats = JSON.parse(data.data);
 
