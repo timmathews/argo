@@ -45,12 +45,6 @@ import (
 // Timestamp format for printing
 const layout = "2006-01-02-15:04:05.999"
 
-type UintSlice []uint32
-
-func (p UintSlice) Len() int           { return len(p) }
-func (p UintSlice) Less(i, j int) bool { return p[i] < p[j] }
-func (p UintSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
-
 type StringSlice []string
 
 func (p StringSlice) Len() int           { return len(p) }
