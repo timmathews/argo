@@ -41,7 +41,7 @@ type Vessel struct {
 	Model        string
 	Year         int
 	Registration string
-	Mmsi         string
+	Mmsi         int
 	Callsign     string
 	Uuid         []string
 }

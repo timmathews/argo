@@ -72,9 +72,9 @@ function submitForm() {
       name: $('#vesselName').val(),
       manufacturer: $('#vesselBrand').val(),
       model: $('#vesselModel').val(),
-      year: $('#vesselYear').val(),
+      year: Number.parseInt($('#vesselYear').val()),
       registration: $('#registration').val(),
-      mmsi: $('#mmsi').val(),
+      mmsi: Number.parseInt($('#mmsi').val()),
       callsign: $('#callsign').val(),
       uuid: getUUID()
     },
