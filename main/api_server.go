@@ -46,6 +46,30 @@ type CommandRequest struct {
 	RequestedPgn uint32 `json:"req_pgn"`
 }
 
+func GetPGNSummary(i int) IndexEntry {
+	pgn := nmea2k.PgnList[i]
+
+	p := IndexEntry{}
+	p.Pgn = pgn.Pgn
+	p.Name = pgn.Description
+	p.Size = pgn.Size
+	p.Category = pgn.Category
+	p.Verified = pgn.IsKnown
+	if pgn.Size <= 8 {
+		p.Type = "Single Frame"
+	} else if pgn.Size > 8 && pgn.Size <= 223 {
+		p.Type = "Fast Packet"
+	} else if pgn.Size > 223 && pgn.Size <= 1785 {
+		p.Type = "ISO 11783 Multi-Packet"
+	} else {
+		p.Type = "Invalid"
+	}
+	p.RepeatingFields = pgn.RepeatingFields
+	p.Details = fmt.Sprintf("/api/v1/messages/%d", i)
+
+	return p
+}
+
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "<html><head><title>Pyxis API</title></head><body><h1>Pyxis API</h1><a href=\"messages\">Messages</a></body></html>")
 }
@@ -62,23 +86,7 @@ func MessagesIndex(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		p := IndexEntry{}
-		p.Pgn = pgn.Pgn
-		p.Name = pgn.Description
-		p.Size = pgn.Size
-		p.Category = pgn.Category
-		p.Verified = pgn.IsKnown
-		if pgn.Size <= 8 {
-			p.Type = "Single Frame"
-		} else if pgn.Size > 8 && pgn.Size <= 223 {
-			p.Type = "Fast Packet"
-		} else if pgn.Size > 223 && pgn.Size <= 1785 {
-			p.Type = "ISO 11783 Multi-Packet"
-		} else {
-			p.Type = "Invalid"
-		}
-		p.RepeatingFields = pgn.RepeatingFields
-		p.Details = fmt.Sprintf("/api/v1/messages/%d", i)
+		p := GetPGNSummary(i)
 
 		if typ != "" {
 			if typ == "s" && p.Size <= 8 {
