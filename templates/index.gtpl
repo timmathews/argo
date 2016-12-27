@@ -36,7 +36,7 @@
           </table>
         </div>
         <div class="col-sm-4">
-          <form>
+          <form onsubmit="return submitForm()">
             <div class="tab-content">
               <div role="tabpanel" class="tab-pane active" id="basic-setup">
                 <div class="form-group">
@@ -159,7 +159,7 @@
               </div> <!-- providers -->
             </div> <!-- tab-content -->
             <div class="form-group">
-              <button class="btn btn-success btn-lg btn-block" onClick="return submitForm()">Update Settings</button>
+              <button class="btn btn-success btn-lg btn-block">Update Settings</button>
             </div>
           </form>
         </div>

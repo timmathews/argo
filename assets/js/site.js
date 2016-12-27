@@ -63,10 +63,6 @@ $(function() {
 });
 
 function submitForm() {
-  var http = new XMLHttpRequest();
-  http.open("POST", "/admin", true);
-  http.setRequestHeader("Content-type","application/json");
-
   var params = {
     vessel: {
       name: $('#vesselName').val(),
@@ -84,15 +80,14 @@ function submitForm() {
     },
     provider_type: $('#provider-type').val(),
     log_file: $('#provider-file').val()
-  }
+  };
 
-  console.log(params);
-
+  var http = new XMLHttpRequest();
+  http.open("POST", "/admin", true);
+  http.setRequestHeader("Content-type", "application/json");
   http.send(JSON.stringify(params));
-  http.onload = function() {
-    console.log(http.response);
-  }
 
+  return false;
 }
 
 function getUUID() {
