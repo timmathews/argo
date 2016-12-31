@@ -106,9 +106,9 @@ func main() {
 
 	log.Debug("config log level", config.LogLevel)
 	log.Debug("command opt log level", opts.LogLevel)
-	log.Debug("log level set to", logging.GetLevel(""))
-
-	log.Debug("opening", opts.DevicePath)
+	log.Info("log level set to", logging.GetLevel(""))
+	log.Info(config.Interfaces)
+	log.Info("opening", opts.DevicePath)
 
 	var stat syscall.Stat_t
 	var port io.ReadWriteCloser

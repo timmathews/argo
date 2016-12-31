@@ -28,6 +28,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -61,7 +62,7 @@ func uuidHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	uuid := Uuid{
-		Uuid: strings.Split(uuid.NewV4().String(), "-"),
+		Uuid: strings.Split(strings.ToUpper(uuid.NewV4().String()), "-"),
 	}
 
 	b, err := json.Marshal(uuid)
@@ -87,6 +88,9 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 			if err = toml.NewEncoder(buf).Encode(data); err != nil {
 				log.Error(err)
 			} else {
+				f, _ := os.Create("vessel.toml")
+				f.Write(buf.Bytes())
+				f.Close()
 				log.Notice("\n", buf.String())
 			}
 		}

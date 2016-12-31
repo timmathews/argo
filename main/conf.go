@@ -20,8 +20,10 @@
 package main
 
 import (
+	"bytes"
 	"github.com/burntsushi/toml"
 	"github.com/imdario/mergo"
+	"os"
 )
 
 type tomlConfig struct {
@@ -98,4 +100,20 @@ func ReadConfig(path string) (tomlConfig, error) {
 	}
 
 	return config, nil
+}
+
+func WriteConfig(path string, config tomlConfig) error {
+	buf := new(bytes.Buffer)
+	if err := toml.NewEncoder(buf).Encode(config); err != nil {
+		return err
+	} else {
+		if f, err := os.Create(path); err != nil {
+			return err
+		} else {
+			f.Write(buf.Bytes())
+			f.Close()
+		}
+	}
+
+	return nil
 }
