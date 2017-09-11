@@ -125,10 +125,8 @@ func MessageDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if pgn >= int64(len(nmea2k.PgnList)) {
-		pgnDef = map[string]interface{}{
-			"Error": "Index out of range",
-			"Index": pgn,
-		}
+		id, _ := nmea2k.PgnList.First(uint32(pgn))
+		pgnDef = nmea2k.PgnList[id]
 	} else {
 		pgnDef = nmea2k.PgnList[pgn]
 	}
