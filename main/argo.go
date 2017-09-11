@@ -153,9 +153,9 @@ func main() {
 	var mqttClient mqtt.Client
 	if !sysconf.Mqtt.Disabled {
 		mqttOpts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("ssl://%v:%v", sysconf.Mqtt.Host, sysconf.Mqtt.Port))
-		mqttOpts.SetClientID("argo") // TODO: This needs to be moved to config file
-		mqttOpts.SetUsername("signalk")
-		mqttOpts.SetPassword("signalk")
+		mqttOpts.SetClientID(sysconf.Mqtt.ClientId)
+		mqttOpts.SetUsername(sysconf.Mqtt.Username)
+		mqttOpts.SetPassword(sysconf.Mqtt.Password)
 		mqttOpts.SetTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12})
 		mqttClient = mqtt.NewClient(mqttOpts)
 		if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {

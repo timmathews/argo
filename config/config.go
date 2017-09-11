@@ -46,6 +46,9 @@ type mqttConfig struct {
 	UseCleartext bool
 	Port         int
 	Host         string
+	ClientId     string
+	Username     string
+	Password     string
 }
 
 type interfaceConfig struct {
@@ -78,6 +81,9 @@ var defaultConfig = TomlConfig{
 		UseCleartext: false,
 		Host:         "localhost",
 		Port:         8883,
+		ClientId:     "argo",
+		Username:     "signalk",
+		Password:     "signalk",
 	},
 	Interfaces: map[string]interfaceConfig{
 		"actisense1": {
