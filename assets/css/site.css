@@ -14,20 +14,6 @@
 @-o-viewport      { width: device-width; }
 @viewport         { width: device-width; }
 
-.narrow .col-xs-3,
-.narrow .col-xs-2 {
-  padding-left: 2px;
-  padding-right: 2px;
-}
-
-.narrow .col-xs-3:first-child {
-  padding-left: 15px;
-}
-
-.narrow .col-xs-3:last-child {
-  padding-right: 15px;
-}
-
 body {
   background-color: #eee;
   padding-top: 70px;
@@ -38,3 +24,21 @@ h1.navbar-brand {
   font-size: 24px;
 }
 
+hr {
+  border-top: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+.octicon {
+  display: inline-block;
+  vertical-align: text-top;
+  fill: currentColor;
+}
+
+.modal-body p {
+  margin-bottom: 0;
+}
+
+th a {
+  color: inherit;
+  text-decoration: underline;
+}

@@ -57,10 +57,26 @@ $(function() {
     $('#stats').empty();
 
     $.each(stats, function(k, v) {
-      $('#stats').append("<tr><th>" + k + "</th><td>" + v + "</td></tr>");
+      $('#stats').append('<tr><th><a href="#" data-pgn="' + k + '">' + k + "</th><td>" + v + "</td></tr>");
     });
+
+    $('a[data-pgn]').on('click', function(e) { showPgnData($(e.target).data('pgn')); });
   };
 });
+
+function showPgnData(pgn) {
+  $.getJSON('/signalk/v1/api/messages/' + pgn, function(data) {
+    console.log(data.FieldList.map(x => x.Name));
+    $('#pgnModal .modal-title').text(data.Description);
+    $('#pgnModal .modal-body .pgn').text(data.Pgn);
+    $('#pgnModal .modal-body .category').text(data.Category);
+    $('#pgnModal .fields').text('');
+    data.FieldList.forEach(function(x) {
+      $('#pgnModal .fields').append('<li>' + x.Name + '</li>');
+    });
+    $('#pgnModal').modal();
+  });
+}
 
 function submitForm() {
   var params = {
