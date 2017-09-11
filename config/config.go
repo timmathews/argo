@@ -17,7 +17,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main
+package config
 
 import (
 	"bytes"
@@ -26,7 +26,7 @@ import (
 	"os"
 )
 
-type tomlConfig struct {
+type TomlConfig struct {
 	LogLevel   string `toml:"log_level"`
 	MapFile    string `toml:"map_file"`
 	AssetPath  string `timp:"asset_path"`
@@ -65,7 +65,7 @@ type vesselConfig struct {
 	Uuid         string
 }
 
-var defaultConfig = tomlConfig{
+var defaultConfig = TomlConfig{
 	LogLevel:  "INFO",
 	MapFile:   "map.xml",
 	AssetPath: "./assets",
@@ -88,8 +88,8 @@ var defaultConfig = tomlConfig{
 	},
 }
 
-func ReadConfig(path string) (tomlConfig, error) {
-	var config tomlConfig
+func ReadConfig(path string) (TomlConfig, error) {
+	var config TomlConfig
 
 	if _, err := toml.DecodeFile(path, &config); err != nil {
 		return defaultConfig, err
@@ -102,7 +102,7 @@ func ReadConfig(path string) (tomlConfig, error) {
 	return config, nil
 }
 
-func WriteConfig(path string, config tomlConfig) error {
+func WriteConfig(path string, config TomlConfig) error {
 	buf := new(bytes.Buffer)
 	if err := toml.NewEncoder(buf).Encode(config); err != nil {
 		return err

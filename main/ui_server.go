@@ -68,7 +68,7 @@ func uuidHandler(w http.ResponseWriter, r *http.Request) {
 	b, err := json.Marshal(uuid)
 
 	if err != nil {
-		log.Error(err)
+		log.Error("JSON Error:", err)
 		http.Error(w, "Could not generate UUID", 500)
 	} else {
 		io.WriteString(w, string(b))
@@ -81,12 +81,12 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		var data FormData
 		err := decoder.Decode(&data)
 		if err != nil {
-			log.Error(err)
+			log.Error("Parsing Error:", err)
 			http.Error(w, "Could not parse data", 500) // What's the correct error here?
 		} else {
 			buf := new(bytes.Buffer)
 			if err = toml.NewEncoder(buf).Encode(data); err != nil {
-				log.Error(err)
+				log.Error("Encoding Error:", err)
 			} else {
 				f, _ := os.Create("vessel.toml")
 				f.Write(buf.Bytes())

@@ -140,7 +140,7 @@ func MessageDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Error(err)
+		log.Error("Marshalling failed:", err)
 	}
 	fmt.Fprintf(w, string(b))
 }

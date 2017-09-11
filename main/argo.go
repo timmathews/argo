@@ -24,12 +24,13 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	mqtt "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/jacobsa/go-serial/serial"
 	"github.com/op/go-logging"
 	"github.com/timmathews/argo/actisense"
 	"github.com/timmathews/argo/can"
 	"github.com/timmathews/argo/canusb"
+	"github.com/timmathews/argo/config"
 	"github.com/timmathews/argo/nmea2k"
 	"github.com/timmathews/argo/signalk"
 	"github.com/wsxiaoys/terminal"
@@ -56,7 +57,7 @@ var logFormat = logging.MustStringFormatter(
 	"%{color}%{time:15:04:05.000} ▶ %{level:4s} %{id:04d} %{message}%{color:reset}",
 )
 
-var config tomlConfig
+var sysconf config.TomlConfig
 var statLog map[int]uint64
 
 func main() {
@@ -82,16 +83,16 @@ func main() {
 		return
 	}
 
-	config, err := ReadConfig(opts.ConfigFile)
+	sysconf, err := config.ReadConfig(opts.ConfigFile)
 	if err != nil {
 		log.Fatalf("could not read config file %v: %v", opts.ConfigFile, err)
 	}
 
-	if (config.LogLevel == "NONE" && opts.LogLevel == "") || opts.LogLevel == "NONE" {
+	if (sysconf.LogLevel == "NONE" && opts.LogLevel == "") || opts.LogLevel == "NONE" {
 		logFilter = logging.AddModuleLevel(logging.NewLogBackend(ioutil.Discard, "", 0))
 		logging.SetBackend(logFilter)
 	} else {
-		requestedLogLevel := config.LogLevel
+		requestedLogLevel := sysconf.LogLevel
 		if opts.LogLevel != "" {
 			requestedLogLevel = opts.LogLevel
 		}
@@ -104,10 +105,10 @@ func main() {
 		}
 	}
 
-	log.Debug("config log level", config.LogLevel)
+	log.Debug("config log level", sysconf.LogLevel)
 	log.Debug("command opt log level", opts.LogLevel)
 	log.Info("log level set to", logging.GetLevel(""))
-	log.Info(config.Interfaces)
+	log.Info("interfaces", sysconf.Interfaces)
 	log.Info("opening", opts.DevicePath)
 
 	var stat syscall.Stat_t
@@ -149,9 +150,9 @@ func main() {
 	}
 
 	// Set up MQTT Client
-	var mqttClient *mqtt.Client
-	if !config.Mqtt.Disabled {
-		mqttOpts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("ssl://%v:%v", config.Mqtt.Host, config.Mqtt.Port))
+	var mqttClient mqtt.Client
+	if !sysconf.Mqtt.Disabled {
+		mqttOpts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("ssl://%v:%v", sysconf.Mqtt.Host, sysconf.Mqtt.Port))
 		mqttOpts.SetClientID("argo") // TODO: This needs to be moved to config file
 		mqttOpts.SetUsername("signalk")
 		mqttOpts.SetPassword("signalk")
@@ -164,9 +165,9 @@ func main() {
 
 	// Convert the port int to a string starting with :
 	// TODO: specify interfaces to listen on
-	addr := fmt.Sprintf(":%v", config.WebSockets.Port)
+	addr := fmt.Sprintf(":%v", sysconf.WebSockets.Port)
 
-	if !config.WebSockets.Disabled {
+	if !sysconf.WebSockets.Disabled {
 		// Start up the WebSockets hub
 		go websocket_hub.run()
 
@@ -202,11 +203,11 @@ func main() {
 				sort.Sort(statPgns)
 			}
 
-			if !config.WebSockets.Disabled {
+			if !sysconf.WebSockets.Disabled {
 				if b, err := json.Marshal(statLog); err == nil {
 					statistics_hub.broadcast <- b
 				} else {
-					log.Error(err)
+					log.Error("JSON.Marshal", err)
 				}
 			}
 
@@ -221,11 +222,11 @@ func main() {
 			if err == nil {
 				bytes, err := json.Marshal(bj)
 				if err == nil {
-					if !config.WebSockets.Disabled {
+					if !sysconf.WebSockets.Disabled {
 						websocket_hub.broadcast <- bytes
 					}
 
-					if !config.Mqtt.Disabled {
+					if !sysconf.Mqtt.Disabled {
 						mqttClient.Publish("signalk/argo", 0, false, bytes) // TODO: This should be in config file
 					}
 				}
