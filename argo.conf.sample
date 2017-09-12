@@ -5,7 +5,7 @@
 
 # Global settings
 
-# log_level sets the threshold for logging. The options are:
+# LogLevel sets the threshold for logging. The options are:
 # * NONE
 # * CRITICAL
 # * ERROR
@@ -13,75 +13,101 @@
 # * NOTICE
 # * INFO
 # * DEBUG
-# log_level = "DEBUG"
+# LogLevel = "NOTICE"
 
-# map_file is the name of the XML file which defines how NMEA 2000 and NMEA
+# MapFile is the name of the XML file which defines how NMEA 2000 and NMEA
 # 0183 messages map to the Signal K structure.
-# map_file = "map.xml"
+# MapFile = "map.xml"
 
-# asset_path is the path where web assets are located. Default is ./assets,
+# HTTP / WebSockets server settings
+[Server]
+
+# AssetPath is the path where web assets are located. Default is ./assets,
 # relative to the executable. In production, should be /var/lib/signalk/assets
 # or other platform appropriate location
-# asset_path = "./assets"
-
-# WebSockets settings
-[websockets]
+# AssetPath = "./assets"
 
 # whether WebSockets support is enabled or not
-# disabled = false
+# EnableWebsockets = true
 
-# port to serve WebSockets data on
-# port = 8082
+# port to serve HTTP requests data on
+# Port = 8080
 
 # MQTT settings
-[mqtt]
+[Mqtt]
 
 # whether MQTT support is enabled or not
-# disabled = false
+# Enable = true
 
 # whether MQTT should use SSL (TLS) or not. Currently this option is ignored
 # and MQTT always uses TLS.
-# useCleartext = false
+# UseTls = true
 
 # MQTT broker host
-# host = "localhost"
+# Host = "localhost"
 
 # MQTT broker port
-# port = 8883
+# Port = 8883
 
 # Hardware interface settings
-[interfaces]
+[Interfaces]
 
 # Multiple interfaces can be configrured by creating a new section called
 # [interfaces.*]. These must occur after the [interfaces] section above and
 # before any other sections defined below. Indenting is optional.
-#  [interfaces.actisense1]
+#  [Interfaces.Actisense1]
 
 # path is the filenname of the interface to read from
-#  path = "/dev/ttyUSB0"
+#  Path = "/dev/ttyUSB0"
 
 # type specifies what type of device the interface is, options are:
 # * actisense - Actisense NGT-1 type device
 # * canusb - Lawicel CAN-USB type device
 # * file - a JSON file with pre-recorded data in CANboat format
-#  type = "actisense"
+#  Type = "actisense"
 
 # speed specifies the baudrate of the device (not required for a file).
 # Typically this is 115200 or 230400 depending on the device.
-#  speed = 115200
+#  Speed = 115200
 
 # Additional examples
-#  [interfaces.actisense2]
-#  path = "/dev/ttyUSB1"
-#  type = "actisense"
-#  speed = 115200
+#  [Interfaces.Actisense2]
+#  Path = "/dev/ttyUSB1"
+#  Type = "actisense"
+#  Speed = 115200
 #
-#  [interfaces.canusb]
-#  path = "/dev/ttyUSB2"
-#  type = "canusb"
-#  speed = 230400
+#  [Interfaces.Canusb]
+#  Path = "/dev/ttyUSB2"
+#  Type = "canusb"
+#  Speed = 230400
 #
-#  [interfaces.wind]
-#  path = "wind.json"
-#  type = "file"
+#  [interfaces.Wind]
+#  Path = "wind.json"
+#  Type = "file"
 
+# Boat's identifying information
+[Vessel]
+
+# Registered name of the vessel
+# Name = "SS Minnow"
+
+# Manufacturer of the vessel
+# Manufacturer = "Wheeler"
+
+# Manufacturer's model name
+# Model = "Playmate Express Bridge"
+
+# Year built
+# Year = 1964
+
+# Vessel registration
+# Registration = "BC112233MV"
+
+# Maritime mobile service identity, regionally assigned
+# Mmsi = 123456789
+
+# Radio callsign
+# Callsign = "KD123A"
+
+# Signal K UUID
+# Uuid = "xxxx-xxx-xxxxx-xxxxxxxxxx-xxxx"

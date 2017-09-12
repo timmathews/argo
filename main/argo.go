@@ -83,7 +83,8 @@ func main() {
 		return
 	}
 
-	sysconf, err := config.ReadConfig(opts.ConfigFile)
+	var err error
+	sysconf, err = config.ReadConfig(opts.ConfigFile)
 	if err != nil {
 		log.Fatalf("could not read config file %v: %v", opts.ConfigFile, err)
 	}
@@ -151,12 +152,14 @@ func main() {
 
 	// Set up MQTT Client
 	var mqttClient mqtt.Client
-	if !sysconf.Mqtt.Disabled {
+	if sysconf.Mqtt.Enable {
 		mqttOpts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("ssl://%v:%v", sysconf.Mqtt.Host, sysconf.Mqtt.Port))
 		mqttOpts.SetClientID(sysconf.Mqtt.ClientId)
 		mqttOpts.SetUsername(sysconf.Mqtt.Username)
 		mqttOpts.SetPassword(sysconf.Mqtt.Password)
-		mqttOpts.SetTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12})
+		if sysconf.Mqtt.UseTls {
+			mqttOpts.SetTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12})
+		}
 		mqttClient = mqtt.NewClient(mqttOpts)
 		if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
 			log.Fatal("MQTT:", token.Error())
@@ -165,9 +168,9 @@ func main() {
 
 	// Convert the port int to a string starting with :
 	// TODO: specify interfaces to listen on
-	addr := fmt.Sprintf(":%v", sysconf.WebSockets.Port)
+	addr := fmt.Sprintf(":%v", sysconf.Server.Port)
 
-	if !sysconf.WebSockets.Disabled {
+	if sysconf.Server.EnableWebsockets {
 		// Start up the WebSockets hub
 		go websocket_hub.run()
 
@@ -203,11 +206,11 @@ func main() {
 				sort.Sort(statPgns)
 			}
 
-			if !sysconf.WebSockets.Disabled {
+			if sysconf.Server.EnableWebsockets {
 				if b, err := json.Marshal(statLog); err == nil {
 					statistics_hub.broadcast <- b
 				} else {
-					log.Error("JSON.Marshal", err)
+					log.Error("JSON.Marshal %v", err)
 				}
 			}
 
@@ -222,12 +225,12 @@ func main() {
 			if err == nil {
 				bytes, err := json.Marshal(bj)
 				if err == nil {
-					if !sysconf.WebSockets.Disabled {
+					if sysconf.Server.EnableWebsockets {
 						websocket_hub.broadcast <- bytes
 					}
 
-					if !sysconf.Mqtt.Disabled {
-						mqttClient.Publish("signalk/argo", 0, false, bytes) // TODO: This should be in config file
+					if sysconf.Mqtt.Enable {
+						mqttClient.Publish(sysconf.Mqtt.Channel, 0, false, bytes)
 					}
 				}
 			}

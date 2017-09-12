@@ -20,31 +20,19 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
-	"github.com/burntsushi/toml"
 	"github.com/gorilla/mux"
 	"github.com/satori/go.uuid"
+	"github.com/timmathews/argo/config"
 	"html/template"
 	"io"
+	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 )
 
 type Uuid struct {
 	Uuid []string `json:"uuid"`
-}
-
-type Vessel struct {
-	Name         string
-	Manufacturer string
-	Model        string
-	Year         int
-	Registration string
-	Mmsi         int
-	Callsign     string
-	Uuid         []string
 }
 
 type Connection struct {
@@ -53,7 +41,7 @@ type Connection struct {
 }
 
 type FormData struct {
-	Vessel     Vessel
+	Vessel     config.VesselConfig
 	Connection Connection
 }
 
@@ -81,18 +69,13 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		var data FormData
 		err := decoder.Decode(&data)
 		if err != nil {
-			log.Error("Parsing Error:", err)
-			http.Error(w, "Could not parse data", 500) // What's the correct error here?
+			log.Error("Parsing %v", err)
+			http.Error(w, "Could not parse data", 400)
 		} else {
-			buf := new(bytes.Buffer)
-			if err = toml.NewEncoder(buf).Encode(data); err != nil {
-				log.Error("Encoding Error:", err)
-			} else {
-				f, _ := os.Create("vessel.toml")
-				f.Write(buf.Bytes())
-				f.Close()
-				log.Notice("\n", buf.String())
-			}
+			sysconf.Vessel = data.Vessel
+			tmp, _ := ioutil.ReadFile("argo.conf")
+			ioutil.WriteFile("argo.conf~", tmp, 0644)
+			config.WriteConfig("argo.conf", sysconf)
 		}
 	}
 }
@@ -101,14 +84,15 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		t, err := template.ParseFiles("templates/index.gtpl")
 		if err == nil {
-			t.Execute(w, nil)
+			log.Notice("Sysconf", sysconf)
+			t.Execute(w, sysconf)
 		}
 	}
 }
 
 func UiServer(addr *string, cmd chan CommandRequest) {
 	r := mux.NewRouter()
-	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("assets/"))))
+	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir(sysconf.Server.AssetPath))))
 	r.HandleFunc("/admin/uuid", uuidHandler)
 	r.HandleFunc("/admin", adminHandler)
 	r.HandleFunc("/", indexHandler)

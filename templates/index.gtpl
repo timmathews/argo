@@ -52,25 +52,26 @@
               <div role="tabpanel" class="tab-pane active" id="basic-setup">
                 <div class="form-group">
                   <label for="vesselName">Vessel Name</label>
-                  <input class="form-control" id="vesselName" placeholder="Name" value="{{.Name}}">
+                  <input class="form-control" id="vesselName" placeholder="Name" value="{{.Vessel.Name}}">
                 </div>
                 <div class="form-row">
                   <div class="col">
                     <div class="form-group">
-                      <label for="vesselBrand">Make</label>
-                      <input class="form-control" id="vesselBrand" placeholder="Manufacturer" value="{{.Make}}">
+                      <label for="vesselManufacturer">Manufacturer</label>
+                      <input class="form-control" id="vesselManufacturer" placeholder="Manufacturer"
+                      value="{{.Vessel.Manufacturer}}">
                     </div>
                   </div>
                   <div class="col">
                     <div class="form-group">
                       <label for="vesselModel">Model</label>
-                      <input class="form-control" id="vesselModel" placeholder="Model" value="{{.Model}}">
+                      <input class="form-control" id="vesselModel" placeholder="Model" value="{{.Vessel.Model}}">
                     </div>
                   </div>
                   <div class="col">
                     <div class="form-group">
                       <label for="vesselYear">Year</label>
-                      <input class="form-control" id="vesselYear" placeholder="Year" type="number" value="{{.Year}}">
+                      <input class="form-control" id="vesselYear" placeholder="Year" type="number" value="{{.Vessel.Year}}">
                     </div>
                   </div>
                 </div>
@@ -81,7 +82,7 @@
                       <img src="/assets/svg/info.svg" class="octicon" data-toggle="tooltip" data-placement="top"
                         title="Maritime Mobile Service Identity, assigned regionally, leave blank if you do not have
                         one" />
-                      <input class="form-control" id="mmsi" placeholder="MMSI" value="{{.Mmsi}}">
+                      <input class="form-control" id="mmsi" placeholder="MMSI" value="{{.Vessel.Mmsi}}">
                     </div>
                   </div>
                   <div class="col">
@@ -89,7 +90,7 @@
                       <label for="callsign">Callsign</label>
                       <img src="/assets/svg/info.svg" class="octicon" data-toggle="tooltip" data-placement="top"
                         title="Your radio callsign" />
-                      <input class="form-control" id="callsign" placeholder="Callsign" value="{{.Callsign}}">
+                      <input class="form-control" id="callsign" placeholder="Callsign" value="{{.Vessel.Callsign}}">
                     </div>
                   </div>
                   <div class="col">
@@ -98,7 +99,7 @@
                       <img src="/assets/svg/info.svg" class="octicon" data-toggle="tooltip" data-placement="top"
                         title="Your boat's registration number, typically displayed on the side of the hull" />
                       <input class="form-control" id="registration" placeholder="Registration"
-                        value="{{.Registration}}">
+                        value="{{.Vessel.Registration}}">
                     </div>
                   </div>
                 </div>
@@ -110,19 +111,19 @@
                     created for you" />
                   <div class="form-row">
                     <div class="col-3">
-                      <input class="form-control" id="uuid_0" value="{{.Uuid}}">
+                      <input class="form-control" id="uuid_0" value="{{.Vessel.Uuid0}}">
                     </div>
                     <div class="col-2">
-                      <input class="form-control" id="uuid_1" value="{{.Uuid}}">
+                      <input class="form-control" id="uuid_1" value="{{.Vessel.Uuid1}}">
                     </div>
                     <div class="col-2">
-                      <input class="form-control" id="uuid_2" value="{{.Uuid}}">
+                      <input class="form-control" id="uuid_2" value="{{.Vessel.Uuid2}}">
                     </div>
                     <div class="col-2">
-                      <input class="form-control" id="uuid_3" value="{{.Uuid}}">
+                      <input class="form-control" id="uuid_3" value="{{.Vessel.Uuid3}}">
                     </div>
                     <div class="col-3">
-                      <input class="form-control" id="uuid_4" value="{{.Uuid}}">
+                      <input class="form-control" id="uuid_4" value="{{.Vessel.Uuid4}}">
                     </div>
                   </div>
                 </div>
@@ -138,13 +139,13 @@
                   <div class="col-4">
                     <div class="form-group">
                       <label for="port">Port</label>
-                      <input class="form-control" id="port" type="number" placeholder="Port" value="">
+                      <input class="form-control" id="port" type="number" placeholder="Port" value="{{.Server.Port}}">
                     </div>
                   </div>
                 </div>
                 <div class="form-check">
                   <label class="form-check-label">
-                    <input class="form-check-input" type="checkbox">
+                    <input class="form-check-input" type="checkbox" {{if .Server.EnableWebsockets}} checked {{end}}>
                     Enable WebSockets
                   </label>
                 </div>
@@ -161,7 +162,7 @@
                 <hr>
                 <div class="form-check">
                   <label class="form-check-label">
-                    <input class="form-check-input" type="checkbox">
+                    <input class="form-check-input" type="checkbox" {{if .Mqtt.Enable}} checked {{end}}>
                     Enable MQTT
                   </label>
                 </div>
@@ -169,13 +170,13 @@
                   <div class="col-8">
                     <div class="form-group">
                       <label for="mqttHost">MQTT Server</label>
-                      <input class="form-control" id="mqttHost" placeholder="Hostname" value="">
+                      <input class="form-control" id="mqttHost" placeholder="Hostname" value="{{.Mqtt.Host}}">
                     </div>
                   </div>
                   <div class="col-4">
                     <div class="form-group">
                       <label for="mqttPort">Port</label>
-                      <input class="form-control" id="mqttPort" type="number" placeholder="Port" value="">
+                      <input class="form-control" id="mqttPort" type="number" placeholder="Port" value="{{.Mqtt.Port}}">
                     </div>
                   </div>
                 </div>
@@ -183,36 +184,28 @@
                   <div class="col">
                     <div class="form-group">
                       <label for="mqttClientId">Client ID</label>
-                      <input class="form-control" id="mqttClientId" placeholder="Client ID" value="">
+                      <input class="form-control" id="mqttClientId" placeholder="Client ID" value="{{.Mqtt.ClientId}}">
                     </div>
                   </div>
                   <div class="col">
                     <div class="form-group">
                       <label for="mqttUsername">Username</label>
-                      <input class="form-control" id="mqttUsername" placeholder="Client ID" value="">
+                      <input class="form-control" id="mqttUsername" placeholder="Username" value="{{.Mqtt.Username}}">
                     </div>
                   </div>
                   <div class="col">
                     <div class="form-group">
                       <label for="mqttPassword">Password</label>
-                      <input class="form-control" id="mqttPassword" type="password" placeholder="Password" value="">
+                      <input class="form-control" id="mqttPassword" type="password" placeholder="Password"
+                        value="{{.Mqtt.Password}}">
                     </div>
                   </div>
                 </div>
                 <div class="form-check">
                   <label class="form-check-label">
-                    <input class="form-check-input" type="checkbox">
+                    <input class="form-check-input" type="checkbox" {{if .Mqtt.UseTls}} checked {{end}}>
                     Use TLS
                   </label>
-                </div>
-                <hr>
-                <div class="form-row">
-                  <div class="col-4">
-                    <div class="form-group">
-                      <label for="mqttPort">Port</label>
-                      <input class="form-control" id="mqttPort" type="number" placeholder="Port" value="">
-                    </div>
-                  </div>
                 </div>
               </div> <!-- network -->
               <div role="tabpanel" class="tab-pane" id="providers">

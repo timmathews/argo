@@ -50,7 +50,9 @@ $(function() {
     $('#file-select').removeClass('hidden');
   }
 
-  var ws = new WebSocket("ws://localhost:8082/ws/stats");
+  var host = window.location.host;
+  var proto = window.location.protocol === 'http:' ? 'ws' : 'wss';
+  var ws = new WebSocket(proto + "://" + host + "/ws/stats");
   ws.onmessage = function(data) {
     var stats = JSON.parse(data.data);
 
@@ -115,5 +117,5 @@ function getUUID() {
     $('#uuid_4').val()
   ];
 
-  return uuid;
+  return uuid.join('-');
 }

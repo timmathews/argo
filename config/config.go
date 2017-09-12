@@ -24,31 +24,34 @@ import (
 	"github.com/burntsushi/toml"
 	"github.com/imdario/mergo"
 	"os"
+	"strings"
 )
 
 type TomlConfig struct {
-	LogLevel   string `toml:"log_level"`
-	MapFile    string `toml:"map_file"`
-	AssetPath  string `timp:"asset_path"`
-	WebSockets webSocketsConfig
+	LogLevel   string
+	MapFile    string
+	Server     serverConfig
 	Mqtt       mqttConfig
 	Interfaces map[string]interfaceConfig
-	Vessel     vesselConfig
+	Vessel     VesselConfig
 }
 
-type webSocketsConfig struct {
-	Disabled bool
-	Port     int
+type serverConfig struct {
+	EnableWebsockets bool
+	Port             int
+	ListenOn         string
+	AssetPath        string
 }
 
 type mqttConfig struct {
-	Disabled     bool
-	UseCleartext bool
-	Port         int
-	Host         string
-	ClientId     string
-	Username     string
-	Password     string
+	Enable   bool
+	UseTls   bool
+	Port     int
+	Host     string
+	ClientId string
+	Username string
+	Password string
+	Channel  string
 }
 
 type interfaceConfig struct {
@@ -57,40 +60,39 @@ type interfaceConfig struct {
 	Speed int
 }
 
-type vesselConfig struct {
+type VesselConfig struct {
 	Name         string
-	Make         string
+	Manufacturer string
 	Model        string
 	Year         int
 	Mmsi         int
 	Callsign     string
 	Registration string
 	Uuid         string
+	Uuid0        string `toml:"-"`
+	Uuid1        string `toml:"-"`
+	Uuid2        string `toml:"-"`
+	Uuid3        string `toml:"-"`
+	Uuid4        string `toml:"-"`
 }
 
 var defaultConfig = TomlConfig{
-	LogLevel:  "INFO",
-	MapFile:   "map.xml",
-	AssetPath: "./assets",
-	WebSockets: webSocketsConfig{
-		Disabled: false,
-		Port:     8082,
+	LogLevel: "INFO",
+	MapFile:  "map.xml",
+	Server: serverConfig{
+		AssetPath:        "./assets",
+		EnableWebsockets: true,
+		Port:             8080,
 	},
 	Mqtt: mqttConfig{
-		Disabled:     false,
-		UseCleartext: false,
-		Host:         "localhost",
-		Port:         8883,
-		ClientId:     "argo",
-		Username:     "signalk",
-		Password:     "signalk",
-	},
-	Interfaces: map[string]interfaceConfig{
-		"actisense1": {
-			Path:  "/dev/ttyUSB0",
-			Type:  "actisense",
-			Speed: 115200,
-		},
+		Enable:   false,
+		UseTls:   true,
+		Host:     "localhost",
+		Port:     8883,
+		ClientId: "argo",
+		Username: "signalk",
+		Password: "signalk",
+		Channel:  "signalk/argo",
 	},
 }
 
@@ -103,6 +105,15 @@ func ReadConfig(path string) (TomlConfig, error) {
 
 	if err := mergo.Merge(&config, defaultConfig); err != nil {
 		return defaultConfig, err
+	}
+
+	u := strings.Split(config.Vessel.Uuid, "-")
+	if len(u) == 5 {
+		config.Vessel.Uuid0 = u[0]
+		config.Vessel.Uuid1 = u[1]
+		config.Vessel.Uuid2 = u[2]
+		config.Vessel.Uuid3 = u[3]
+		config.Vessel.Uuid4 = u[4]
 	}
 
 	return config, nil
