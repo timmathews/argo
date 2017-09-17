@@ -33,9 +33,6 @@ type commandArgs struct {
 	Src        int
 	LogLevel   string
 	ConfigFile string
-	MapFile    string
-	DeviceType string
-	DevicePath string
 }
 
 func GetCommandLineOptions() commandArgs {
@@ -48,22 +45,10 @@ func GetCommandLineOptions() commandArgs {
 	flag.IntVar(&args.Src, "source", 255, "Display PGNs from this source only")
 	flag.StringVar(&args.LogLevel, "log", "", "Set logging level: NONE, CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG")
 	flag.StringVar(&args.ConfigFile, "config", "argo.conf", "Path to config file")
-	flag.StringVar(&args.MapFile, "map", "map.xml", "File to use for mapping between input and Signal K")
-	flag.StringVar(&args.DeviceType, "device", "actisense", "Choose type of device: actisense, canusb, file")
 
 	flag.Parse()
 
 	args.LogLevel = strings.ToUpper(args.LogLevel)
-
-	if flag.NArg() == 0 {
-		if args.DeviceType == "file" {
-			args.DevicePath = "sample.json"
-		} else {
-			args.DevicePath = "/dev/ttyUSB0"
-		}
-	} else {
-		args.DevicePath = flag.Arg(0)
-	}
 
 	return args
 }

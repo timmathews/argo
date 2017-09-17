@@ -32,15 +32,19 @@ type TomlConfig struct {
 	MapFile    string
 	Server     serverConfig
 	Mqtt       mqttConfig
-	Interfaces map[string]interfaceConfig
+	Interfaces map[string]InterfaceConfig
 	Vessel     VesselConfig
 }
 
 type serverConfig struct {
 	EnableWebsockets bool
+	UseTls           bool
 	Port             int
 	ListenOn         string
 	AssetPath        string
+	Certificate      string `toml:"-"`
+	PublicKeyFile    string
+	PrivateKeyFile   string
 }
 
 type mqttConfig struct {
@@ -54,10 +58,10 @@ type mqttConfig struct {
 	Channel  string
 }
 
-type interfaceConfig struct {
+type InterfaceConfig struct {
 	Path  string
 	Type  string
-	Speed int
+	Speed uint
 }
 
 type VesselConfig struct {

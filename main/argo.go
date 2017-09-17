@@ -28,7 +28,6 @@ import (
 	"github.com/jacobsa/go-serial/serial"
 	"github.com/op/go-logging"
 	"github.com/timmathews/argo/actisense"
-	"github.com/timmathews/argo/can"
 	"github.com/timmathews/argo/canusb"
 	"github.com/timmathews/argo/config"
 	"github.com/timmathews/argo/nmea2k"
@@ -37,6 +36,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/signal"
 	"sort"
 	"strconv"
 	"syscall"
@@ -86,58 +86,28 @@ func main() {
 	var err error
 	sysconf, err = config.ReadConfig(opts.ConfigFile)
 	if err != nil {
-		log.Fatalf("could not read config file %v: %v", opts.ConfigFile, err)
+		log.Fatal("could not read config file %v: %v", opts.ConfigFile, err)
 	}
 
-	if (sysconf.LogLevel == "NONE" && opts.LogLevel == "") || opts.LogLevel == "NONE" {
+	if opts.LogLevel != "" {
+		sysconf.LogLevel = opts.LogLevel
+	}
+
+	if sysconf.LogLevel == "NONE" {
 		logFilter = logging.AddModuleLevel(logging.NewLogBackend(ioutil.Discard, "", 0))
 		logging.SetBackend(logFilter)
 	} else {
 		requestedLogLevel := sysconf.LogLevel
-		if opts.LogLevel != "" {
-			requestedLogLevel = opts.LogLevel
-		}
 
 		lvl, err := logging.LogLevel(requestedLogLevel)
 		if err == nil {
 			logFilter.SetLevel(lvl, "")
 		} else {
-			log.Warningf("Could not set log level to %v: %v", requestedLogLevel, err)
+			log.Warning("Could not set log level to %v: %v", requestedLogLevel, err)
 		}
 	}
 
-	log.Debug("config log level", sysconf.LogLevel)
-	log.Debug("command opt log level", opts.LogLevel)
-	log.Info("log level set to", logging.GetLevel(""))
-	log.Info("interfaces", sysconf.Interfaces)
-	log.Info("opening", opts.DevicePath)
-
-	var stat syscall.Stat_t
-	var port io.ReadWriteCloser
-	err = syscall.Stat(opts.DevicePath, &stat)
-
-	if err != nil {
-		log.Fatalf("failure to stat %v: %v", opts.DevicePath, err)
-	}
-
-	if stat.Mode&syscall.S_IFMT == syscall.S_IFCHR {
-		log.Debugf("%v is a serial port", opts.DevicePath)
-		options := serial.OpenOptions{
-			PortName:        opts.DevicePath,
-			BaudRate:        230400,
-			DataBits:        8,
-			StopBits:        1,
-			MinimumReadSize: 4,
-		}
-		port, err = serial.Open(options)
-
-		if err != nil {
-			log.Fatal("error opening port:", err)
-		}
-	} else {
-		log.Debugf("%v is a file", opts.DevicePath)
-		opts.DeviceType = "file"
-	}
+	log.Notice("log level set to %v", logging.GetLevel(""))
 
 	txch := make(chan nmea2k.ParsedMessage)
 	cmdch := make(chan CommandRequest)
@@ -145,9 +115,9 @@ func main() {
 	statLog := make(map[string]uint64)
 	var statPgns StringSlice
 
-	mapData, err := signalk.ParseMappings(opts.MapFile)
+	mapData, err := signalk.ParseMappings(sysconf.MapFile)
 	if err != nil {
-		log.Fatalf("could not read XML map file %v: %v", opts.MapFile, err)
+		log.Fatal("could not read XML map file %v: %v", sysconf.MapFile, err)
 	}
 
 	// Set up MQTT Client
@@ -184,10 +154,12 @@ func main() {
 
 	// Print and transmit received messages
 	go func() {
+		verbose := logging.GetLevel("") == logging.DEBUG
+
+		var devices map[string]uint8
+
 		for {
 			res := <-txch
-
-			verbose := logging.GetLevel("") == logging.DEBUG
 
 			if (opts.Pgn == 0 || int(res.Header.Pgn) == opts.Pgn) &&
 				(opts.Src == 255 || int(res.Header.Source) == opts.Src) &&
@@ -237,76 +209,104 @@ func main() {
 		}
 	}()
 
-	var canport can.ReadWriter
+	for k, i := range sysconf.Interfaces {
+		log.Notice("opening %v at %v", k, i.Path)
+		go processInterface(i, txch)
+	}
 
-	// Handle command requests
-	go func() {
-		for {
-			req := <-cmdch
+	exitc := make(chan os.Signal, 1)
+	signal.Notify(exitc, os.Interrupt, os.Kill, syscall.SIGTERM)
 
-			if req.RequestType == "iso" {
-				b0 := (byte)(req.RequestedPgn) & 0xFF
-				b1 := (byte)(req.RequestedPgn>>8) & 0xFF
-				b2 := (byte)(req.RequestedPgn>>16) & 0xFF
-				if canport != nil {
-					canport.Write([]byte{0x03, 0x00, 0xEA, 0x00, 0xFF, 0x03, b0, b1, b2})
-				} else {
-					log.Warning("canport is nil")
-				}
-			}
+	sig := <-exitc
+
+	log.Notice("cleaning up and exiting with %v", sig)
+}
+
+func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessage) {
+	var stat syscall.Stat_t
+	var port io.ReadWriteCloser
+
+	err := syscall.Stat(iface.Path, &stat)
+	if err != nil {
+		log.Fatal("failure to stat %v: %v", iface.Path, err)
+	}
+
+	if stat.Mode&syscall.S_IFMT == syscall.S_IFCHR {
+		log.Debug("%v is a serial port", iface.Path)
+
+		options := serial.OpenOptions{
+			PortName:        iface.Path,
+			BaudRate:        iface.Speed,
+			DataBits:        8,
+			StopBits:        1,
+			MinimumReadSize: 4,
 		}
-	}()
+
+		port, err = serial.Open(options)
+
+		if err != nil {
+			log.Fatal("error opening port:", err)
+		}
+	} else {
+		log.Debug("%v is a file", iface.Path)
+	}
 
 	// Set up hardware and start reading data
-	log.Debug("configuring", opts.DeviceType)
-	if opts.DeviceType == "canusb" {
+	log.Debug("configuring %v", iface.Type)
+
+	if iface.Type == "canusb" {
 		log.Debug("adding Fast Packets")
+
 		for _, p := range nmea2k.PgnList {
 			if p.Size > 8 {
-				log.Debug("adding PGN:", p.Pgn)
+				log.Debug("adding PGN: %v", p.Pgn)
 				canusb.AddFastPacket(p.Pgn)
 			}
 		}
 
 		// Read from hardware
 		log.Debug("opening channel")
-		canport, _ = canusb.OpenChannel(port, 221)
+
+		canport, _ := canusb.OpenChannel(port, 221)
+
 		for {
 			raw, err := canport.Read()
 			if err == nil {
 				txch <- *(nmea2k.ParsePacket(raw))
 			} else {
-				log.Warning("canport:", err)
+				log.Warning("canport: %v", err)
 			}
 		}
-	} else if opts.DeviceType == "actisense" {
+	} else if iface.Type == "actisense" {
 		// Read from hardware
 		log.Debug("opening channel")
-		canport, _ = actisense.OpenChannel(port)
+		canport, _ := actisense.OpenChannel(port)
 		time.Sleep(2)
+
 		for {
 			raw, err := canport.Read()
 			if err == nil {
 				txch <- *(nmea2k.ParsePacket(raw))
 			} else {
-				log.Warning("canport:", err)
+				log.Warning("canport: %v", err)
 			}
 		}
-	} else if opts.DeviceType == "file" {
+	} else if iface.Type == "file" {
 		// Read from file
-		file, _ := os.Open(opts.DevicePath)
+		file, _ := os.Open(iface.Path)
 		fileScanner := bufio.NewScanner(file)
+
 		for fileScanner.Scan() {
 			txt := fileScanner.Text()
 			pgn, err := nmea2k.FromCanBoat(txt)
 			if err == nil {
 				txch <- *pgn
 			} else {
-				log.Warning("filescanner:", err)
+				log.Warning("filescanner: %v", err)
 			}
 			time.Sleep(100 * time.Millisecond)
 		}
 	} else {
-		log.Fatalf("unknown device type %s. Expected one of: canusb, actisense, file", opts.DeviceType)
+		log.Fatal("unknown device type %s. Expected one of: canusb, actisense, file", iface.Type)
 	}
 }
