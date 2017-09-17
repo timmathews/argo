@@ -24,13 +24,7 @@
 $(function() {
   $('[data-toggle="tooltip"]').tooltip();
 
-  $('#provider-type').change(function(e) {
-    if($(e.target).val() === 'filestream') {
-      $('#file-select').removeClass('hidden');
-    } else {
-      $('#file-select').addClass('hidden');
-    }
-  });
+  $('#interfaceType').change(handleInterfaceTypeChange);
 
   $('#genUUID').click(function(e) {
     e.preventDefault();
@@ -45,10 +39,6 @@ $(function() {
       $('#uuid_4').val(uuid[4]);
     });
   });
-
-  if($('#provider-type').val() === 'filestream') {
-    $('#file-select').removeClass('hidden');
-  }
 
   var host = window.location.host;
   var proto = window.location.protocol === 'http:' ? 'ws' : 'wss';
@@ -80,24 +70,91 @@ function showPgnData(pgn) {
   });
 }
 
+function handleInterfaceTypeChange(e) {
+  $('#fileSelectGroup').hide();
+  $('#devicePathGroup').hide();
+  $('#deviceBaudGroup').hide();
+  $('#gpsdPortGroup').hide();
+
+  var intType = $(e.target).val();
+  console.log(intType);
+
+  if (intType === 'filestreamNmea0183' || intType === 'filestreamNmea2000') {
+    $('#fileSelectGroup').show();
+  } else if (intType === 'gpsd') {
+    $('#gpsdPortGroup').show();
+  } else if (intType === 'actisense' || intType === 'canusb') {
+    $('#devicePathGroup').show();
+    $('#deviceBaudGroup').show();
+  }
+}
+
+function addInterface() {
+  var intType = $('#interfaceType').val();
+  var intPath = $('#devicePath').val();
+  var intFile = $('#fileName').val();
+  var intBaud = $('#baudRate').val();
+
+  var intName = '';
+
+  if (intType === 'filestreamNmea0183') {
+    intName = 'NMEA 0183 Recording';
+  } else if (intType === 'filestreamNmea2000') {
+    intName = 'NMEA 2000 Recording';
+  } else if (intType === 'gpsd') {
+    intName = 'GPSd';
+  } else if (intType === 'actisense') {
+    intName = 'Actisense NGT-1';
+  } else if (intType === 'canusb') {
+    intName = 'Lawicel CAN-USB';
+  }
+
+  var list = document.getElementById('providerListBody');
+
+  var r = document.createElement('tr');
+  var d1 = document.createElement('td');
+  d1.appendChild(document.createTextNode(intName));
+  var d2 = document.createElement('td');
+  d2.appendChild(document.createTextNode(intPath));
+  var d3 = document.createElement('td');
+  d3.appendChild(document.createTextNode(intFile));
+
+  r.appendChild(d1);
+  r.appendChild(d2);
+  r.appendChild(d3);
+
+  list.appendChild(r);
+}
+
 function submitForm() {
   var params = {
-    vessel: {
-      name: $('#vesselName').val(),
-      manufacturer: $('#vesselBrand').val(),
-      model: $('#vesselModel').val(),
-      year: Number.parseInt($('#vesselYear').val()),
-      registration: $('#registration').val(),
-      mmsi: Number.parseInt($('#mmsi').val()),
-      callsign: $('#callsign').val(),
-      uuid: getUUID()
+    Vessel: {
+      Name: $('#vesselName').val(),
+      Manufacturer: $('#vesselManufacturer').val(),
+      Model: $('#vesselModel').val(),
+      Year: Number.parseInt($('#vesselYear').val()),
+      Registration: $('#registration').val(),
+      Mmsi: Number.parseInt($('#mmsi').val()),
+      Callsign: $('#callsign').val(),
+      Uuid: getUUID()
     },
-    connection: {
-      listen: $('#listenOn').val(),
-      port: Number.parseInt($('#port').val())
+    Server: {
+      ListenOn: $('#listenOn').val(),
+      Port: Number.parseInt($('#port').val()),
+      UseTls: $('#useTls').is(':checked'),
+      EnableWebsockets: $('#enableWebsockets').is(':checked'),
+      Certificate: $('#certificate').val() // Get Base64 encoded file??
     },
-    provider_type: $('#provider-type').val(),
-    log_file: $('#provider-file').val()
+    Mqtt: {
+      Enable: $('#mqttEnable').is(':checked'),
+      UseTls: $('#mqttUseTls').is(':checked'),
+      Host: $('#mqttHost').val(),
+      Port: Number.parseInt($('#mqttPort').val()),
+      ClientId: $('#mqttClientId').val(),
+      Username: $('#mqttUsername').val(),
+      Password: $('#mqttPassword').val(),
+      Channel: $('#mqttChannel').val()
+    }
   };
 
   var http = new XMLHttpRequest();

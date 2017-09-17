@@ -22,6 +22,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"github.com/imdario/mergo"
 	"github.com/satori/go.uuid"
 	"github.com/timmathews/argo/config"
 	"html/template"
@@ -35,15 +36,7 @@ type Uuid struct {
 	Uuid []string `json:"uuid"`
 }
 
-type Connection struct {
-	ListenOn string `json:"listen"`
-	Port     int
-}
-
-type FormData struct {
-	Vessel     config.VesselConfig
-	Connection Connection
-}
+var pages *template.Template
 
 func uuidHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -65,27 +58,46 @@ func uuidHandler(w http.ResponseWriter, r *http.Request) {
 
 func adminHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
-		decoder := json.NewDecoder(r.Body)
-		var data FormData
-		err := decoder.Decode(&data)
+		var data config.TomlConfig
+
+		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
 			log.Error("Parsing %v", err)
 			http.Error(w, "Could not parse data", 400)
 		} else {
-			sysconf.Vessel = data.Vessel
-			tmp, _ := ioutil.ReadFile("argo.conf")
-			ioutil.WriteFile("argo.conf~", tmp, 0644)
-			config.WriteConfig("argo.conf", sysconf)
+			log.Notice("\n%v", data)
+			err = mergo.Merge(&sysconf, data)
+			if err == nil {
+				tmp, _ := ioutil.ReadFile("argo.conf")
+				ioutil.WriteFile("argo.conf~", tmp, 0644)
+				config.WriteConfig("argo.conf", sysconf)
+			} else {
+				log.Error("%v", err)
+			}
 		}
+	}
+}
+
+func appsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		t, err := template.ParseFiles("templates/layout.gtpl", "templates/apps.gtpl")
+		if err != nil {
+			log.Error("%v", err)
+		} else {
+			t.ExecuteTemplate(w, "layout", nil)
+		}
+	} else {
+		http.Error(w, "Method not allowed", 405)
 	}
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		t, err := template.ParseFiles("templates/index.gtpl")
-		if err == nil {
-			log.Notice("Sysconf", sysconf)
-			t.Execute(w, sysconf)
+		t, err := template.ParseFiles("templates/layout.gtpl", "templates/index.gtpl")
+		if err != nil {
+			log.Error("%v", err)
+		} else {
+			t.ExecuteTemplate(w, "layout", sysconf)
 		}
 	}
 }
@@ -95,6 +107,7 @@ func UiServer(addr *string, cmd chan CommandRequest) {
 	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir(sysconf.Server.AssetPath))))
 	r.HandleFunc("/admin/uuid", uuidHandler)
 	r.HandleFunc("/admin", adminHandler)
+	r.HandleFunc("/apps", appsHandler)
 	r.HandleFunc("/", indexHandler)
 	http.Handle("/", r)
 }
