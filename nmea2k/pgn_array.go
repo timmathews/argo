@@ -97,6 +97,81 @@ func (inVal PgnLookup) MarshalXML(e *xml.Encoder, start xml.StartElement) error 
 	return nil
 }
 
+var lookupAlertType = PgnLookup{
+	0:  "Reserved",
+	1:  "Energy Alarm",
+	2:  "Alarm",
+	3:  "Reserved",
+	4:  "Reserved",
+	5:  "Warning",
+	6:  "Reserved",
+	7:  "Reserved",
+	8:  "Caution",
+	13: "Reserved",
+	14: "Data out of range",
+	15: "Data not available",
+}
+
+var lookupAlertCategory = PgnLookup{
+	0:  "Navigational",
+	1:  "Technical",
+	13: "Reserved",
+	14: "Data out of range",
+	15: "Data not available",
+}
+
+var lookupSilenceStatus = PgnLookup{
+	0: "Not temporary status",
+	1: "Temporary status",
+}
+
+var lookupAcknowledgeStatus = PgnLookup{
+	0: "Not acknowledged",
+	1: "Acknowledged",
+}
+
+var lookupEscalationStatus = PgnLookup{
+	0: "Not escalated",
+	1: "Escalated",
+}
+
+var lookupSupport = PgnLookup{
+	0: "Not supported",
+	1: "Supported",
+}
+
+var lookupTriggerCondition = PgnLookup{
+	0:  "Manual",
+	1:  "Auto",
+	2:  "Test",
+	13: "Reserved",
+	14: "Data out of range",
+	15: "Data not available",
+}
+
+var lookupThresholdStatus = PgnLookup{
+	0:  "Normal",
+	1:  "Threshold exceeded",
+	2:  "Extreme threshold exceeded",
+	3:  "Low threshold exceeded",
+	4:  "Extreme low threshold exceeded",
+	13: "Reserved",
+	14: "Data out of range",
+	15: "Data not available",
+}
+
+var lookupAlertState = PgnLookup{
+	0:   "Disabled",
+	1:   "Normal",
+	2:   "Active",
+	3:   "Silenced",
+	4:   "Acknowleged",
+	5:   "Awaiting acknowlege",
+	253: "Reserved",
+	254: "Data out of range",
+	255: "Data not available",
+}
+
 var lookupAisAccuracy = PgnLookup{
 	0: "Low",
 	1: "High",
@@ -193,7 +268,7 @@ var lookupTurnMode = PgnLookup{
 	2: "Radius Controlled",
 }
 
-var lookupCommandedRudderDirection = Pgn{
+var lookupCommandedRudderDirection = PgnLookup{
 	0: "No Order",
 	1: "Move to starboard",
 	2: "Move to port",
@@ -1006,9 +1081,9 @@ var PgnList = PgnArray{
 	// network address to a node. The NAME information in the data portion of the
 	// message must match the name information of the node whose network address
 	// is to be set.
-	{"ISO Commanded Address", "General", 65240, false, 8, 0, []Field{
+	{"ISO Commanded Address", "General", 65240, true, 8, 0, []Field{
 		{"Unique Number", 21, RES_BINARY, false, nil, "ISO Identity Number", "", 0},
-		{"Manufacturer Code", 11, 1, false, nil, "", "", 0},
+		{"Manufacturer Code", 11, 1, false, lookupCompanyCode, "", "", 0},
 		{"Device Instance Lower", 3, 1, false, nil, "ISO ECU Instance", "", 0},
 		{"Device Instance Upper", 5, 1, false, nil, "ISO Function Instance", "", 0},
 		{"Device Function", 8, 1, false, nil, "ISO Function", "", 0},
@@ -1172,7 +1247,7 @@ var PgnList = PgnArray{
 		{"Status", 8, 1, false, nil, "", "", 0}},
 	},
 
-	{"PGN List (Transmit and Receive)", "Mandatory", 126464, false, 8, 1, []Field{
+	{"PGN List (Transmit and Receive)", "Mandatory", 126464, true, 8, 1, []Field{
 		{"Function Code", 8, RES_LOOKUP, false, lookupFunctionCode, "Transmit or receive PGN Group Function Code", "", 0},
 		{"PGN", 24, RES_INTEGER, false, nil, "", "", 0}},
 	},
@@ -1353,6 +1428,30 @@ var PgnList = PgnArray{
 	// http://www.maretron.com/support/manuals/USB100UM_1.2.pdf
 	// http://www8.garmin.com/manuals/GPSMAP4008_NMEA2000NetworkFundamentals.pdf
 
+	{"Alert", "Alert", 126983, true, 27, 0, []Field{
+		{"Alert Type", 4, 1, false, lookupAlertType, "", "", 0},
+		{"Alert Category", 4, 1, false, lookupAlertCategory, "", "", 0},
+		{"Alert System", 8, 1, false, nil, "", "", 0},
+		{"Alert Sub-System", 8, 1, false, nil, "", "", 0},
+		{"Alert ID", 16, 1, false, nil, "", "", 0},
+		{"Data Source Network ID NAME", 64, 1, false, nil, "", "", 0},
+		{"Data Source Instance", 8, 1, false, nil, "", "", 0},
+		{"Data Source Index", 8, 1, false, nil, "", "", 0},
+		{"Alert Occurence Number", 8, 1, false, nil, "", "", 0},
+		{"Temporary Silence Status", 1, 1, false, lookupSilenceStatus, "", "", 0},
+		{"Acknowledge Status", 1, 1, false, lookupAcknowledgeStatus, "", "", 0},
+		{"Escalation Status", 1, 1, false, lookupEscalationStatus, "", "", 0},
+		{"Temporary Silence Support", 1, 1, false, lookupSupport, "", "", 0},
+		{"Acknowledge Support", 1, 1, false, lookupSupport, "", "", 0},
+		{"Escalation Support", 1, 1, false, lookupSupport, "", "", 0},
+		{"Reserved", 2, RES_BINARY, false, nil, "Reserved", "", 0},
+		{"Acknowledge Source Network ID NAME", 64, 1, false, nil, "", "", 0},
+		{"Trigger Condition", 4, 1, false, lookupTriggerCondition, "", "", 0},
+		{"Threshold Status", 4, 1, false, lookupThresholdStatus, "", "", 0},
+		{"Alert Priority", 8, 1, false, nil, "", "", 0},
+		{"Alert State", 8, 1, false, lookupAlertState, "", "", 0}},
+	},
+
 	{"Heading/Track Control", "Steering", 127237, true, 21, 0, []Field{
 		{"Rudder Limit Exceeded", 2, 1, false, nil, "", "", 0},
 		{"Off-Heading Limit Exceeded", 2, 1, false, nil, "", "", 0},
@@ -1360,7 +1459,7 @@ var PgnList = PgnArray{
 		{"Override", 2, 1, false, nil, "", "", 0},
 		{"Steering Mode", 3, 1, false, lookupSteeringMode, "", "", 0},
 		{"Turn Mode", 3, 1, false, lookupTurnMode, "", "", 0},
-		{"Heading Reference", 2, 1, false, lookupHeadingReference, "", "", 0},
+		{"Heading Reference", 2, 1, false, lookupDirectionReference, "", "", 0},
 		{"Reserved", 5, 1, false, nil, "", "", 0},
 		{"Commanded Rudder Direction", 3, 1, false, lookupCommandedRudderDirection, "", "", 0},
 		{"Commanded Rudder Angle", 16, RES_DEGREES, true, "deg", "", "", 0},
