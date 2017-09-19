@@ -1375,11 +1375,10 @@ var PgnList = PgnArray{
 	},
 
 	// http://www.maretron.com/support/manuals/RAA100UM_1.0.pdf
-	// Haven't actually seen this value yet, lengths are guesses
-	{"Rudder", "Steering", 127245, false, 8, 0, []Field{
-		{"Instance", 8, 1, false, nil, "", "", 0},
-		{"Direction Order", 2, 1, false, nil, "", "", 0},
-		{"Reserved", 6, RES_BINARY, false, nil, "Reserved", "", 0},
+	{"Rudder", "Steering", 127245, true, 8, 0, []Field{
+		{"Rudder Instance", 8, 1, false, nil, "", "", 0},
+		{"Direction Order", 3, 1, false, lookupCommandedRudderDirection, "", "", 0},
+		{"Reserved", 5, RES_BINARY, false, nil, "Reserved", "", 0},
 		{"Angle Order", 16, RES_DEGREES, true, "deg", "", "", 0},
 		{"Position", 16, RES_DEGREES, true, "deg", "", "", 0}},
 	},
@@ -1404,9 +1403,9 @@ var PgnList = PgnArray{
 
 	{"Attitude", "Steering", 127257, true, 7, 0, []Field{
 		{"SID", 8, 1, false, nil, "", "", 0},
-		{"Yaw", 16, RES_ROTATION, true, "deg/s", "", "navigation.yaw", 0},
-		{"Pitch", 16, RES_ROTATION, true, "deg/s", "", "navigation.pitch", 0},
-		{"Roll", 16, RES_ROTATION, true, "deg/s", "", "navigation.roll", 0}},
+		{"Yaw", 16, RES_ROTATION, true, "deg", "", "navigation.attitude.yaw", 0},
+		{"Pitch", 16, RES_ROTATION, true, "deg", "", "navigation.attitude.pitch", 0},
+		{"Roll", 16, RES_ROTATION, true, "deg", "", "navigation.attitude.roll", 0}},
 	},
 
 	// NMEA + Simrad AT10
