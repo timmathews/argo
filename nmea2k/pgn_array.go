@@ -178,6 +178,27 @@ var lookupRepeatIndicator = PgnLookup{
 	3: "Final retransmission",
 }
 
+var lookupSteeringMode = PgnLookup{
+	0: "Main Steering",
+	1: "Non-Followup Device",
+	2: "Followup Device",
+	3: "Heading Control Standaline",
+	4: "Heading Control",
+	5: "Track Control",
+}
+
+var lookupTurnMode = PgnLookup{
+	0: "Rudder Limit Controlled",
+	1: "Turn Rate Controlled",
+	2: "Radius Controlled",
+}
+
+var lookupCommandedRudderDirection = Pgn{
+	0: "No Order",
+	1: "Move to starboard",
+	2: "Move to port",
+}
+
 var lookupEngineInstance = PgnLookup{
 	0: "Single Engine or Dual Engine Port",
 	1: "Dual Engine Starboard",
@@ -361,6 +382,8 @@ var lookupYesNo = PgnLookup{
 var lookupDirectionReference = PgnLookup{
 	0: "True",
 	1: "Magnetic",
+	2: "Error",
+	3: "Null",
 }
 
 var lookupNavStatus = PgnLookup{
@@ -1330,16 +1353,16 @@ var PgnList = PgnArray{
 	// http://www.maretron.com/support/manuals/USB100UM_1.2.pdf
 	// http://www8.garmin.com/manuals/GPSMAP4008_NMEA2000NetworkFundamentals.pdf
 
-	{"Heading/Track control", "Steering", 127237, false, 0x15, 0, []Field{
+	{"Heading/Track Control", "Steering", 127237, true, 21, 0, []Field{
 		{"Rudder Limit Exceeded", 2, 1, false, nil, "", "", 0},
 		{"Off-Heading Limit Exceeded", 2, 1, false, nil, "", "", 0},
 		{"Off-Track Limit Exceeded", 2, 1, false, nil, "", "", 0},
 		{"Override", 2, 1, false, nil, "", "", 0},
-		{"Steering Mode", 4, 1, false, nil, "", "", 0},
-		{"Turn Mode", 4, 1, false, nil, "", "", 0},
-		{"Heading Reference", 3, 1, false, nil, "", "", 0},
-		{"Reserved", 3, 1, false, nil, "", "", 0},
-		{"Commanded Rudder Direction", 2, 1, false, nil, "", "", 0},
+		{"Steering Mode", 3, 1, false, lookupSteeringMode, "", "", 0},
+		{"Turn Mode", 3, 1, false, lookupTurnMode, "", "", 0},
+		{"Heading Reference", 2, 1, false, lookupHeadingReference, "", "", 0},
+		{"Reserved", 5, 1, false, nil, "", "", 0},
+		{"Commanded Rudder Direction", 3, 1, false, lookupCommandedRudderDirection, "", "", 0},
 		{"Commanded Rudder Angle", 16, RES_DEGREES, true, "deg", "", "", 0},
 		{"Heading-To-Steer (Course)", 16, RES_DEGREES, false, "deg", "", "", 0},
 		{"Track", 16, RES_DEGREES, false, "deg", "", "", 0},
