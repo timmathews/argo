@@ -21,7 +21,6 @@ package signalk
 
 import (
 	"encoding/xml"
-	"fmt"
 	set "github.com/deckarep/golang-set"
 	"github.com/timmathews/argo/can"
 	"github.com/timmathews/argo/nmea2k"
@@ -44,7 +43,7 @@ func MakeSet(s []value) set.Set {
 }
 
 func TestMain(m *testing.M) {
-	mapfile, err := ioutil.ReadFile("./map.xml")
+	mapfile, err := ioutil.ReadFile("../map.xml")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -69,19 +68,18 @@ func TestFieldsetValidDate(t *testing.T) {
 	}
 
 	expected := update{
-		source{126992, "/dev/actisense", ts, 1},
-		[]value{{"~/system/currentTime", "2015-05-23T12:00:00Z"}, {"~/system/currentTimeSource", "GPS"}},
+		source{126992, "/dev/actisense", 1},
+		ts,
+		[]value{{"system.currentTime", "2015-05-23T12:00:00Z"}, {"system.currentTimeSource", "GPS"}},
 	}
 
 	got, err := mapdata.Delta(&in)
 
-	x := MakeSet(got.Values)
+	x := MakeSet(got.Updates[0].Values)
 	y := MakeSet(expected.Values)
 
 	if !x.Equal(y) {
-		t.Errorf("\nExpected: %+v\n     Got: %+v\n     Err: %v", expected, got, err)
-	} else {
-		fmt.Printf("%+v\n", got)
+		t.Errorf("\nExpected: %+v\n     Got: %+v\n     Err: %v", x, y, err)
 	}
 }
 
@@ -97,19 +95,18 @@ func TestFieldsetMissingDate(t *testing.T) {
 	}
 
 	expected := update{
-		source{126992, "/dev/actisense", ts, 1},
-		[]value{{"~/system/currentTimeSource", "GPS"}},
+		source{126992, "/dev/actisense", 1},
+		ts,
+		[]value{{"system.currentTimeSource", "GPS"}},
 	}
 
 	got, err := mapdata.Delta(&in)
 
-	x := MakeSet(got.Values)
+	x := MakeSet(got.Updates[0].Values)
 	y := MakeSet(expected.Values)
 
 	if !x.Equal(y) {
 		t.Errorf("\nExpected: %+v\n     Got: %+v\n     Err: %v", expected, got, err)
-	} else {
-		fmt.Printf("%+v\n", got)
 	}
 }
 
@@ -125,19 +122,18 @@ func TestConditions(t *testing.T) {
 	}
 
 	expected := update{
-		source{129026, "/dev/actisense", ts, 1},
-		[]value{{"~/navigation/courseOverGroundTrue", 123.4}},
+		source{129026, "/dev/actisense", 1},
+		ts,
+		[]value{{"navigation.courseOverGroundTrue", 123.4}},
 	}
 
 	got, err := mapdata.Delta(&in)
 
-	x := MakeSet(got.Values)
+	x := MakeSet(got.Updates[0].Values)
 	y := MakeSet(expected.Values)
 
 	if !x.Equal(y) {
 		t.Errorf("\nExpected: %+v\n     Got: %+v\n     Err: %v", expected, got, err)
-	} else {
-		fmt.Printf("%+v\n", got)
 	}
 }
 
@@ -157,23 +153,22 @@ func TestRepeatingFields(t *testing.T) {
 	}
 
 	expected := update{
-		source{127503, "/dev/actisense", ts, 1},
+		source{127503, "/dev/actisense", 1},
+		ts,
 		[]value{
-			{"~/electric/ac/0/numberOfLines", 3},
-			{"~/electric/ac/0/line1/acceptability", "Good"},
-			{"~/electric/ac/0/line2/acceptability", "Bad Level"},
-			{"~/electric/ac/0/line3/acceptability", "Bad Frequency"},
+			{"electric.ac.0.numberOfLines", 3},
+			{"electric.ac.0.line1.acceptability", "Good"},
+			{"electric.ac.0.line2.acceptability", "Bad Level"},
+			{"electric.ac.0.line3.acceptability", "Bad Frequency"},
 		},
 	}
 
 	got, err := mapdata.Delta(&in)
 
-	x := MakeSet(got.Values)
+	x := MakeSet(got.Updates[0].Values)
 	y := MakeSet(expected.Values)
 
 	if !x.Equal(y) {
 		t.Errorf("\nExpected: %+v\n     Got: %+v\n     Err: %v", expected, got, err)
-	} else {
-		fmt.Printf("%+v\n", got)
 	}
 }
