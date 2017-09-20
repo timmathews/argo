@@ -388,6 +388,13 @@
     </sentence>
   </mapping>
   <mapping>
+    <path>~/navigation/rateOfTurn</path>
+    <parameter_group>
+      <pgn>127251</pgn>
+      <field>1</field>
+    </parameter_group>
+  </mapping>
+  <mapping>
     <path>~/vendor/actisense/operatingMode</path>
     <parameter_group>
       <pgn>262161</pgn>
