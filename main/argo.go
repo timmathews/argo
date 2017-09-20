@@ -156,8 +156,6 @@ func main() {
 	go func() {
 		verbose := logging.GetLevel("") == logging.DEBUG
 
-		var devices map[string]uint8
-
 		for {
 			res := <-txch
 
@@ -228,7 +226,7 @@ func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessa
 
 	err := syscall.Stat(iface.Path, &stat)
 	if err != nil {
-		log.Fatal("failure to stat %v: %v", iface.Path, err)
+		log.Fatalf("failure to stat %v: %v", iface.Path, err)
 	}
 
 	if stat.Mode&syscall.S_IFMT == syscall.S_IFCHR {
@@ -245,7 +243,7 @@ func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessa
 		port, err = serial.Open(options)
 
 		if err != nil {
-			log.Fatal("error opening port:", err)
+			log.Fatalf("error opening port:", err)
 		}
 	} else {
 		log.Debug("%v is a file", iface.Path)
@@ -307,6 +305,6 @@ func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessa
 			time.Sleep(100 * time.Millisecond)
 		}
 	} else {
-		log.Fatal("unknown device type %s. Expected one of: canusb, actisense, file", iface.Type)
+		log.Fatalf("unknown device type %s. Expected one of: canusb, actisense, file", iface.Type)
 	}
 }
