@@ -26,6 +26,8 @@ $(function() {
 
   $('#interfaceType').change(handleInterfaceTypeChange);
 
+  $('.appInstall').on('submit', handleAppInstall);
+
   $('#genUUID').click(function(e) {
     e.preventDefault();
 
@@ -175,4 +177,17 @@ function getUUID() {
   ];
 
   return uuid.join('-');
+}
+
+function handleAppInstall(e) {
+  e.preventDefault();
+  var p = $(e.target).find('input[name="name"]').val();
+  var v = $(e.target).find('input[name="version"]').val();
+
+  var pkg = {package: p, version: v};
+
+  var http = new XMLHttpRequest();
+  http.open("POST", "/apps/install", true);
+  http.setRequestHeader("Content-type", "application/json");
+  http.send(JSON.stringify(pkg));
 }

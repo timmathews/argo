@@ -36,6 +36,38 @@ type Uuid struct {
 	Uuid []string `json:"uuid"`
 }
 
+type npmPackages struct {
+	Objects []npmObject
+}
+
+type npmObject struct {
+	Package npmPackage
+}
+
+type npmLinks struct {
+	Npm        string
+	Homepage   string
+	Repository string
+}
+
+type npmAuthor struct {
+	Name  string
+	Email string
+}
+
+type npmPackage struct {
+	Name        string
+	Version     string
+	Description string
+	Links       npmLinks
+	Author      npmAuthor
+}
+
+type pkgRequest struct {
+	Package string
+	Version string
+}
+
 var pages *template.Template
 
 func uuidHandler(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +116,37 @@ func appsHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Error("%v", err)
 		} else {
-			t.ExecuteTemplate(w, "layout", nil)
+			resp, err := http.Get("http://registry.npmjs.org/-/v1/search?size=250&text=keywords:signalk-webapp")
+			if err != nil {
+				log.Error("%v", err)
+				return
+			}
+			defer resp.Body.Close()
+
+			var data npmPackages
+			err = json.NewDecoder(resp.Body).Decode(&data)
+			if err != nil {
+				log.Error("%v", err)
+				return
+			}
+
+			t.ExecuteTemplate(w, "layout", data.Objects)
+		}
+	} else {
+		http.Error(w, "Method not allowed", 405)
+	}
+}
+
+func appInstallHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		var data pkgRequest
+		err := json.NewDecoder(r.Body).Decode(&data)
+		if err != nil {
+			log.Error("%v", err)
+		} else {
+			if err = installPackage(data.Package, data.Version); err != nil {
+				log.Error("%v", err)
+			}
 		}
 	} else {
 		http.Error(w, "Method not allowed", 405)
@@ -107,6 +169,7 @@ func UiServer(addr *string, cmd chan CommandRequest) {
 	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir(sysconf.Server.AssetPath))))
 	r.HandleFunc("/admin/uuid", uuidHandler)
 	r.HandleFunc("/admin", adminHandler)
+	r.HandleFunc("/apps/install", appInstallHandler)
 	r.HandleFunc("/apps", appsHandler)
 	r.HandleFunc("/", indexHandler)
 	http.Handle("/", r)
