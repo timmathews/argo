@@ -120,6 +120,16 @@ func main() {
 		log.Fatal("could not read XML map file %v: %v", sysconf.MapFile, err)
 	}
 
+	if opts.ExplainMap {
+		s, err := mapData.PrintMappings()
+		if err != nil {
+			log.Fatal("could not generate YAML")
+		}
+
+		fmt.Println(s)
+		return
+	}
+
 	// Set up MQTT Client
 	var mqttClient mqtt.Client
 	if sysconf.Mqtt.Enable {

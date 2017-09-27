@@ -23,6 +23,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/timmathews/argo/nmea2k"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"strconv"
 	"strings"
@@ -201,6 +202,15 @@ func (m *Mappings) Delta(msg *nmea2k.ParsedMessage) (delta, error) {
 	} else {
 		return delta{}, fmt.Errorf("unknown PGN %v from %v on %v", upd.Source.Pgn, upd.Source.Src, upd.Source.Device)
 	}
+}
+
+func (m *Mappings) PrintMappings() (string, error) {
+	d, err := yaml.Marshal(&m)
+	if err == nil {
+		return string(d), nil
+	}
+
+	return "", err
 }
 
 // Pack searches the mapping database for a matching path, then generates the PGN for that. This may

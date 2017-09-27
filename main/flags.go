@@ -28,6 +28,7 @@ import (
 type commandArgs struct {
 	Help       bool
 	Explain    bool
+	ExplainMap bool
 	Stats      bool
 	Pgn        int
 	Src        int
@@ -40,6 +41,7 @@ func GetCommandLineOptions() commandArgs {
 
 	flag.BoolVar(&args.Help, "help", false, "This help message")
 	flag.BoolVar(&args.Explain, "explain", false, "Dump PGNs as JSON")
+	flag.BoolVar(&args.ExplainMap, "explain-map", false, "Dump NMEA to SK map file as YAML")
 	flag.BoolVar(&args.Stats, "statistic", false, "Display live statistics")
 	flag.IntVar(&args.Pgn, "pgn", 0, "Display only this PGN")
 	flag.IntVar(&args.Src, "source", 255, "Display PGNs from this source only")
