@@ -74,6 +74,9 @@ func main() {
 	}
 
 	if opts.Explain {
+		nmea2k.PgnList.PrintRust()
+		return
+
 		bytes, err := json.MarshalIndent(nmea2k.PgnList, "", "  ")
 		if err == nil {
 			fmt.Println(string(bytes))

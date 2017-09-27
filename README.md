@@ -1,6 +1,9 @@
 Argo
 ====
 
+**This branch has a different `-explain` function which generates Rust code
+instead.**
+
 Argo is a [Signal K](http://signalk.org) compliant server written in
 [Go](http://golang.org). The goal of Argo is to consume as many different
 sources of data as possible and convert them to Signal K on as many different

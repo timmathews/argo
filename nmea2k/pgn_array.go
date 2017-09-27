@@ -22,7 +22,10 @@ package nmea2k
 import (
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"math"
+	"reflect"
+	"regexp"
 )
 
 const ACTISENSE_BEM = 0x40000 // Actisense specific fake PGNs
@@ -893,6 +896,106 @@ var lookupFusionReplayStatus = PgnLookup{
 	0: "Off",
 	1: "One/Track",
 	2: "All/Album",
+}
+
+type Assoc struct {
+	Left  PgnLookup
+	Right string
+}
+
+var lookups = []Assoc{
+	{Left: lookupAcceptability, Right: "lookupAcceptability"},
+	{Left: lookupAcknowledgeStatus, Right: "lookupAcknowledgeStatus"},
+	{Left: lookupAirmarAccessLevel, Right: "lookupAirmarAccessLevel"},
+	{Left: lookupAirmarBootState, Right: "lookupAirmarBootState"},
+	{Left: lookupAirmarCalibrateFunction, Right: "lookupAirmarCalibrateFunction"},
+	{Left: lookupAirmarCalibrationStatus, Right: "lookupAirmarCalibrationStatus"},
+	{Left: lookupAirmarCogSubstitute, Right: "lookupAirmarCogSubstitute"},
+	{Left: lookupAirmarControl, Right: "lookupAirmarControl"},
+	{Left: lookupAirmarDepthQuality, Right: "lookupAirmarDepthQuality"},
+	{Left: lookupAirmarFormatCode, Right: "lookupAirmarFormatCode"},
+	{Left: lookupAirmarSpeedFilter, Right: "lookupAirmarSpeedFilter"},
+	{Left: lookupAirmarTempFilter, Right: "lookupAirmarTempFilter"},
+	{Left: lookupAirmarTempInstance, Right: "lookupAirmarTempInstance"},
+	{Left: lookupAirmarTestId, Right: "lookupAirmarTestId"},
+	{Left: lookupAirmarTransmissionInterval, Right: "lookupAirmarTransmissionInterval"},
+	{Left: lookupAisAccuracy, Right: "lookupAisAccuracy"},
+	{Left: lookupAisBand, Right: "lookupAisBand"},
+	{Left: lookupAisCommState, Right: "lookupAisCommState"},
+	{Left: lookupAisDTE, Right: "lookupAisDTE"},
+	{Left: lookupAisMode, Right: "lookupAisMode"},
+	{Left: lookupAisRAIM, Right: "lookupAisRAIM"},
+	{Left: lookupAisTransceiver, Right: "lookupAisTransceiver"},
+	{Left: lookupAisUnitType, Right: "lookupAisUnitType"},
+	{Left: lookupAisVersion, Right: "lookupAisVersion"},
+	{Left: lookupAlertCategory, Right: "lookupAlertCategory"},
+	{Left: lookupAlertState, Right: "lookupAlertState"},
+	{Left: lookupAlertType, Right: "lookupAlertType"},
+	{Left: lookupCommandedRudderDirection, Right: "lookupCommandedRudderDirection"},
+	{Left: lookupCompanyCode, Right: "lookupCompanyCode"},
+	{Left: lookupDeviceClass, Right: "lookupDeviceClass"},
+	{Left: lookupDGnssMode, Right: "lookupDGnssMode"},
+	{Left: lookupDirectionReference, Right: "lookupDirectionReference"},
+	{Left: lookupEngineInstance, Right: "lookupEngineInstance"},
+	{Left: lookupEscalationStatus, Right: "lookupEscalationStatus"},
+	{Left: lookupFunctionCode, Right: "lookupFunctionCode"},
+	{Left: lookupFusionMute, Right: "lookupFusionMute"},
+	{Left: lookupFusionReplayMode, Right: "lookupFusionReplayMode"},
+	{Left: lookupFusionReplayStatus, Right: "lookupFusionReplayStatus"},
+	{Left: lookupFusionTimeFormat, Right: "lookupFusionTimeFormat"},
+	{Left: lookupFusionTransport, Right: "lookupFusionTransport"},
+	{Left: lookupGearStatus, Right: "lookupGearStatus"},
+	{Left: lookupGns, Right: "lookupGnss"},
+	{Left: lookupGnsAis, Right: "lookupGnssAis"},
+	{Left: lookupGnsIntegrity, Right: "lookupGnssIntegrity"},
+	{Left: lookupGnsMethod, Right: "lookupGnssMethod"},
+	{Left: lookupGnssAntenna, Right: "lookupGnssAntenna"},
+	{Left: lookupGnssMode, Right: "lookupGnssMode"},
+	{Left: lookupGnssSatMode, Right: "lookupGnssSatMode"},
+	{Left: lookupGnssSatStatus, Right: "lookupGnssSatStatus"},
+	{Left: lookupHumidityInstance, Right: "lookupHumidityInstance"},
+	{Left: lookupIndustryCode, Right: "lookupIndustryCode"},
+	{Left: lookupIsoAckResults, Right: "lookupIsoAckResults"},
+	{Left: lookupLine, Right: "lookupLine"},
+	{Left: lookupMagneticVariation, Right: "lookupMagneticVariation"},
+	{Left: lookupNavCalculation, Right: "lookupNavCalculation"},
+	{Left: lookupNavMarkType, Right: "lookupNavMarkType"},
+	{Left: lookupNavStatus, Right: "lookupNavStatus"},
+	{Left: lookupOffOn, Right: "lookupOffOn"},
+	{Left: lookupPositionAccuracy, Right: "lookupPositionAccuracy"},
+	{Left: lookupPowerFactor, Right: "lookupPowerFactor"},
+	{Left: lookupPressureSource, Right: "lookupPressureSource"},
+	{Left: lookupPriorityLevel, Right: "lookupPriorityLevel"},
+	{Left: lookupRepeatIndicator, Right: "lookupRepeatIndicator"},
+	{Left: lookupResidualMode, Right: "lookupResidualMode"},
+	{Left: lookupShipType, Right: "lookupShipType"},
+	{Left: lookupSilenceStatus, Right: "lookupSilenceStatus"},
+	{Left: lookupSimnetAlarm, Right: "lookupSimnetAlarm"},
+	{Left: lookupSimnetApEvents, Right: "lookupSimnetApEvents"},
+	{Left: lookupSimnetBacklightLevel, Right: "lookupSimnetBacklightLevel"},
+	{Left: lookupSimnetDirection, Right: "lookupSimnetDirection"},
+	{Left: lookupSonicHubControl, Right: "lookupSonicHubControl"},
+	{Left: lookupSonicHubMute, Right: "lookupSonicHubMute"},
+	{Left: lookupSonicHubPlaylist, Right: "lookupSonicHubPlaylist"},
+	{Left: lookupSonicHubSource, Right: "lookupSonicHubSource"},
+	{Left: lookupSonicHubTuning, Right: "lookupSonicHubTuning"},
+	{Left: lookupSonicHubZone, Right: "lookupSonicHubZone"},
+	{Left: lookupStandbyOn, Right: "lookupStandbyOn"},
+	{Left: lookupSteeringMode, Right: "lookupSteeringMode"},
+	{Left: lookupSupport, Right: "lookupSupport"},
+	{Left: lookupSystemTime, Right: "lookupSystemTime"},
+	{Left: lookupTankType, Right: "lookupTankType"},
+	{Left: lookupTargetAcquisition, Right: "lookupTargetAcquisition"},
+	{Left: lookupTemperatureSource, Right: "lookupTemperatureSource"},
+	{Left: lookupThresholdStatus, Right: "lookupThresholdStatus"},
+	{Left: lookupTideTendency, Right: "lookupTideTendency"},
+	{Left: lookupTimeStamp, Right: "lookupTimeStamp"},
+	{Left: lookupTrackStatus, Right: "lookupTrackStatus"},
+	{Left: lookupTriggerCondition, Right: "lookupTriggerCondition"},
+	{Left: lookupTurnMode, Right: "lookupTurnMode"},
+	{Left: lookupWaveform, Right: "lookupWaveform"},
+	{Left: lookupWindReference, Right: "lookupWindReference"},
+	{Left: lookupYesNo, Right: "lookupYesNo"},
 }
 
 var PgnList = PgnArray{
@@ -3730,4 +3833,207 @@ func (pp PgnArray) Last(id uint32) (int, Pgn) {
 	}
 
 	return 0, pp[0]
+}
+
+var matchRegex = regexp.MustCompile("^=[0-9]*")
+
+func (f Field) GetFieldUnits() string {
+
+	switch v := f.Units.(type) {
+	case string:
+		switch v {
+		case "%%":
+			return "Some(Unit::Percent)"
+		case "A":
+			return "Some(Unit::Ampere)"
+		case "days":
+			return "Some(Unit::Day)"
+		case "dB":
+			return "Some(Unit::Decibel)"
+		case "deg":
+			return "Some(Unit::Degree)"
+		case "deg/s":
+			return "Some(Unit::DegreesPerSecond)"
+		case "hPa":
+			return "Some(Unit::Hectopascal)"
+		case "Hz":
+			return "Some(Unit::Hertz)"
+		case "K":
+			return "Some(Unit::Kelvin)"
+		case "kHz":
+			return "Some(Unit::Kilohertz)"
+		case "kWh":
+			return "Some(Unit::Kilowatthour)"
+		case "L":
+			return "Some(Unit::Liter)"
+		case "L/h":
+			return "Some(Unit::LitersPerHour)"
+		case "m":
+			return "Some(Unit::Meter)"
+		case "minutes":
+			return "Some(Unit::Minute)"
+		case "MMSI":
+			return "Some(Unit::Mmsi)"
+		case "m/s":
+			return "Some(Unit::MetersPerSecond)"
+		case "Pa":
+			return "Some(Unit::Pascal)"
+		case "ppm":
+			return "Some(Unit::PartsPerMillion)"
+		case "ppt":
+			return "Some(Unit::PartsPerThousand"
+		case "rpm":
+			return "Some(Unit::RevolutionsPerMinute)"
+		case "s":
+			return "Some(Unit::Second)"
+		case "seconds":
+			return "Some(Unit::Second)"
+		case "Tesla":
+			return "Some(Unit::Tesla)"
+		case "V":
+			return "Some(Unit::Volt)"
+		case "VA":
+			return "Some(Unit::VoltAmpere)"
+		case "VAr":
+			return "Some(Unit::VoltAmpereReactive)"
+		case "vol":
+			return "Some(Unit::Volume)"
+		case "W":
+			return "Some(Unit::Watt)"
+		default:
+			if matchRegex.MatchString(v) {
+				return fmt.Sprintf("Some(Unit::Match(\"%s\"))", v)
+			} else {
+				return fmt.Sprintf("Some(\"%s\")", v)
+			}
+		}
+	case int:
+		if v == 0 {
+			return "None"
+		}
+	case PgnLookup:
+		return "Some(Unit::Lookup)"
+	}
+
+	if f.Units == nil {
+		return "None"
+	}
+
+	t := reflect.TypeOf(f.Units)
+	return t.Name()
+}
+
+func (f Field) GetFieldType() string {
+	switch f.Resolution {
+	case RES_MANUFACTURER:
+		return "Manufacturer"
+	case RES_LOOKUP:
+		return "Lookup"
+	case RES_BINARY:
+		return "Binary"
+	case RES_FLOAT:
+		return "Float"
+	case RES_DEGREES:
+		if f.Signed {
+			return "SignedInteger"
+		} else {
+			return "UnsignedInteger"
+		}
+	case RES_ROTATION:
+		return "SignedInteger"
+	case RES_LATITUDE:
+		return "Float"
+	case RES_LONGITUDE:
+		return "Float"
+	case RES_TEMPERATURE:
+		return "UnsignedInteger"
+	case RES_PRESSURE:
+		return "UnsignedInteger"
+	case RES_INTEGER:
+		if f.Signed {
+			return "SignedInteger"
+		} else {
+			return "UnsignedInteger"
+		}
+	case RES_DATE:
+		return "Date"
+	case RES_TIME:
+		return "Time"
+	case RES_ASCII:
+		return "AsciiString"
+	case RES_STRING:
+		return "FixedString"
+	case RES_STRINGLZ:
+		return "PascalString"
+	default:
+		return "ManualFixup"
+	}
+}
+
+func (f Field) GetMultiplier() float64 {
+	if f.Resolution > 0 {
+		return f.Resolution
+	} else {
+		return 1.0
+	}
+}
+
+func (f Field) GetDescription() string {
+	if len(f.Description) == 0 {
+		return "None"
+	} else {
+		return fmt.Sprintf("Some(\"%v\")", f.Description)
+	}
+}
+
+func (f Field) GetLookup() string {
+	if _, ok := f.Units.(PgnLookup); ok {
+		for _, x := range lookups {
+			p1 := reflect.ValueOf(x.Left).Pointer()
+			p2 := reflect.ValueOf(f.Units).Pointer()
+
+			if p1 == p2 {
+				return fmt.Sprintf("Some(%v)", x.Right)
+			}
+		}
+	}
+
+	return "None"
+}
+
+func (pp PgnArray) PrintRust() {
+	fmt.Println("PgnList = vec![")
+	for _, pgn := range pp {
+		fmt.Println("Pgn {")
+		fmt.Printf("    name: \"%v\",\n", pgn.Description)
+		fmt.Printf("    category: PgnCategory::%v,\n", pgn.Category)
+		fmt.Printf("    pgn: %v,\n", pgn.Pgn)
+		fmt.Printf("    is_known: %v,\n", pgn.IsKnown)
+		fmt.Printf("    size: %v,\n", pgn.Size)
+		fmt.Printf("    repeating_fields: %v,\n", pgn.RepeatingFields)
+		fmt.Println("    fields: vec![")
+
+		start := uint32(0)
+		for i, field := range pgn.FieldList {
+			if i > 0 {
+				start = start + pgn.FieldList[i-1].Size
+			}
+
+			fmt.Println("        Field {")
+			fmt.Printf("            name: \"%v\",\n", field.Name)
+			fmt.Printf("            description: %v,\n", field.GetDescription())
+			fmt.Printf("            field_type: Some(FieldType::%v),\n", field.GetFieldType())
+			fmt.Printf("            lookup: %v,\n", field.GetLookup())
+			fmt.Printf("            multiplier: %f,\n", field.GetMultiplier())
+			fmt.Printf("            offset: %v,\n", field.Offset)
+			fmt.Printf("            start: %v,\n", start)
+			fmt.Printf("            size: %v,\n", field.Size)
+			fmt.Printf("            unit: %v,\n", field.GetFieldUnits())
+			fmt.Println("        },")
+		}
+
+		fmt.Println("    ],")
+		fmt.Println("},")
+	}
+	fmt.Println("];")
 }
