@@ -632,7 +632,7 @@ var lookupAirmarCalibrationStatus = PgnLookup{
 	5: "In progress",
 }
 
-var lookupAirmarFormatCode = map[uint32]string{
+var lookupAirmarFormatCode = PgnLookup{
 	1: "Format Code 1",
 }
 
@@ -650,6 +650,10 @@ var lookupAirmarCogSubstitute = PgnLookup{
 var lookupAirmarControl = PgnLookup{
 	0: "Report previous values",
 	1: "Generate new values",
+}
+
+var lookupAirmarDepthQuality = PgnLookup{
+	0: "No depth lock",
 }
 
 var lookupAirmarTempInstance = PgnLookup{
@@ -859,6 +863,38 @@ var lookupSimnetDirection = PgnLookup{
 	5: "Right rudder (starboard)",
 }
 
+var lookupSimnetAlarm = PgnLookup{
+	56: "Clear",
+	57: "Raise",
+}
+
+var lookupFusionMute = PgnLookup{
+	1: "Muted",
+	2: "Not muted",
+}
+
+var lookupFusionTransport = PgnLookup{
+	1: "Paused",
+}
+
+var lookupFusionTimeFormat = PgnLookup{
+	0: "12h",
+	1: "24h",
+}
+
+var lookupFusionReplayMode = PgnLookup{
+	9:  "USB repeat",
+	10: "USB shuffle",
+	12: "iPod repeat",
+	13: "iPod shuffle",
+}
+
+var lookupFusionReplayStatus = PgnLookup{
+	0: "Off",
+	1: "One/Track",
+	2: "All/Album",
+}
+
 var PgnList = PgnArray{
 	{"Unknown PGN", "Mandatory", 0, false, 8, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, nil, "", "", 0},
@@ -869,7 +905,7 @@ var PgnList = PgnArray{
 	{"ISO Acknowledgement", "Mandatory", 59392, true, 8, 0, []Field{
 		{"Control", 8, RES_LOOKUP, false, lookupIsoAckResults, "", "", 0},
 		{"Group Function", 8, 1, false, nil, "", "", 0},
-		{"Reserved", 24, RES_BINARY, false, nil, "Reserved", "", 0},
+		{"Reserved", 24, RES_BINARY, false, nil, "Alignment padding", "", 0},
 		{"PGN", 24, RES_INTEGER, false, nil, "Parameter Group Number of requested information", "", 0}},
 	},
 
@@ -883,7 +919,7 @@ var PgnList = PgnArray{
 		{"Device Instance Lower", 3, 1, false, nil, "ISO ECU Instance", "", 0},
 		{"Device Instance Upper", 5, 1, false, nil, "ISO Function Instance", "", 0},
 		{"Device Function", 8, 1, false, nil, "ISO Function", "", 0},
-		{"Reserved", 1, RES_BINARY, false, nil, "", "", 0},
+		{"Reserved", 1, RES_BINARY, false, nil, "Alignment padding", "", 0},
 		{"Device Class", 7, RES_LOOKUP, false, lookupDeviceClass, "", "", 0},
 		{"System Instance", 4, 1, false, nil, "ISO Device Class Instance", "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
@@ -1186,7 +1222,7 @@ var PgnList = PgnArray{
 		{"Reserved", 2, 1, false, nil, "", "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "Marine Industry", "", 0},
 		{"SID", 8, 1, false, nil, "", "", 0},
-		{"Depth Quality Factor", 4, RES_LOOKUP, false, ",0=No Depth Lock", "", "", 0}},
+		{"Depth Quality Factor", 4, RES_LOOKUP, false, lookupAirmarDepthQuality, "", "", 0}},
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/DST200UserlManual.pdf
@@ -1323,8 +1359,7 @@ var PgnList = PgnArray{
 		{"Reserved", 2, 1, false, nil, "", "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "Marine Industry", "", 0},
 		{"Proprietary ID", 8, RES_INTEGER, false, "=35", "Simulate Mode", "", 0},
-		{"Simulate Mode", 2, RES_LOOKUP, false, lookupOffOn, "", "", 0},
-		{"Reserved", 22, RES_BINARY, false, nil, "Reserved", "", 0}},
+		{"Simulate Mode", 2, RES_LOOKUP, false, lookupOffOn, "", "", 0}},
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/DST200UserlManual.pdf
@@ -1333,14 +1368,13 @@ var PgnList = PgnArray{
 		{"Reserved", 2, 1, false, nil, "", "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "Marine Industry", "", 0},
 		{"Proprietary ID", 8, RES_INTEGER, false, "=40", "Calibrate Depth", "", 0},
-		{"Speed of Sound Mode", 16, 0.1, false, "m/s", "actual allowed range is 1350.0 to 1650.0 m/s", "", 0},
-		{"Reserved", 8, RES_BINARY, false, nil, "Reserved", "", 0}},
+		{"Speed of Sound Mode", 16, 0.1, false, "m/s", "actual allowed range is 1350.0 to 1650.0 m/s", "", 0}},
 	},
 
 	// http://www.airmartechnology.com/uploads/installguide/DST200UserlManual.pdf
 	{"Calibrate Speed", "Airmar", 126720, true, 8, 2, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=135", "Airmar", "", 0},
-		{"Reserved", 2, 1, false, nil, "", "", 0},
+		{"Reserved", 2, 1, false, nil, "Alignment padding", "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "Marine Industry", "", 0},
 		{"Proprietary ID", 8, RES_INTEGER, false, "=41", "Calibrate Speed", "", 0},
 		{"Number of pairs of data points", 8, RES_INTEGER, false, nil, "actual range is 0 to 25. 254=restore default speed curve", "", 0},
@@ -2669,7 +2703,7 @@ var PgnList = PgnArray{
 		{"Wind Speed", 16, 0.01, false, "m/s", "", "", 0},
 		{"Wind Direction", 16, RES_DEGREES, false, "deg", "", "", 0},
 		{"Wind Reference", 3, RES_LOOKUP, false, lookupWindReference, "", "", 0},
-		{"Reserved", 5, RES_BINARY, false, "", "reserved", "", 0},
+		{"Reserved", 5, RES_BINARY, false, nil, "reserved", "", 0},
 		{"Wind Gusts", 16, 0.01, false, "m/s", "", "", 0},
 		{"Atmospheric Pressure", 16, RES_PRESSURE, false, "hPa", "", "", 0},
 		{"Ambient Temperature", 16, RES_TEMPERATURE, false, "K", "", "", 0},
@@ -2687,12 +2721,12 @@ var PgnList = PgnArray{
 		{"Wind Speed", 16, 0.01, false, "m/s", "", "", 0},
 		{"Wind Direction", 16, RES_DEGREES, false, "deg", "", "", 0},
 		{"Wind Reference", 3, RES_LOOKUP, false, lookupWindReference, "", "", 0},
-		{"Reserved", 5, RES_BINARY, false, "", "reserved", "", 0},
+		{"Reserved", 5, RES_BINARY, false, nil, "reserved", "", 0},
 		{"Wind Gusts", 16, 0.01, false, "m/s", "", "", 0},
 		{"Wave Height", 16, 1, false, nil, "", "", 0},
 		{"Dominant Wave Period", 16, 1, false, nil, "", "", 0},
 		{"Atmospheric Pressure", 16, RES_PRESSURE, false, "hPa", "", "", 0},
-		{"Pressure Tendency Rate", 16, 1, false, "", "", "", 0},
+		{"Pressure Tendency Rate", 16, 1, false, nil, "", "", 0},
 		{"Air Temperature", 16, RES_TEMPERATURE, false, "K", "", "", 0},
 		{"Water Temperature", 16, RES_TEMPERATURE, false, "K", "", "", 0},
 		{"Station ID", 64, RES_ASCII, false, nil, "", "", 0}},
@@ -3099,7 +3133,7 @@ var PgnList = PgnArray{
 		{"Message ID", 8, 1, false, "=14", "", "", 0},
 		{"A", 8, 1, false, 0, "", "", 0},
 		{"B", 8, 1, false, 0, "", "", 0},
-		{"Scan", 8, RES_LOOKUP, false, ",0=Off,1=Scan", "", "", 0}},
+		{"Scan", 8, RES_LOOKUP, false, lookupOffOn, "", "", 0}},
 	},
 
 	{"Fusion: Menu Item", "Entertainment", 130820, false, 23, 0, []Field{
@@ -3124,11 +3158,11 @@ var PgnList = PgnArray{
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
 		{"Message ID", 8, 1, false, "=19", "", "", 0},
 		{"A", 8, 1, false, 0, "", "", 0},
-		{"Mode", 8, RES_LOOKUP, false, ",9=USB Repeat,10=USB Shuffle,12=iPod Repeat,13=iPod Shuffle", "", "", 0},
+		{"Mode", 8, RES_LOOKUP, false, lookupFusionReplayMode, "", "", 0},
 		{"C", 24, 1, false, 0, "", "", 0},
 		{"D", 8, 1, false, 0, "", "", 0},
 		{"E", 8, 1, false, 0, "", "", 0},
-		{"Status", 8, RES_LOOKUP, false, ",0=Off,1=One/Track,2=All/Album", "", "", 0},
+		{"Status", 8, RES_LOOKUP, false, lookupFusionReplayStatus, "", "", 0},
 		{"H", 8, 1, false, 0, "", "", 0},
 		{"I", 8, 1, false, 0, "", "", 0},
 		{"J", 8, 1, false, 0, "", "", 0}},
@@ -3144,8 +3178,8 @@ var PgnList = PgnArray{
 		{"C", 24, 1, false, 0, "", "", 0},
 		{"Minutes", 8, 1, false, 0, "", "", 0},
 		{"Hours", 8, 1, false, 0, "", "", 0},
-		{"Format", 1, RES_LOOKUP, false, ",0=12h,1=24h", "", "", 0},
-		{"Alarm", 1, RES_LOOKUP, false, ",0=Off,1=On", "", "", 0},
+		{"Format", 1, RES_LOOKUP, false, lookupFusionTimeFormat, "", "", 0},
+		{"Alarm", 1, RES_LOOKUP, false, lookupOffOn, "", "", 0},
 		{"I", 6, 1, false, 0, "", "", 0},
 		{"J", 8, 1, false, 0, "", "", 0}},
 	},
@@ -3180,7 +3214,7 @@ var PgnList = PgnArray{
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
 		{"Message ID", 8, 1, false, "=23", "", "", 0},
 		{"A", 8, 1, false, 0, "", "", 0},
-		{"Mute", 8, RES_LOOKUP, false, ",1=Muted,2=Not Muted", "", "", 0}},
+		{"Mute", 8, RES_LOOKUP, false, lookupFusionMute, "", "", 0}},
 	},
 
 	{"Fusion: Unknown (24)", "Entertainment", 130820, false, 5, 0, []Field{
@@ -3245,7 +3279,7 @@ var PgnList = PgnArray{
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
 		{"Message ID", 8, 1, false, "=32", "", "", 0},
 		{"A", 8, 1, false, 0, "", "", 0},
-		{"Transport", 8, RES_LOOKUP, false, ",1=Paused", "", "", 0}},
+		{"Transport", 8, RES_LOOKUP, false, lookupFusionTransport, "", "", 0}},
 	},
 
 	{"Fusion: Stereo ID", "Entertainment", 130820, false, 5, 0, []Field{
@@ -3539,7 +3573,7 @@ var PgnList = PgnArray{
 		{"A", 16, 1, false, 0, "", "", 0},
 		{"Proprietary ID", 8, RES_LOOKUP, false, "=1", "Alarm command", "", 0},
 		{"C", 8, 1, false, 0, "", "", 0},
-		{"Alarm", 16, RES_LOOKUP, false, ",57=Raise,56=Clear", "", "", 0},
+		{"Alarm", 16, RES_LOOKUP, false, lookupSimnetAlarm, "", "", 0},
 		{"Message ID", 16, RES_INTEGER, false, 0, "", "", 0},
 		{"F", 8, 1, false, 0, "", "", 0},
 		{"G", 8, 1, false, 0, "", "", 0}},
