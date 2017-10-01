@@ -26,6 +26,7 @@ import (
 	"math"
 	"reflect"
 	"regexp"
+	"strconv"
 )
 
 const ACTISENSE_BEM = 0x40000 // Actisense specific fake PGNs
@@ -3902,9 +3903,9 @@ func (f Field) GetFieldUnits() string {
 			return "Some(Unit::Watt)"
 		default:
 			if matchRegex.MatchString(v) {
-				return fmt.Sprintf("Some(Unit::Match(\"%s\"))", v)
+				return "None"
 			} else {
-				return fmt.Sprintf("Some(\"%s\")", v)
+				return fmt.Sprintf("Some(\"%v\")", v)
 			}
 		}
 	case int:
@@ -3912,7 +3913,7 @@ func (f Field) GetFieldUnits() string {
 			return "None"
 		}
 	case PgnLookup:
-		return "Some(Unit::Lookup)"
+		return "None"
 	}
 
 	if f.Units == nil {
@@ -3924,9 +3925,17 @@ func (f Field) GetFieldUnits() string {
 }
 
 func (f Field) GetFieldType() string {
+	if v, ok := f.Units.(string); ok {
+		if matchRegex.MatchString(v) {
+			if i, e := strconv.Atoi(v[1:]); e == nil {
+				return fmt.Sprintf("Match(%v)", i)
+			}
+		}
+	}
+
 	switch f.Resolution {
 	case RES_MANUFACTURER:
-		return "Manufacturer"
+		return "Lookup"
 	case RES_LOOKUP:
 		return "Lookup"
 	case RES_BINARY:
@@ -3950,6 +3959,8 @@ func (f Field) GetFieldType() string {
 	case RES_PRESSURE:
 		return "UnsignedInteger"
 	case RES_INTEGER:
+		fallthrough
+	case 1:
 		if f.Signed {
 			return "SignedInteger"
 		} else {
@@ -3966,7 +3977,11 @@ func (f Field) GetFieldType() string {
 	case RES_STRINGLZ:
 		return "PascalString"
 	default:
-		return "ManualFixup"
+		if f.Units == nil {
+			return "None"
+		} else {
+			return "ManualFixup"
+		}
 	}
 }
 
