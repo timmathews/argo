@@ -42,6 +42,8 @@ type npmPackages struct {
 
 type npmObject struct {
 	Package npmPackage
+	Path    string
+	Version string
 }
 
 type npmLinks struct {
@@ -130,6 +132,16 @@ func appsHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			installedPackages := getInstalledPackages("./node_modules")
+
+			for k, v := range data.Objects {
+				log.Notice("%v", v.Package.Name)
+				if val, ok := installedPackages[v.Package.Name]; ok {
+					data.Objects[k].Path = "/apps" + val.Location
+					data.Objects[k].Version = val.Version
+				}
+			}
+
 			t.ExecuteTemplate(w, "layout", data.Objects)
 		}
 	} else {
@@ -164,8 +176,18 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func addApps(r *mux.Router) {
+	pkgs := getInstalledPackages("./node_modules")
+	for k, _ := range pkgs {
+		log.Notice("%v", k)
+		dir := http.Dir("./node_modules")
+		r.PathPrefix("/apps/" + k).Handler(http.StripPrefix("/apps/", http.FileServer(dir)))
+	}
+}
+
 func UiServer(addr *string, cmd chan CommandRequest) {
 	r := mux.NewRouter()
+	addApps(r)
 	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir(sysconf.Server.AssetPath))))
 	r.HandleFunc("/admin/uuid", uuidHandler)
 	r.HandleFunc("/admin", adminHandler)
@@ -173,4 +195,11 @@ func UiServer(addr *string, cmd chan CommandRequest) {
 	r.HandleFunc("/apps", appsHandler)
 	r.HandleFunc("/", indexHandler)
 	http.Handle("/", r)
+
+	r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		s, _ := route.GetPathTemplate()
+		log.Notice("%v", s)
+
+		return nil
+	})
 }

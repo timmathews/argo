@@ -3,10 +3,10 @@
 <table class="table table-sm table-striped">
   <thead>
     <tr>
-      <th>Install</th>
-      <th>Update</th>
+      <th></th>
+      <th>Installed Version</th>
       <th>Name</th>
-      <th>Descriptions</th>
+      <th>Description</th>
       <th>Authors</th>
       <th>Link</th>
     </tr>
@@ -23,8 +23,16 @@
           </button>
         </form>
       </td>
-      <td></td>
-      <td>{{$app.Package.Name}}</td>
+      <td>{{$app.Version}}</td>
+      <td>
+        {{if $app.Path}}
+          <a href="{{$app.Path}}">
+            {{$app.Package.Name}}
+          </a>
+        {{else}}
+          {{$app.Package.Name}}
+        {{end}}
+      </td>
       <td>{{$app.Package.Description}}</td>
       <td>{{$app.Package.Author.Name}}</td>
       <td><a href="{{$app.Package.Links.Npm}}">npm</a></td>

@@ -1,3 +1,4 @@
 argo
 vendor/package-lock.json
 *.swp
+node_modules/
