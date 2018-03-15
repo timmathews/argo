@@ -29,9 +29,11 @@ import (
 
 const (
 	// ASCII characters which mark packet start and stop
+	NUL = 0x00
 	STX = 0x02
 	ETX = 0x03
 	DLE = 0x10
+	DC1 = 0x11
 	ESC = 0x1B
 
 	// N2K commands
@@ -43,11 +45,10 @@ const (
 	NGT_MSG_SEND     = 0xA1
 )
 
-/* The following startup command reverse engineered from Actisense NMEAreader.
- * It instructs the NGT1 to clear its PGN message TX list, thus it starts
- * sending all PGNs.
- */
-var NGT_STARTUP_SEQ = []byte{0x11, 0x02, 0x00}
+// The following startup command was reverse engineered from Actisense
+// NMEAreader. It instructs the NGT1 to clear its PGN message TX list, thus it
+// starts sending all PGNs.
+var NGT_STARTUP_SEQ = []byte{DC1, STX, NUL}
 
 type MsgState int
 
@@ -77,25 +78,24 @@ func OpenChannel(port io.ReadWriteCloser) (p *ActisensePort, err error) {
 	return p, nil
 }
 
-/*
- * Wrap the PGN or NGT message and send to NGT
- *
- * The message envelope has the following structure:
- *
- * <DLE><STX><COMMAND><LEN><CMD DATA><CRC><DLE><ETX>
- *
- * <COMMAND> is a one byte to either send or receive a specific
- * N2K or NGT message
- *
- * <LEN> is the length of the unescaped <CMD DATA>
- *
- * <CMD DATA> is the actual command being sent, either an NGT message or an
- * NMEA2000 PGN. Any DLE characters (0x10) are escaped with another DLE
- * character, so <DLE> becomes <DLE><DLE>.
- *
- * <CRC> is such that the sum of all unescaped data bytes plus the command byte
- * plus the length plus the checksum add up to zero, modulo 256.
- */
+// Wrap the PGN or NGT message and send to NGT
+//
+// The message envelope has the following structure:
+//
+// <DLE><STX><COMMAND><LEN><CMD DATA><CRC><DLE><ETX>
+//
+// <COMMAND> is a one byte to either send or receive a specific
+// N2K or NGT message
+//
+// <LEN> is the length of the unescaped <CMD DATA>
+//
+// <CMD DATA> is the actual command being sent, either an NGT message or an
+// NMEA2000 PGN. Any DLE characters (0x10) are escaped with another DLE
+// character, so <DLE> becomes <DLE><DLE>.
+//
+// <CRC> is such that the sum of all unescaped data bytes plus the command byte
+// plus the length plus the checksum add up to zero, modulo 256.
+//
 func (p *ActisensePort) Write(payload []byte) (int, error) {
 	return p.write(N2K_MSG_SEND, payload)
 }

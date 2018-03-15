@@ -27,15 +27,21 @@ import (
 const layout = "2006-01-02-15:04:05.999"
 
 type RawMessage struct {
-	Timestamp   time.Time // Timestamp of receipt of CAN Message
-	Priority    uint8     // Message priority, 0 is highest priority [id >> 26]
-	Pgn         uint32    // Parameter group number/name id [(id & 0x3FFFFFF) >> 8]
-	Source      uint8     // Sender ID [id & 0xFF]
-	Destination uint8     /* Destination of message. If the PF field (bits 24:17 of the
-	* ID) are >= 0xF0, than dst is 255 (broadcast). Otherwise
-	* use the FS field (bits 16:9 of the ID) as the destination
-	* address */
-	Length uint8 // number of bytes which make up the frame
+	// Timestamp of receipt of CAN Message
+	Timestamp time.Time
+	// Message priority, 0 is highest priority [id >> 26]
+	Priority uint8
+	// Parameter group number/name id [(id & 0x3FFFFFF) >> 8]
+	Pgn uint32
+	// Sender ID [id & 0xFF]
+	Source uint8
+	// Destination of message. If the PF field (bits 24:17 of the
+	// ID) are >= 0xF0, than dst is 255 (broadcast). Otherwise
+	// use the FS field (bits 16:9 of the ID) as the destination
+	// address
+	Destination uint8
+	// number of bytes which make up the frame
+	Length uint8
 	Data   []byte
 }
 
