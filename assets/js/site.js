@@ -33,7 +33,6 @@ $(function() {
 
     $.get('/admin/uuid', function(data) {
       var uuid = data.uuid;
-      console.log(uuid);
       $('#uuid_0').val(uuid[0]);
       $('#uuid_1').val(uuid[1]);
       $('#uuid_2').val(uuid[2]);
@@ -48,19 +47,24 @@ $(function() {
   ws.onmessage = function(data) {
     var stats = JSON.parse(data.data);
 
-    $('#stats').empty();
-
     $.each(stats, function(k, v) {
-      $('#stats').append('<tr><th><a href="#" data-pgn="' + k + '">' + k + "</th><td>" + v + "</td></tr>");
-    });
+      let ln = $('#stats a[data-pgn="' + k + '"]');
+      if(ln.length > 0) {
+        ln.parent().siblings()[0].innerText = v;
+      } else {
+        $('#stats').append('<tr><th><a href="#" data-pgn="' +
+          k + '">' + k + "</th><td>" + v + "</td></tr>");
 
-    $('a[data-pgn]').on('click', function(e) { showPgnData($(e.target).data('pgn')); });
+        $('#stats a[data-pgn="' + k + '"]').on('click', function(e) {
+          showPgnData(k);
+        });
+      }
+    });
   };
 });
 
 function showPgnData(pgn) {
   $.getJSON('/signalk/v1/api/messages/' + pgn, function(data) {
-    console.log(data.FieldList.map(x => x.Name));
     $('#pgnModal .modal-title').text(data.Description);
     $('#pgnModal .modal-body .pgn').text(data.Pgn);
     $('#pgnModal .modal-body .category').text(data.Category);
@@ -79,7 +83,6 @@ function handleInterfaceTypeChange(e) {
   $('#gpsdPortGroup').hide();
 
   var intType = $(e.target).val();
-  console.log(intType);
 
   if (intType === 'filestreamNmea0183' || intType === 'filestreamNmea2000') {
     $('#fileSelectGroup').show();
