@@ -86,7 +86,7 @@ func main() {
 	var err error
 	sysconf, err = config.ReadConfig(opts.ConfigFile)
 	if err != nil {
-		log.Fatal("could not read config file %v: %v", opts.ConfigFile, err)
+		log.Fatalf("could not read config file. %v", err)
 	}
 
 	if opts.LogLevel != "" {
@@ -94,7 +94,8 @@ func main() {
 	}
 
 	if sysconf.LogLevel == "NONE" {
-		logFilter = logging.AddModuleLevel(logging.NewLogBackend(ioutil.Discard, "", 0))
+		logFilter =
+			logging.AddModuleLevel(logging.NewLogBackend(ioutil.Discard, "", 0))
 		logging.SetBackend(logFilter)
 	} else {
 		requestedLogLevel := sysconf.LogLevel
@@ -103,11 +104,11 @@ func main() {
 		if err == nil {
 			logFilter.SetLevel(lvl, "")
 		} else {
-			log.Warning("Could not set log level to %v: %v", requestedLogLevel, err)
+			log.Warningf("Could not set log level to %v: %v", requestedLogLevel, err)
 		}
 	}
 
-	log.Notice("log level set to %v", logging.GetLevel(""))
+	log.Noticef("log level set to %v", logging.GetLevel(""))
 
 	txch := make(chan nmea2k.ParsedMessage)
 	cmdch := make(chan CommandRequest)
@@ -117,13 +118,15 @@ func main() {
 
 	mapData, err := signalk.ParseMappings(sysconf.MapFile)
 	if err != nil {
-		log.Fatal("could not read XML map file %v: %v", sysconf.MapFile, err)
+		log.Fatalf("could not read XML map file %v: %v", sysconf.MapFile, err)
 	}
 
 	// Set up MQTT Client
 	var mqttClient mqtt.Client
 	if sysconf.Mqtt.Enable {
-		mqttOpts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("ssl://%v:%v", sysconf.Mqtt.Host, sysconf.Mqtt.Port))
+		mqttOpts := mqtt.NewClientOptions().AddBroker(
+			fmt.Sprintf("ssl://%v:%v", sysconf.Mqtt.Host, sysconf.Mqtt.Port),
+		)
 		mqttOpts.SetClientID(sysconf.Mqtt.ClientId)
 		mqttOpts.SetUsername(sysconf.Mqtt.Username)
 		mqttOpts.SetPassword(sysconf.Mqtt.Password)
@@ -180,7 +183,7 @@ func main() {
 				if b, err := json.Marshal(statLog); err == nil {
 					statistics_hub.broadcast <- b
 				} else {
-					log.Error("JSON.Marshal %v", err)
+					log.Errorf("JSON.Marshal %v", err)
 				}
 			}
 
@@ -208,7 +211,7 @@ func main() {
 	}()
 
 	for k, i := range sysconf.Interfaces {
-		log.Notice("opening %v at %v", k, i.Path)
+		log.Noticef("opening %v at %v", k, i.Path)
 		go processInterface(i, txch)
 	}
 
@@ -217,7 +220,7 @@ func main() {
 
 	sig := <-exitc
 
-	log.Notice("cleaning up and exiting with %v", sig)
+	log.Notice("cleaning up and exiting with", sig)
 }
 
 func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessage) {
@@ -230,7 +233,7 @@ func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessa
 	}
 
 	if stat.Mode&syscall.S_IFMT == syscall.S_IFCHR {
-		log.Debug("%v is a serial port", iface.Path)
+		log.Debugf("%v is a serial port", iface.Path)
 
 		options := serial.OpenOptions{
 			PortName:        iface.Path,
@@ -246,18 +249,18 @@ func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessa
 			log.Fatalf("error opening port:", err)
 		}
 	} else {
-		log.Debug("%v is a file", iface.Path)
+		log.Debugf("%v is a file", iface.Path)
 	}
 
 	// Set up hardware and start reading data
-	log.Debug("configuring %v", iface.Type)
+	log.Debug("configuring", iface.Type)
 
 	if iface.Type == "canusb" {
 		log.Debug("adding Fast Packets")
 
 		for _, p := range nmea2k.PgnList {
 			if p.Size > 8 {
-				log.Debug("adding PGN: %v", p.Pgn)
+				log.Debug("adding PGN:", p.Pgn)
 				canusb.AddFastPacket(p.Pgn)
 			}
 		}
@@ -272,7 +275,7 @@ func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessa
 			if err == nil {
 				txch <- *(nmea2k.ParsePacket(raw))
 			} else {
-				log.Warning("canport: %v", err)
+				log.Warning("canport:", err)
 			}
 		}
 	} else if iface.Type == "actisense" {
@@ -286,7 +289,7 @@ func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessa
 			if err == nil {
 				txch <- *(nmea2k.ParsePacket(raw))
 			} else {
-				log.Warning("canport: %v", err)
+				log.Warning("canport:", err)
 			}
 		}
 	} else if iface.Type == "file" {
@@ -300,11 +303,14 @@ func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessa
 			if err == nil {
 				txch <- *pgn
 			} else {
-				log.Warning("filescanner: %v", err)
+				log.Warning("filescanner:", err)
 			}
 			time.Sleep(100 * time.Millisecond)
 		}
 	} else {
-		log.Fatalf("unknown device type %s. Expected one of: canusb, actisense, file", iface.Type)
+		log.Fatalf(
+			"unknown device type %s. Expected one of: canusb, actisense, file",
+			iface.Type,
+		)
 	}
 }
