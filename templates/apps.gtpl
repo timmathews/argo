@@ -23,8 +23,8 @@
           </button>
         </form>
       </td>
-      <td>{{$app.Version}}</td>
-      <td>
+      <td class="version">{{$app.Version}}</td>
+      <td class="path">
         {{if $app.Path}}
           <a href="{{$app.Path}}">
             {{$app.Package.Name}}

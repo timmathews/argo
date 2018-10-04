@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -17,28 +19,62 @@ type nodePackage struct {
 	Keywords []string `json:"keywords"`
 }
 
+type yarnMessage struct {
+	Type string      `json:"type"`
+	Data interface{} `json:"data"`
+}
+
 func installPackage(name, version string) error {
-	cmd := exec.Command("npm", "install", fmt.Sprintf("%s@%s", name, version), "--prefix ./vendor")
+	cmd := exec.Command(
+		"yarn",
+		"add",
+		fmt.Sprintf("%s@%s", name, version),
+		"--json",
+		"--silent",
+	)
+	chn := make(chan string)
 
-	stderr, _ := cmd.StderrPipe()
-	stdout, _ := cmd.StdoutPipe()
+	go func(cm *exec.Cmd, ch chan string) {
+		defer func() { ch <- "" }()
 
-	if err := cmd.Start(); err != nil {
-		return err
-	}
+		stdout, _ := cmd.StdoutPipe()
 
-	processErrors, _ := ioutil.ReadAll(stderr)
-	processOutput, _ := ioutil.ReadAll(stdout)
+		<-ch
 
-	if len(processErrors) > 0 {
-		log.Error("Process Errors: %v", string(processErrors))
-	}
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			m := scanner.Text()
+			var res yarnMessage
+			json.Unmarshal([]byte(m), &res)
+			if res.Type == "step" {
+				if v, ok := res.Data.(map[string]interface{}); ok {
+					c, ok1 := v["current"].(float64)
+					t, ok2 := v["total"].(float64)
 
-	if len(processOutput) > 0 {
-		log.Notice("%v", string(processOutput))
-	}
+					if ok1 && ok2 {
+						log.Noticef("Progress %v/%v", c, t)
+					}
+				} else {
+					log.Error("Could not convert 'data'")
+				}
+			}
+		}
+	}(cmd, chn)
+
+	chn <- ""
+	cmd.Start()
 
 	return cmd.Wait()
+}
+
+func getPathForPackage(pkg string) string {
+	path := filepath.Join("node_modules", pkg, "index.html")
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return filepath.Join("/apps", pkg, "public")
+	}
+
+	return filepath.Join("/apps", pkg)
 }
 
 func getInstalledPackages(path string) map[string]nodePackage {
@@ -61,6 +97,16 @@ func getInstalledPackages(path string) map[string]nodePackage {
 					var p nodePackage
 					err := json.Unmarshal(pkgFile, &p)
 					if err == nil && contains(p.Keywords, "signalk-webapp") {
+						if p.Location == "" {
+							p.Location = fmt.Sprintf("/%v", p.Name)
+						}
+
+						_, err := os.Stat(filepath.Join(path, file.Name(), "index.html"))
+						if os.IsNotExist(err) {
+							p.Location = filepath.Join(p.Location, "/public")
+						}
+
+						// strip node_modules from path, if it exists
 						if strings.Contains(path, "node_modules") {
 							packages[filepath.Join(path, file.Name())[13:]] = p
 						} else {

@@ -189,5 +189,11 @@ function handleAppInstall(e) {
   var http = new XMLHttpRequest();
   http.open("POST", "/apps/install", true);
   http.setRequestHeader("Content-type", "application/json");
+  http.addEventListener("load", function() {
+    res = JSON.parse(this.responseText);
+    var row = $(e.target).parent().parent();
+    row.children('.version').text(v);
+    row.children('.path').html('<a href="' + res.url + '">' + p + '</a>');
+  });
   http.send(JSON.stringify(pkg));
 }

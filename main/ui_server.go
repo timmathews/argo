@@ -21,6 +21,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/imdario/mergo"
 	"github.com/satori/go.uuid"
@@ -149,19 +150,38 @@ func appsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func appInstallHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		var data pkgRequest
-		err := json.NewDecoder(r.Body).Decode(&data)
-		if err != nil {
-			log.Error("%v", err)
-		} else {
-			if err = installPackage(data.Package, data.Version); err != nil {
+func appInstallHandlerFactory(m *mux.Router) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			var data pkgRequest
+			err := json.NewDecoder(r.Body).Decode(&data)
+			w.Header().Set("Content-Type", "text/json")
+			if err != nil {
 				log.Error("%v", err)
+			} else {
+				if err = installPackage(data.Package, data.Version); err != nil {
+					log.Error("%v", err)
+					io.WriteString(
+						w,
+						fmt.Sprintf(`{"result":"error","message":"%v"}`, err),
+					)
+				} else {
+					log.Noticef("%v@%v installed", data.Package, data.Version)
+					dir := http.Dir("./node_modules")
+					path := getPathForPackage(data.Package)
+					m.PathPrefix(path).Handler(
+						http.StripPrefix("/apps/", http.FileServer(dir)),
+					)
+					io.WriteString(
+						w,
+						fmt.Sprintf(`{"result":"ok","url":"%v","dir":"%v"}`, path, dir),
+					)
+				}
 			}
+
+		} else {
+			http.Error(w, "Method not allowed", 405)
 		}
-	} else {
-		http.Error(w, "Method not allowed", 405)
 	}
 }
 
@@ -191,7 +211,7 @@ func UiServer(addr *string, cmd chan CommandRequest) {
 	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir(sysconf.Server.AssetPath))))
 	r.HandleFunc("/admin/uuid", uuidHandler)
 	r.HandleFunc("/admin", adminHandler)
-	r.HandleFunc("/apps/install", appInstallHandler)
+	r.HandleFunc("/apps/install", appInstallHandlerFactory(r))
 	r.HandleFunc("/apps", appsHandler)
 	r.HandleFunc("/", indexHandler)
 	http.Handle("/", r)
