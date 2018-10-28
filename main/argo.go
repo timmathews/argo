@@ -58,7 +58,6 @@ var logFormat = logging.MustStringFormatter(
 )
 
 var sysconf config.TomlConfig
-var statLog map[int]uint64
 
 func main() {
 	logBackend := logging.NewLogBackend(os.Stderr, "", 0)
@@ -112,6 +111,7 @@ func main() {
 
 	txch := make(chan nmea2k.ParsedMessage)
 	cmdch := make(chan CommandRequest)
+	regch := make(chan ClientRegistration)
 
 	statLog := make(map[string]uint64)
 	var statPgns StringSlice
@@ -154,6 +154,20 @@ func main() {
 
 	go ApiServer(&addr, cmdch)
 	go UiServer(&addr, cmdch)
+	go DeviceRegistrationServer(&addr, regch)
+
+	// Send device registration request over WS channel
+	go func() {
+		for {
+			i := <-regch
+
+			bytes, err := json.Marshal(i)
+
+			if err == nil && sysconf.Server.EnableWebsockets {
+				statistics_hub.broadcast <- bytes
+			}
+		}
+	}()
 
 	// Print and transmit received messages
 	go func() {
@@ -220,7 +234,7 @@ func main() {
 
 	sig := <-exitc
 
-	log.Notice("cleaning up and exiting with", sig)
+	log.Noticef("cleaning up and exiting with %v", sig)
 }
 
 func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessage) {

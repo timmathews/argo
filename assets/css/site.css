@@ -35,6 +35,35 @@ hr {
   fill: currentColor;
 }
 
+nav .octicon {
+  fill: white;
+  height: 1.333rem;
+}
+
+nav .octicon+.badge {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  text-align: center;
+  font-size: 9px;
+  padding: 2px 3px;
+  line-height: .9;
+}
+
+nav .dropdown-toggle::after {
+  display: none;
+}
+
+nav .dropdown-menu-right {
+  right: 0;
+  left: unset;
+}
+
+nav .dropdown-item {
+  width: 250px;
+  white-space: unset;
+}
+
 .modal-body p {
   margin-bottom: 0;
 }

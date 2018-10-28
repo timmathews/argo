@@ -24,9 +24,30 @@
 $(function() {
   $('[data-toggle="tooltip"]').tooltip();
 
+  $('i.octicon').each(function() {
+    var i = $(this);
+    $.get(i.data('svg'), function(data) {
+      var svg = $(data).find('svg');
+      svg
+        .addClass('octicon')
+        .removeAttr('xmlns')
+        .removeAttr('width')
+        .removeAttr('height');
+
+      i.replaceWith(svg);
+    }, 'xml');
+  });
+
   $('#interfaceType').change(handleInterfaceTypeChange);
 
   $('.appInstall').on('submit', handleAppInstall);
+
+  $('#regModal').on('show.bs.modal', function() {
+    $(this).find('.client-id').text(client.clientId);
+    $(this).find('.client-desc').text(client.description);
+    $(this).find('.client-mfg').text(client.manufacturer.companyName);
+    $(this).find('.client-prd').text(client.manufacturer.productName);
+  });
 
   $('#genUUID').click(function(e) {
     e.preventDefault();
@@ -41,25 +62,43 @@ $(function() {
     });
   });
 
+  var client = {};
+  var clients = [];
+
   var host = window.location.host;
   var proto = window.location.protocol === 'http:' ? 'ws' : 'wss';
   var ws = new WebSocket(proto + "://" + host + "/ws/stats");
   ws.onmessage = function(data) {
     var stats = JSON.parse(data.data);
 
-    $.each(stats, function(k, v) {
-      let ln = $('#stats a[data-pgn="' + k + '"]');
-      if(ln.length > 0) {
-        ln.parent().siblings()[0].innerText = v;
-      } else {
-        $('#stats').append('<tr><th><a href="#" data-pgn="' +
-          k + '">' + k + "</th><td>" + v + "</td></tr>");
-
-        $('#stats a[data-pgn="' + k + '"]').on('click', function(e) {
-          showPgnData(k);
-        });
+    if(stats.clientId) {
+      client = stats;
+      clients.push(client);
+      if($('.announce-menu a span').length == 0) {
+        $('.announce-menu a').append('<span class="badge badge-success" />');
       }
-    });
+
+      if($('.announce-menu div').length == 0) {
+        $('.announce-menu').append('<div class="dropdown-menu dropdown-menu-right" />');
+        $('.announce-menu a').dropdown();
+      }
+
+      $('.announce-menu a span').text(clients.length);
+    } else {
+      $.each(stats, function(k, v) {
+        let ln = $('#stats a[data-pgn="' + k + '"]');
+        if(ln.length > 0) {
+          ln.parent().siblings()[0].innerText = v;
+        } else {
+          $('#stats').append('<tr><th><a href="#" data-pgn="' +
+            k + '">' + k + "</th><td>" + v + "</td></tr>");
+
+          $('#stats a[data-pgn="' + k + '"]').on('click', function(e) {
+            showPgnData(k);
+          });
+        }
+      });
+    }
   };
 });
 
@@ -199,4 +238,22 @@ function handleAppInstall(e) {
     row.children('.path').html('<a href="' + res.url + '">' + p + '</a>');
   });
   http.send(JSON.stringify(pkg));
+}
+
+function buildNotifcationItem(c) {
+  var item = $('<div class="dropdown-item" />');
+  var title = $('<h4 data-toggle="tooltip" data-placement="top" '
+    + 'data-html="true" title="' + client.clientId + '<br>'
+    + client.manufacturer.companyName + '">'
+    + client.manufacturer.productName + '</h4>');
+
+  item.append(title);
+  item.append('<p>' + client.description + ' is requesting access</p>');
+  item.append('<button type="button" class="btn btn-primary btn-sm">Accept</button> ');
+  item.append('<button type="button" class="btn btn-default btn-sm">Reject</button>');
+
+  $('.announce-menu > div').append(item);
+  title.tooltip();
+
+  return item;
 }

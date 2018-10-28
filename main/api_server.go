@@ -168,4 +168,11 @@ func ApiServer(addr *string, cmd chan CommandRequest) {
 	s.HandleFunc("/messages/{key}", MessageDetailsHandler)
 	s.HandleFunc("/control/send", http.HandlerFunc(SendMessageHandler(cmd)))
 	http.Handle("/signalk/v1/api/", r)
+
+	r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		s, _ := route.GetPathTemplate()
+		log.Notice("%v", s)
+
+		return nil
+	})
 }

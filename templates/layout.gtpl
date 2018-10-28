@@ -35,6 +35,11 @@
           </li>
         </ul>
       </div>
+      <div class="dropdown announce-menu">
+        <a class="dropdown-toggle" href="#" data-toggle="dropdown">
+          <i data-svg="/assets/svg/bell.svg" class="octicon"></i>
+        </a>
+    </div>
     </nav>
     <div class="container">
       {{template "content" .}}
@@ -49,6 +54,34 @@
         <a href="http://www.gnu.org/licenses/gpl-3.0.html">GPLv3</a>
       </span>
     </nav>
+    <div id="regModal" class="modal fade" tabindex="-1" role="dialog" aria-labeledby="regModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="regModalLabel">Client Access Request</h4>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p>
+              A device is requesting access to your Signal K network. If you do not recognize this device you should
+              not approve the request.
+            </p>
+            <dl>
+              <dt>Client ID:</dt><dd class="client-id"></dd>
+              <dt>Description:</dt><dd class="client-desc"></dd>
+              <dt>Manufacturer:</dt><dd class="client-mfg"></dd>
+              <dt>Product:</dt><dd class="client-prd"></dd>
+            </dl>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Deny</button>
+            <button type="button" class="btn btn-success">Accept</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
