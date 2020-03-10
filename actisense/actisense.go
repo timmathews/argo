@@ -218,6 +218,9 @@ func n2kMessageReceived(msg []byte) (*can.RawMessage, error) {
 
 	raw.Length = lth
 	lth += 12
+	if int(lth) > len(msg) {
+		return nil, fmt.Errorf("Ignore corrupt msg / data length: %d", lth)
+	}
 	raw.Data = msg[12:lth]
 
 	return raw, nil
