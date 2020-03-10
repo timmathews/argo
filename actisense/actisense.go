@@ -22,9 +22,10 @@ package actisense
 import (
 	"errors"
 	"fmt"
-	"github.com/timmathews/argo/can"
 	"io"
 	"time"
+
+	"github.com/timmathews/argo/can"
 )
 
 const (
