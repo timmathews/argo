@@ -21,10 +21,11 @@ package nmea2k
 
 import (
 	"fmt"
-	"github.com/timmathews/argo/can"
 	"math"
 	"strconv"
 	"time"
+
+	"github.com/timmathews/argo/can"
 )
 
 const layout = "2006-01-02-15:04:05.999"
@@ -226,18 +227,16 @@ func (msg *RawMessage) extractDate(start, end uint32) (t time.Time, e error) {
 
 	if len(data) != 2 {
 		e = &DecodeError{data, "Field size mismatch"}
+	} else {
+		d = uint32(data[0]) | uint32(data[1])<<8
+		if d == 0xFFFF {
+			e = &DecodeError{data, "Data not present"}
+		} else {
+			t = time.Unix(int64(d*86400), 0)
+		}
 	}
-
-	d = uint32(data[0]) | uint32(data[1])<<8
-
-	if d == 0xFFFF {
-		e = &DecodeError{data, "Data not present"}
-	}
-
-	t = time.Unix(int64(d*86400), 0)
 
 	return
-
 }
 
 func (msg *RawMessage) extractTime(start, end uint32) (t time.Time, e error) {
