@@ -246,24 +246,23 @@ func (msg *RawMessage) extractTime(start, end uint32) (t time.Time, e error) {
 
 	if len(data) != 4 {
 		e = &DecodeError{data, "Field size mismatch"}
+	} else {
+		for i := 0; i < 4; i++ {
+			d |= uint32(data[i]) << uint(8*i)
+		}
+		if d == 0xFFFFFFFF {
+			e = &DecodeError{data, "Data not present"}
+		} else {
+			seconds := d / 10000
+			units := d % 10000
+			minutes := seconds / 60
+			seconds = seconds % 60
+			hours := minutes / 60
+			minutes = minutes % 60
+
+			t = time.Date(1970, time.January, 1, int(hours), int(minutes), int(seconds), int(units*10000), time.Local)
+		}
 	}
-
-	for i := 0; i < 4; i++ {
-		d |= uint32(data[i]) << uint(8*i)
-	}
-
-	if d == 0xFFFFFFFF {
-		e = &DecodeError{data, "Data not present"}
-	}
-
-	seconds := d / 10000
-	units := d % 10000
-	minutes := seconds / 60
-	seconds = seconds % 60
-	hours := minutes / 60
-	minutes = minutes % 60
-
-	t = time.Date(1970, time.January, 1, int(hours), int(minutes), int(seconds), int(units*10000), time.Local)
 
 	return
 
