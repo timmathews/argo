@@ -1984,7 +1984,7 @@ var PgnList = PgnArray{
 		{"AtoN Status", 8, RES_BINARY, false, nil, "", "", 0},
 		{"AIS Transceiver information", 5, RES_LOOKUP, false, lookupAisTransceiver, "", "", 0}},
 		{"NMEA Reserved", 3, RES_BINARY, false, nil, "", "", 0},
-		{"Aid to Navigation (AtoN) Name", 160, RES_STRING, false, nil, "", "", 0},
+		{"Aid to Navigation (AtoN) Name", 274, RES_STRING, false, nil, "", "", 0},
 	},
 
 	{"Datum", "Navigation", 129044, true, 24, 0, []Field{
