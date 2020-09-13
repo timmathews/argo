@@ -177,7 +177,7 @@ var lookupAisAccuracy = PgnLookup{
 	1: "High",
 }
 
-var lookupAisAtoNType = PgnLookuo{
+var lookupAisAtoNType = PgnLookup{
 	0:  "Not specified",
 	1:  "Reference point",
 	2:  "RACON",
@@ -1982,9 +1982,9 @@ var PgnList = PgnArray{
 		{"GNSS Type", 4, RES_LOOKUP, false, lookupGnsAis, "", "", 0},
 		{"NMEA Reserved", 3, RES_BINARY, false, nil, "", "", 0},
 		{"AtoN Status", 8, RES_BINARY, false, nil, "", "", 0},
-		{"AIS Transceiver information", 5, RES_LOOKUP, false, lookupAisTransceiver, "", "", 0}},
+		{"AIS Transceiver information", 5, RES_LOOKUP, false, lookupAisTransceiver, "", "", 0},
 		{"NMEA Reserved", 3, RES_BINARY, false, nil, "", "", 0},
-		{"Aid to Navigation (AtoN) Name", 274, RES_STRING, false, nil, "", "", 0},
+		{"Aid to Navigation (AtoN) Name", 274, RES_STRING, false, nil, "", "", 0}},
 	},
 
 	{"Datum", "Navigation", 129044, true, 24, 0, []Field{
