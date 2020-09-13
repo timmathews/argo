@@ -200,7 +200,7 @@ func n2kMessageReceived(msg []byte) (*can.RawMessage, error) {
 
 	// Packet length from NGT1
 	if msg[0] < 11 {
-		return nil, errors.New(fmt.Sprintf("Ignore short msg", len(msg)))
+		return nil, errors.New(fmt.Sprintf("Ignore short msg, %v", len(msg)))
 	}
 
 	raw := new(can.RawMessage)
@@ -213,7 +213,7 @@ func n2kMessageReceived(msg []byte) (*can.RawMessage, error) {
 	lth := msg[11]
 
 	if lth > 223 {
-		return nil, errors.New(fmt.Sprintf("Ignore long msg", lth))
+		return nil, errors.New(fmt.Sprintf("Ignore long msg %v", lth))
 	}
 
 	raw.Length = lth
@@ -231,7 +231,7 @@ func ngtMessageReceived(msg []byte) (*can.RawMessage, error) {
 	pLen := msg[0]
 
 	if pLen < 12 {
-		return nil, errors.New(fmt.Sprintf("Ignore short msg", len(msg)))
+		return nil, errors.New(fmt.Sprintf("Ignore short msg %v", len(msg)))
 	}
 
 	raw := new(can.RawMessage)

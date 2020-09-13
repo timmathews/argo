@@ -220,7 +220,7 @@ func main() {
 
 	sig := <-exitc
 
-	log.Notice("cleaning up and exiting with", sig)
+	log.Notice("cleaning up and exiting with %v", sig)
 }
 
 func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessage) {
@@ -253,7 +253,7 @@ func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessa
 	}
 
 	// Set up hardware and start reading data
-	log.Debug("configuring", iface.Type)
+	log.Debug("configuring %v", iface.Type)
 
 	if iface.Type == "canusb" {
 		log.Debug("adding Fast Packets")

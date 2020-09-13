@@ -1,4 +1,4 @@
-module github.com/asbjorn/argo
+module github.com/timmathews/argo
 
 go 1.13
 
@@ -15,7 +15,6 @@ require (
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/op/go-logging v0.0.0-20160211212156-b2cb9fa56473
 	github.com/satori/go.uuid v1.1.0
-	github.com/timmathews/argo v0.0.0-20181009003531-03c44b3fef04
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0
 	golang.org/x/net v0.0.0-20161229225711-8fd7f2595553 // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
