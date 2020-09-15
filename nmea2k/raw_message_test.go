@@ -20,10 +20,20 @@
 package nmea2k
 
 import (
+	"encoding/hex"
 	"github.com/timmathews/argo/can"
 	"testing"
 	"time"
 )
+
+type numTest struct {
+	startByte uint32
+	endByte   uint32
+	startBit  uint32
+	numBits   uint32
+	expected  uint64
+	data      []byte
+}
 
 func TestExtractLatLonWithValid64BitVal(t *testing.T) {
 	vLat := -76.56960748136044
@@ -117,16 +127,46 @@ func TestExtractPressureWithValidPressure(t *testing.T) {
 }
 
 func TestExtractNumber(t *testing.T) {
-	msg := RawMessage{new(can.RawMessage)}
-	msg.Data = []byte{0x06, 0xF0}
+	// start byte, bytes, start bit, bits, expected, data
+	data := []numTest{
+		// Aligned to byte boundaries, whole byte sizes
+		numTest{0, 1, 0, 8, 4, []byte{4}},
+		numTest{0, 2, 0, 16, 4, []byte{4, 0}},
+		numTest{0, 3, 0, 24, 4, []byte{4, 0, 0}},
+		numTest{0, 4, 0, 32, 4, []byte{4, 0, 0, 0}},
+		numTest{0, 5, 0, 40, 4, []byte{4, 0, 0, 0, 0}},
+		numTest{0, 6, 0, 48, 4, []byte{4, 0, 0, 0, 0, 0}},
+		numTest{0, 7, 0, 56, 4, []byte{4, 0, 0, 0, 0, 0, 0}},
+		numTest{0, 8, 0, 64, 4, []byte{4, 0, 0, 0, 0, 0, 0, 0}},
 
-	startBit := uint32(3)
-	bits := uint32(8)
+		// Aligned to byte boundaries, fractional byte sizes
+		numTest{0, 1, 0, 3, 1, []byte{0x79}},
+		numTest{0, 2, 0, 11, 321, []byte{0x41, 0x79}},
+		numTest{0, 3, 0, 22, 1655134, []byte{0x5e, 0x41, 0xD9}},
+		numTest{0, 4, 0, 29, 155278871, []byte{0x17, 0x5e, 0x41, 0xC9}},
+		numTest{0, 5, 0, 37, 39751391043, []byte{0x43, 0x17, 0x5e, 0x41, 0xC9}},
 
-	res := 4096
+		// Real world values, a NAME
+		numTest{0, 3, 0, 21, 110737, []byte{0x91, 0xb0, 0x21, 0x22, 0x00, 0x82, 0x32, 0xc0}},
+		numTest{2, 4, 5, 11, 273, []byte{0x91, 0xb0, 0x21, 0x22, 0x00, 0x82, 0x32, 0xc0}},
+		numTest{4, 5, 0, 3, 0, []byte{0x91, 0xb0, 0x21, 0x22, 0x00, 0x82, 0x32, 0xc0}},
+		numTest{4, 5, 3, 5, 0, []byte{0x91, 0xb0, 0x21, 0x22, 0x00, 0x82, 0x32, 0xc0}},
+		numTest{5, 6, 0, 8, 130, []byte{0x91, 0xb0, 0x21, 0x22, 0x00, 0x82, 0x32, 0xc0}},
+		numTest{6, 7, 0, 1, 0, []byte{0x91, 0xb0, 0x21, 0x22, 0x00, 0x82, 0x32, 0xc0}},
+		numTest{6, 7, 1, 7, 25, []byte{0x91, 0xb0, 0x21, 0x22, 0x00, 0x82, 0x32, 0xc0}},
+		numTest{7, 8, 0, 4, 0, []byte{0x91, 0xb0, 0x21, 0x22, 0x00, 0x82, 0x32, 0xc0}},
+		numTest{7, 8, 4, 3, 4, []byte{0x91, 0xb0, 0x21, 0x22, 0x00, 0x82, 0x32, 0xc0}},
+		numTest{7, 8, 7, 1, 1, []byte{0x91, 0xb0, 0x21, 0x22, 0x00, 0x82, 0x32, 0xc0}},
+	}
 
-	if x, err := msg.extractNumber(1, 0, 2, startBit, bits); x != uint64(res) {
-		t.Errorf("extractNumber(%v, %v, %v) = %v, expected %v", msg.Data, startBit, bits, x, res)
-		t.Error(err)
+	for _, d := range data {
+		msg := RawMessage{new(can.RawMessage)}
+		msg.Data = d.data
+
+		if x, err := msg.extractNumber(1, d.startByte, d.endByte, d.startBit, d.numBits); x != d.expected {
+			t.Errorf("{%v}.extractNumber(1, %v, %v, %v, %v) = %v, expected %v",
+				hex.EncodeToString(d.data), d.startByte, d.endByte, d.startBit, d.numBits, x, d.expected)
+			t.Error(err)
+		}
 	}
 }

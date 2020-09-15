@@ -20,6 +20,7 @@
 package nmea2k
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math"
 	"strconv"
@@ -390,51 +391,37 @@ func (msg *RawMessage) extractString(start, end uint32) (s string, e error) {
 
 }
 
-func (msg *RawMessage) extractNumber(res float64, start, end, startBit, bits uint32) (value interface{}, e error) {
-
-	data := msg.Data[start:end]
-	bytes := len(data)
+func (msg *RawMessage) extractNumber(res float64, start, end, offset, width uint32) (value interface{}, e error) {
+	data := make([]byte, 8)
+	bytes := end - start
+	var num uint64
 
 	if bytes > 8 {
-		e = &DecodeError{data, "Field size mismatch"}
+		e = &DecodeError{msg.Data[start:end], "Numeric field exceeds max width"}
+		return
 	}
 
-	var num uint64
-	var nbits, shift uint32
-	var t byte
+	copy(data, msg.Data[start:end])
+	mask := ^uint64(0) >> uint64(64-width)
 
-	for i := 0; i < bytes; i++ {
-		shift += nbits
-		// Calculate number of bits used in the byte
-		if i == 0 {
-			nbits = min(8-startBit, bits)
-		} else if (i == bytes-1) && (bits%8 != 0) {
-			nbits = min(8, (bits-startBit)%8)
-		} else {
-			nbits = 8
-		}
-
-		mask := byte(0xFF)
-		mask = mask >> byte(8-nbits)
-
-		t = data[i] >> startBit
-
-		num |= uint64(t&mask) << shift
-
-	}
+	num = binary.LittleEndian.Uint64(data)
+	num = num >> offset
+	num = num & mask
 
 	var maxValue uint64
-	if bits > 8 {
-		maxValue = 1<<(bits-1) - 1
+	if width > 8 {
+		maxValue = 1<<(width-1) - 1
+	} else if width == 1 {
+		maxValue = 1
 	} else {
-		maxValue = 1<<bits - 1
+		maxValue = 1<<width - 1
 	}
 
 	if maxValue == 0 {
 		maxValue = 0x7FFFFFFFFFFFFFFF
 	}
 
-	if num >= maxValue {
+	if num > maxValue {
 		e = &DecodeError{data, "Field not present"}
 		return
 	}
@@ -446,7 +433,6 @@ func (msg *RawMessage) extractNumber(res float64, start, end, startBit, bits uin
 	}
 
 	return
-
 }
 
 func (msg *RawMessage) extractLookupField(f *Field, start, end, startBit, bits uint32) (ret interface{}, e error) {
