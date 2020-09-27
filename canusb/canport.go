@@ -79,10 +79,7 @@ func OpenChannel(port io.ReadWriteCloser, address uint8) (p *CanPort, err error)
 // called before closing the serial port. No harm will come from calling this
 // function multiple times. OpenChannel is its counterpart.
 func (p *CanPort) CloseChannel() error {
-	var s string
-
-	fmt.Sprintf(s, "C\r")
-	_, err := p.Write([]byte(s))
+	_, err := p.Write([]byte("C\r"))
 
 	close(p.tx)
 	close(p.rx)
@@ -191,10 +188,13 @@ func (p *CanPort) frameReceived(msg []byte) (*CanFrame, error) {
 		frame.grp = (frame.Data[0] & 0x70) >> 5
 
 		// PGN, source and group ID make a unique identifier for the frame group
-		uid := uint32(frame.grp<<28) + uint32(frame.Pgn<<8) + uint32(frame.Source)
+		uid := uint32(uint32(frame.grp)<<28) +
+			uint32(frame.Pgn<<8) +
+			uint32(frame.Source)
 
 		if frame.seq == 0 { // First in the series
-			delete(partial_messages, uid) // Delete any existing scraps, should probably warn
+			// Delete any existing scraps, should probably warn
+			delete(partial_messages, uid)
 			frame.Length = frame.Data[1]
 			frame.Data = frame.Data[2:]
 
