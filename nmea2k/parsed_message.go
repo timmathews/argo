@@ -28,6 +28,8 @@ import (
 	"time"
 )
 
+var layout = "2006-01-02T15:04:05.000"
+
 type DataMap map[int]interface{}
 
 func (inVal DataMap) MarshalJSON() ([]byte, error) {
