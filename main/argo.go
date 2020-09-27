@@ -43,9 +43,6 @@ import (
 	"time"
 )
 
-// Timestamp format for printing
-const layout = "2006-01-02-15:04:05.999"
-
 type StringSlice []string
 
 func (p StringSlice) Len() int           { return len(p) }
@@ -260,7 +257,7 @@ func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessa
 
 		for _, p := range nmea2k.PgnList {
 			if p.Size > 8 {
-				log.Debug("adding PGN:", p.Pgn)
+				log.Debug("adding PGN: %d", p.Pgn)
 				canusb.AddFastPacket(p.Pgn)
 			}
 		}

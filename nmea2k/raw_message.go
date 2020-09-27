@@ -29,8 +29,6 @@ import (
 	"github.com/timmathews/argo/can"
 )
 
-const layout = "2006-01-02-15:04:05.999"
-
 type DecodeError struct {
 	Data  []byte
 	Where string

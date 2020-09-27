@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const layout = "2006-01-02-15:04:05.999"
+const layout = "2006-01-02-15:04:05.000"
 
 type RawMessage struct {
 	// Timestamp of receipt of CAN Message
