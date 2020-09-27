@@ -30,33 +30,17 @@ import (
 
 const (
 	// ASCII characters which mark packet start and stop
-	NUL = 0x00
 	STX = 0x02
 	ETX = 0x03
 	DLE = 0x10
-	DC1 = 0x11
-	ESC = 0x1B
-
-	// N2K commands
-	N2K_MSG_RECEIVED = 0x93
-	N2K_MSG_SEND     = 0x94
-
-	// NGT commands
-	NGT_MSG_RECEIVED = 0xA0
-	NGT_MSG_SEND     = 0xA1
 )
-
-// The following startup command was reverse engineered from Actisense
-// NMEAreader. It instructs the NGT1 to clear its PGN message TX list, thus it
-// starts sending all PGNs.
-var NGT_STARTUP_SEQ = []byte{DC1, STX, NUL}
 
 type MsgState int
 
 const (
-	MSG_START MsgState = iota
-	MSG_ESCAPE
-	MSG_MESSAGE
+	MsgStart MsgState = iota
+	MsgEscape
+	MsgMessage
 )
 
 type ActisensePort struct {
@@ -70,7 +54,7 @@ func OpenChannel(port io.ReadWriteCloser) (p *ActisensePort, err error) {
 		IsOpen: true,
 	}
 
-	_, err = p.write(NGT_MSG_SEND, NGT_STARTUP_SEQ)
+	_, err = p.SetOperatingMode(OpModeRxAll)
 
 	if err != nil {
 		return nil, err
@@ -98,13 +82,13 @@ func OpenChannel(port io.ReadWriteCloser) (p *ActisensePort, err error) {
 // plus the length plus the checksum add up to zero, modulo 256.
 //
 func (p *ActisensePort) Write(payload []byte) (int, error) {
-	return p.write(N2K_MSG_SEND, payload)
+	return p.write(N2kMsgSend, payload...)
 }
 
 func (p *ActisensePort) Read() (*can.RawMessage, error) {
 	var buf []byte
 	rxbuf := []byte{0}
-	state := MSG_START
+	state := MsgStart
 	var msg *can.RawMessage
 
 	for {
@@ -114,39 +98,39 @@ func (p *ActisensePort) Read() (*can.RawMessage, error) {
 		}
 
 		for _, b := range rxbuf {
-			if state == MSG_ESCAPE {
+			if state == MsgEscape {
 				if b == ETX { // End of message
 					msg, err = messageReceived(buf)
 					buf = nil
-					state = MSG_START
+					state = MsgStart
 					if err == nil {
 						return msg, nil
 					}
 				} else if b == STX { // Start of message
-					state = MSG_MESSAGE
+					state = MsgMessage
 				} else if b == DLE { // Escaped DLE char
 					buf = append(buf, b)
-					state = MSG_MESSAGE
+					state = MsgMessage
 				} else { // Unexpected character after DLE
 					buf = nil
-					state = MSG_START
+					state = MsgStart
 				}
-			} else if state == MSG_MESSAGE {
+			} else if state == MsgMessage {
 				if b == DLE { // Escape char
-					state = MSG_ESCAPE
+					state = MsgEscape
 				} else {
 					buf = append(buf, b)
 				}
 			} else {
 				if b == DLE { // Escape char
-					state = MSG_ESCAPE
+					state = MsgEscape
 				}
 			}
 		}
 	}
 }
 
-func (p *ActisensePort) write(command byte, payload []byte) (int, error) {
+func (p *ActisensePort) write(command byte, payload ...byte) (int, error) {
 	bst := []byte{DLE, STX}
 
 	bst = append(bst, command, byte(len(payload)))
@@ -187,9 +171,9 @@ func messageReceived(msg []byte) (*can.RawMessage, error) {
 
 	command := msg[0]
 
-	if command == N2K_MSG_RECEIVED {
+	if command == N2kMsgRecv {
 		return n2kMessageReceived(msg[1:])
-	} else if command == NGT_MSG_RECEIVED {
+	} else if command == ACmdRecv {
 		return ngtMessageReceived(msg[1:])
 	} else {
 		return nil, fmt.Errorf("Unknown message type (%02X) received", command)
