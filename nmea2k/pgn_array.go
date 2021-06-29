@@ -741,9 +741,9 @@ var PgnList = PgnArray{
 
 	{"Attitude", "Steering", 127257, true, 7, 0, []Field{
 		{"SID", 8, 1, false, nil, "", "", 0},
-		{"Yaw", 16, RES_ROTATION, true, "deg", "", "navigation.attitude.yaw", 0},
-		{"Pitch", 16, RES_ROTATION, true, "deg", "", "navigation.attitude.pitch", 0},
-		{"Roll", 16, RES_ROTATION, true, "deg", "", "navigation.attitude.roll", 0}},
+		{"Yaw", 16, RES_DEGREES, true, "deg", "", "navigation.attitude.yaw", 0},
+		{"Pitch", 16, RES_DEGREES, true, "deg", "", "navigation.attitude.pitch", 0},
+		{"Roll", 16, RES_DEGREES, true, "deg", "", "navigation.attitude.roll", 0}},
 	},
 
 	// NMEA + Simrad AT10
