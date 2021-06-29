@@ -636,6 +636,12 @@ var PgnList = PgnArray{
 		{"Time", 32, RES_TIME, false, "s", "Seconds since midnight", "", 0}},
 	},
 
+	// https://www.nmea.org/Assets/20140102%20nmea-2000-126993%20heartbeat%20pgn%20corrigendum.pdf
+	{"Heartbeat", "General", 126993, true, 8, 0, []Field{
+		{"Update Rate", 16, 0.01, false, "s", "Data transmit offset", "", 0},
+		{"Heartbeat Sequence Counter", 8, 1, false, nil, "", "", 0}},
+	},
+
 	{"Product Information", "Mandatory", 126996, false, 0x86, 0, []Field{
 		{"NMEA 2000 Version", 16, 1, false, nil, "", "", 0},
 		{"Product Code", 16, 1, false, nil, "", "", 0},
