@@ -31,6 +31,7 @@ type commandArgs struct {
 	Stats      bool
 	Pgn        int
 	Src        int
+	Dst        int
 	LogLevel   string
 	ConfigFile string
 }
@@ -43,6 +44,7 @@ func GetCommandLineOptions() commandArgs {
 	flag.BoolVar(&args.Stats, "statistic", false, "Display live statistics")
 	flag.IntVar(&args.Pgn, "pgn", 0, "Display only this PGN")
 	flag.IntVar(&args.Src, "source", 255, "Display PGNs from this source only")
+	flag.IntVar(&args.Dst, "dest", 255, "Display PGNs for this destination only")
 	flag.StringVar(&args.LogLevel, "log", "", "Set logging level: NONE, CRITICAL, ERROR, WARNING, NOTICE, INFO, DEBUG")
 	flag.StringVar(&args.ConfigFile, "config", "argo.conf", "Path to config file")
 

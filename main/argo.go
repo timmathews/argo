@@ -162,6 +162,7 @@ func main() {
 
 			if (opts.Pgn == 0 || int(res.Header.Pgn) == opts.Pgn) &&
 				(opts.Src == 255 || int(res.Header.Source) == opts.Src) &&
+				(opts.Dst == 255 || int(res.Header.Destination) == opts.Dst) &&
 				!opts.Stats {
 				log.Debug(res.Header.Print(verbose))
 				log.Info(res.Print(verbose))
