@@ -97,9 +97,7 @@ func (inVal PgnLookup) MarshalXML(e *xml.Encoder, start xml.StartElement) error 
 
 var PgnList = PgnArray{
 	{"Unknown PGN", "Mandatory", 0, false, 8, 0, []Field{
-		{"Manufacturer Code", 11, RES_MANUFACTURER, false, nil, "", "", 0},
-		{"Reserved", 2, 1, false, nil, "", "", 0},
-		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0}},
+		{"Bytes", 64, RES_BINARY, false, nil, "", "", 0}},
 	},
 
 	{"ISO Acknowledgement", "Mandatory", 59392, true, 8, 0, []Field{
@@ -119,7 +117,7 @@ var PgnList = PgnArray{
 		{"Device Instance Lower", 3, 1, false, nil, "ISO ECU Instance", "", 0},
 		{"Device Instance Upper", 5, 1, false, nil, "ISO Function Instance", "", 0},
 		{"Device Function", 8, 1, false, nil, "ISO Function", "", 0},
-		{"Reserved", 1, RES_BINARY, false, nil, "Alignment padding", "", 0},
+		{"Reserved", 1, 1, false, nil, "Alignment padding", "", 0},
 		{"Device Class", 7, RES_LOOKUP, false, lookupDeviceClass, "", "", 0},
 		{"System Instance", 4, 1, false, nil, "ISO Device Class Instance", "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
@@ -2884,12 +2882,190 @@ var PgnList = PgnArray{
 		{"Test result", 8, RES_LOOKUP, false, nil, "Values other than 0 are failure codes. See Airmar docs for description.", "", 0}},
 	},
 
-	{"Actisense: Operating mode", "Actisense", ACTISENSE_BEM + 0x11, false, 0x0e, 0, []Field{
+	{"Actisense: ReInit Main App", "Actisense", ACTISENSE_BEM + 0x00, false, 0x0e, 0, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0}},
+	},
+
+	{"Actisense: Commit to EEPROM", "Actisense", ACTISENSE_BEM + 0x01, false, 0x0e, 0, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0}},
+	},
+
+	{"Actisense: Commit to Flash", "Actisense", ACTISENSE_BEM + 0x02, false, 0x0e, 0, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0}},
+	},
+
+	{"Actisense: Hardware Info", "Actisense", ACTISENSE_BEM + 0x10, false, 0x33, 0, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Bootloader Software Vers", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Bootloader Timestamp", 32, RES_TIME, false, 0, "", "", 0},
+		{"App Software Vers", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"App Timestamp", 32, RES_TIME, false, 0, "", "", 0},
+		{"PCB Version", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Total Operating Time", 32, RES_INTEGER, false, 0, "s", "", 0},
+		{"Model Sub ID Number", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Operating Mode", 16, RES_INTEGER, false, 0, "", "", 0}},
+	},
+
+	{"Actisense: Operating mode", "Actisense", ACTISENSE_BEM + 0x11, false, 0x0d, 0, []Field{
 		{"SID", 8, 1, false, 0, "", "", 0},
 		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
 		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
 		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
 		{"Operating Mode", 16, 1, false, 0, "", "", 0}},
+	},
+
+	// This is not strictly correct. According to the ARL Actisense Comms SDK
+	// manual, the hardware protocol and baud rate fields repeat for each channel
+	// (channel count). We should use the hardware protocol value to determine
+	// which lookup table to use to decode the baud rate field
+	{"Actisense: Port Baud Codes", "Actisense", ACTISENSE_BEM + 0x12, false, 0x10, 0, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Channel Count", 8, 1, false, 0, "", "", 0},
+		{"CAN Hardware Protocol", 8, 1, false, 0, "", "", 0},
+		{"CAN Baud Rate", 8, RES_LOOKUP, false, lookupActisenseCANBaudCode, "", "", 0},
+		{"UART Hardware Protocol", 8, 1, false, 0, "", "", 0},
+		{"UART Baud Rate", 8, RES_LOOKUP, false, lookupActisenseUARTBaudCode, "", "", 0}},
+	},
+
+	{"Actisense: Port P-Codes", "Actisense", ACTISENSE_BEM + 0x13, false, 0x0e, 1, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Channel P-Code", 8, RES_LOOKUP, false, lookupActisensePCode, "", "", 0}},
+	},
+
+	{"Actisense: Port Duplicate Delete", "Actisense", ACTISENSE_BEM + 0x14, false, 0x0e, 1, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Channel Dup. Del.", 8, 1, false, 0, "", "", 0}},
+	},
+
+	{"Actisense: Total Time", "Actisense", ACTISENSE_BEM + 0x15, false, 0x0f, 0, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Total Time", 32, 1, false, 0, "s", "", 0}},
+	},
+
+	{"Actisense: Hardware Baud Codes", "Actisense", ACTISENSE_BEM + 0x16, false, 0x0f, 0, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Channel Count", 8, 1, false, 0, "", "", 0},
+		{"CAN Hardware Protocol", 8, 1, false, 0, "", "", 0},
+		{"CAN Baud Rate", 8, RES_LOOKUP, false, lookupActisenseCANBaudCode, "", "", 0},
+		{"UART Hardware Protocol", 8, 1, false, 0, "", "", 0},
+		{"UART Baud Rate", 8, RES_LOOKUP, false, lookupActisenseUARTBaudCode, "", "", 0}},
+	},
+
+	{"Actisense: Product Info N2K", "Actisense", ACTISENSE_BEM + 0x40, false, 0x39, 1, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Data", 32 * 8, RES_BINARY, false, 0, "", "", 0}},
+	},
+
+	{"Actisense: Product Info N2K", "Actisense", ACTISENSE_BEM + 0x41, false, 0x39, 1, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		//		{"Support Version", 16, RES_INTEGER, false, 0, "", "", 0},
+		//		{"Certification Level", 16, RES_INTEGER, false, 0, "", "", 0},
+		//		{"Load Equiv", 8, RES_INTEGER, false, 0, "", "", 0},
+		{"Data", 32 * 8, RES_STRING, false, 0, "", "", 0}},
+	},
+
+	{"Actisense: CAN Config", "Actisense", ACTISENSE_BEM + 0x42, false, 0x17, 0, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Preferred Address", 8, 1, false, nil, "", "", 0},
+		{"Unique Number", 21, 1, false, nil, "ISO Identity Number", "", 0},
+		{"Manufacturer Code", 11, RES_LOOKUP, false, lookupCompanyCode, "", "", 0},
+		{"Device Instance Lower", 3, 1, false, nil, "ISO ECU Instance", "", 0},
+		{"Device Instance Upper", 5, 1, false, nil, "ISO Function Instance", "", 0},
+		{"Device Function", 8, 1, false, nil, "ISO Function", "", 0},
+		{"Reserved", 1, 1, false, nil, "", "", 0},
+		{"Device Class", 7, RES_LOOKUP, false, lookupDeviceClass, "", "", 0},
+		{"System Instance", 4, 1, false, nil, "ISO Device Class Instance", "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
+		{"Arbitrary Address Capable", 1, 1, false, nil, "ISO Self Configurable", "", 0},
+		{"New Source Address", 8, 1, false, nil, "", "", 0},
+		{"Previous Address", 8, 1, false, 0, "", "", 0},
+		{"Source Address", 8, 1, false, 0, "", "", 0},
+		{"Address Valid", 8, 1, false, 0, "", "", 0}},
+	},
+
+	{"Actisense: RX PGN Status", "Actisense", ACTISENSE_BEM + 0x46, false, 0x14, 1, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"PGN", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Data", 8, RES_BINARY, false, 0, "", "", 0}},
+	},
+
+	{"Actisense: RX PGN List", "Actisense", ACTISENSE_BEM + 0x48, false, 0x39, 1, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"PGN List Length", 8, RES_INTEGER, false, 0, "", "", 0},
+		{"PGN", 32, RES_INTEGER, false, 0, "", "", 0}},
+	},
+
+	{"Actisense: TX PGN List", "Actisense", ACTISENSE_BEM + 0x49, false, 0x39, 1, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"PGN List Length", 8, RES_INTEGER, false, 0, "", "", 0},
+		{"PGN", 32, RES_INTEGER, false, 0, "", "", 0}},
+	},
+
+	{"Actisense: Clear PGN List", "Actisense", ACTISENSE_BEM + 0x4a, false, 0x0e, 0, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Cleared List", 8, RES_INTEGER, false, 0, "", "", 0}},
+	},
+
+	{"Actisense: Params PGN Enable List", "Actisense", ACTISENSE_BEM + 0x4d, false, 0x0c, 1, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Rx Real In Use", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Rx Max Real", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Rx Virtual In Use", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Rx Max Virtual", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Tx Virtual In Use", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Tx Max Virtual", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Synchronized", 16, RES_BINARY, false, 0, "", "", 0}},
 	},
 
 	{"Actisense: Startup status", "Actisense", ACTISENSE_BEM + 0xf0, false, 0x0f, 0, []Field{
@@ -2931,10 +3107,12 @@ var PgnList = PgnArray{
 		{"Ch2 PointerLoading", 8, 1, false, 0, "", "", 0}},
 	},
 
-	{"Actisense: ?", "Actisense", ACTISENSE_BEM + 0xf4, false, 17, 0, []Field{
+	{"Actisense: Negative ACK", "Actisense", ACTISENSE_BEM + 0xf4, false, 17, 0, []Field{
 		{"SID", 8, 1, false, 0, "", "", 0},
 		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
-		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0}},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_BINARY, false, 0, "", "", 0},
+		{"Data", 32, RES_BINARY, false, 0, "", "", 0}},
 	},
 }
 

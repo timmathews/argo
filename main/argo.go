@@ -281,6 +281,8 @@ func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessa
 		canport, _ := actisense.OpenChannel(port)
 		time.Sleep(2)
 
+		canport.GetOperatingMode()
+
 		for {
 			raw, err := canport.Read()
 			if err == nil {
