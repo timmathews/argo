@@ -21,9 +21,10 @@ package nmea2k
 
 import (
 	"encoding/hex"
-	"github.com/timmathews/argo/can"
 	"testing"
 	"time"
+
+	"github.com/timmathews/argo/can"
 )
 
 type numTest struct {
@@ -33,6 +34,44 @@ type numTest struct {
 	numBits   uint32
 	expected  uint64
 	data      []byte
+}
+
+func TestFieldOffsets(t *testing.T) {
+	pgn := Pgn{"Test", "Test", 123456, true, 64, 0, []Field{
+		{"Field 0", 8, 1, false, "", "", "", 0},  // Aligned, 1 byte
+		{"Field 1", 12, 1, false, "", "", "", 0}, // Aligned, >1 byte
+		{"Field 2", 4, 1, false, "", "", "", 0},  // Unaligned, <1 byte, no cross
+		{"Field 3", 21, 1, false, "", "", "", 0}, // Aligned, >2 bytes
+		{"Field 4", 5, 1, false, "", "", "", 0},  // Unaligned, <1 byte, cross
+		{"Field 5", 14, 1, false, "", "", "", 0}, // Unaligned, >1 byte
+		{"Field 6", 3, 1, false, "", "", "", 0},  // Aligned, <1 byte
+		{"Field 7", 9, 1, false, "", "", "", 0},  // Unaligned, >1 byte
+		{"Field 8", 20, 1, false, "", "", "", 0}, // Unaligned, >2 bytes
+	}}
+
+	expected := []numTest{
+		{0, 1, 0, 8, 0, nil},
+		{1, 3, 0, 12, 0, nil},
+		{2, 3, 4, 4, 0, nil},
+		{3, 6, 0, 21, 0, nil},
+		{5, 6, 5, 5, 0, nil},
+		{6, 8, 2, 14, 0, nil},
+		{8, 9, 0, 3, 0, nil},
+		{8, 10, 3, 9, 0, nil},
+		{9, 12, 4, 20, 0, nil},
+	}
+
+	for i := 0; i < 9; i++ {
+		r_start_byte, r_bytes, r_start_bit, r_bits := pgn.FieldOffsets(int32(i))
+		e_values := expected[i]
+
+		if !(r_start_byte == e_values.startByte && r_bytes == e_values.endByte &&
+			r_start_bit == e_values.startBit && r_bits == e_values.numBits) {
+			t.Errorf("FieldOffsets(%v) = %v, %v, %v, %v. Expected %v, %v, %v, %v",
+				i, r_start_byte, r_bytes, r_start_bit, r_bits, e_values.startByte,
+				e_values.endByte, e_values.startBit, e_values.numBits)
+		}
+	}
 }
 
 func TestExtractLatLonWithValid64BitVal(t *testing.T) {
@@ -159,11 +198,13 @@ func TestExtractNumber(t *testing.T) {
 		numTest{7, 8, 7, 1, 1, []byte{0x91, 0xb0, 0x21, 0x22, 0x00, 0x82, 0x32, 0xc0}},
 	}
 
+	field := Field{"", 0, 1, false, nil, "", "", 0}
+
 	for _, d := range data {
 		msg := RawMessage{new(can.RawMessage)}
 		msg.Data = d.data
 
-		if x, err := msg.extractNumber(1, d.startByte, d.endByte, d.startBit, d.numBits); x != d.expected {
+		if x, err := msg.extractNumber(&field, d.startByte, d.endByte, d.startBit, d.numBits); x != d.expected {
 			t.Errorf("{%v}.extractNumber(1, %v, %v, %v, %v) = %v, expected %v",
 				hex.EncodeToString(d.data), d.startByte, d.endByte, d.startBit, d.numBits, x, d.expected)
 			t.Error(err)
