@@ -46,13 +46,14 @@ const RES_TEMPERATURE = -6
 const RES_6BITASCII = -7
 const RES_INTEGER = -8
 const RES_LOOKUP = -9
-const RES_BINARY = -10
-const RES_MANUFACTURER = -11
-const RES_STRING = -12
-const RES_FLOAT = -13
-const RES_PRESSURE = -14
-const RES_STRINGLZ = -15
-const MAX_RES_LOOKUP = 15
+const RES_LOOKUP2 = -10
+const RES_BINARY = -11
+const RES_MANUFACTURER = -12
+const RES_STRING = -13
+const RES_FLOAT = -14
+const RES_PRESSURE = -15
+const RES_STRINGLZ = -16
+const MAX_RES_LOOKUP = 16
 
 type Field struct {
 	Name        string
@@ -116,7 +117,7 @@ var PgnList = PgnArray{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, nil, "", "", 0},
 		{"Device Instance Lower", 3, 1, false, nil, "ISO ECU Instance", "", 0},
 		{"Device Instance Upper", 5, 1, false, nil, "ISO Function Instance", "", 0},
-		{"Device Function", 8, 1, false, nil, "ISO Function", "", 0},
+		{"Device Function", 8, RES_LOOKUP2, false, lookupDeviceFunction, "ISO Function", "", 6},
 		{"Reserved", 1, 1, false, nil, "Alignment padding", "", 0},
 		{"Device Class", 7, RES_LOOKUP, false, lookupDeviceClass, "", "", 0},
 		{"System Instance", 4, 1, false, nil, "ISO Device Class Instance", "", 0},

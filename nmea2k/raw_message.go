@@ -58,6 +58,26 @@ func max(x, y uint32) uint32 {
 	return y
 }
 
+func (p *Pgn) FieldOffsets(idx int32) (low_byte, high_byte, start_bit, bits uint32) {
+	bits = p.FieldList[idx].Size
+	bytes := (bits + 7) / 8
+	bits = min(bytes*8, bits)
+
+	var offset uint32
+	for i, f := range p.FieldList {
+		if i == int(idx) {
+			break
+		}
+		offset += f.Size
+	}
+
+	low_byte = offset / 8
+	high_byte = low_byte + bytes
+	start_bit = offset % 8
+
+	return
+}
+
 func ParsePacket(cmsg *can.RawMessage) (pgnParsed *ParsedMessage) {
 	msg := &RawMessage{cmsg}
 
@@ -121,6 +141,20 @@ func ParsePacket(cmsg *can.RawMessage) (pgnParsed *ParsedMessage) {
 				data, err = msg.extractNumber(&field, start_byte, bytes, start_bit, bits)
 			case RES_LOOKUP:
 				data, err = msg.extractLookupField(&field, start_byte, bytes, start_bit, bits)
+			case RES_LOOKUP2:
+				superFieldId := field.Offset
+				superFieldVal := pgnParsed.Data[int(superFieldId)]
+				// The superField may not have been parsed yet
+				if superFieldVal == nil {
+					start_byte, bytes, start_bit, bits := pgnDefinition.FieldOffsets(superFieldId)
+					data, err = msg.extractNumber(&field, start_byte, bytes, start_bit, bits)
+					if err != nil {
+						break
+					}
+				} else {
+					data = uint32(superFieldVal.(float64))
+				}
+				data, err = msg.extractLookupSubfield(&field, uint32(data.(float64)), start_byte, bytes, start_bit, bits)
 			case RES_MANUFACTURER:
 				data, err = msg.extractManufacturer(&field, start_byte, bytes, start_bit, bits)
 			case RES_PRESSURE:
