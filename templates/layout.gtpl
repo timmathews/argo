@@ -33,6 +33,9 @@
           <li class="nav-item">
             <a class="nav-link" href="#">Plugins</a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/n2k">NMEA 2000 Debugging</a>
+          </li>
         </ul>
       </div>
     </nav>

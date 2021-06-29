@@ -197,6 +197,17 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func n2kHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		t, err := template.ParseFiles("templates/layout.gtpl", "templates/n2k.gtpl")
+		if err != nil {
+			log.Error("%v", err)
+		} else {
+			t.ExecuteTemplate(w, "layout", nil)
+		}
+	}
+}
+
 func addApps(r *mux.Router) {
 	pkgs := getInstalledPackages("./node_modules")
 	for k, _ := range pkgs {
@@ -214,6 +225,7 @@ func UiServer(addr *string, cmd chan CommandRequest) {
 	r.HandleFunc("/admin", adminHandler)
 	r.HandleFunc("/apps/install", appInstallHandlerFactory(r))
 	r.HandleFunc("/apps", appsHandler)
+	r.HandleFunc("/n2k", n2kHandler)
 	r.HandleFunc("/", indexHandler)
 	http.Handle("/", r)
 

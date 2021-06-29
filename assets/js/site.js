@@ -200,3 +200,16 @@ function handleAppInstall(e) {
   });
   http.send(JSON.stringify(pkg));
 }
+
+function addRow(after) {
+  let row = $("#row-template").render({
+    id: Date.now(),
+    field: after + 2,
+  });
+
+  row.insertAfter(`#row-${after}`);
+}
+
+function removeRow(id) {
+
+}
