@@ -3123,7 +3123,7 @@ var PgnList = PgnArray{
 		{"UART Baud Rate", 8, RES_LOOKUP, false, lookupActisenseUARTBaudCode, "", "", 0}},
 	},
 
-	{"Actisense: Product Info N2K", "Actisense", ACTISENSE_BEM + 0x40, false, 0x39, 1, []Field{
+	{"Actisense: Supported PGN List", "Actisense", ACTISENSE_BEM + 0x40, false, 0x39, 1, []Field{
 		{"SID", 8, 1, false, 0, "", "", 0},
 		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
 		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
@@ -3164,6 +3164,30 @@ var PgnList = PgnArray{
 		{"Address Valid", 8, 1, false, 0, "", "", 0}},
 	},
 
+	{"Actisense: CAN Info Field 1", "Actisense", ACTISENSE_BEM + 0x43, false, 0x14, 1, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Info", 32 * 8, RES_STRING, false, 0, "", "", 0}},
+	},
+
+	{"Actisense: CAN Info Field 2", "Actisense", ACTISENSE_BEM + 0x44, false, 0x14, 1, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Info", 32 * 8, RES_STRING, false, 0, "", "", 0}},
+	},
+
+	{"Actisense: CAN Info Field 3", "Actisense", ACTISENSE_BEM + 0x45, false, 0x14, 1, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Info", 32 * 8, RES_STRING, false, 0, "", "", 0}},
+	},
+
 	{"Actisense: RX PGN Status", "Actisense", ACTISENSE_BEM + 0x46, false, 0x14, 1, []Field{
 		{"SID", 8, 1, false, 0, "", "", 0},
 		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
@@ -3171,6 +3195,13 @@ var PgnList = PgnArray{
 		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
 		{"PGN", 32, RES_INTEGER, false, 0, "", "", 0},
 		{"Data", 8, RES_BINARY, false, 0, "", "", 0}},
+	},
+
+	{"Actisense: RX PGN Status", "Actisense", ACTISENSE_BEM + 0x47, false, 0x14, 1, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0}},
 	},
 
 	{"Actisense: RX PGN List", "Actisense", ACTISENSE_BEM + 0x48, false, 0x39, 1, []Field{
@@ -3197,6 +3228,20 @@ var PgnList = PgnArray{
 		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
 		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0},
 		{"Cleared List", 8, RES_INTEGER, false, 0, "", "", 0}},
+	},
+
+	{"Actisense: RX PGN Status", "Actisense", ACTISENSE_BEM + 0x4b, false, 0x14, 1, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0}},
+	},
+
+	{"Actisense: RX PGN Status", "Actisense", ACTISENSE_BEM + 0x4c, false, 0x14, 1, []Field{
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"Model ID", 16, RES_INTEGER, false, 0, "", "", 0},
+		{"Serial ID", 32, RES_INTEGER, false, 0, "", "", 0},
+		{"Error ID", 32, RES_INTEGER, false, 0, "", "", 0}},
 	},
 
 	{"Actisense: Params PGN Enable List", "Actisense", ACTISENSE_BEM + 0x4d, false, 0x0c, 1, []Field{
