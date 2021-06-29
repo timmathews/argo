@@ -118,7 +118,7 @@ func ParsePacket(cmsg *can.RawMessage) (pgnParsed *ParsedMessage) {
 			case RES_6BITASCII:
 				data, err = msg.extract6BitASCII(start_byte, bytes)
 			case RES_INTEGER:
-				data, err = msg.extractNumber(res, start_byte, bytes, start_bit, bits)
+				data, err = msg.extractNumber(&field, start_byte, bytes, start_bit, bits)
 			case RES_LOOKUP:
 				data, err = msg.extractLookupField(&field, start_byte, bytes, start_bit, bits)
 			case RES_MANUFACTURER:
@@ -135,7 +135,7 @@ func ParsePacket(cmsg *can.RawMessage) (pgnParsed *ParsedMessage) {
 				data = msg.Data[start_byte:bytes]
 			}
 		} else if field.Resolution > 0.0 {
-			data, err = msg.extractNumber(res, start_byte, bytes, start_bit, bits)
+			data, err = msg.extractNumber(&field, start_byte, bytes, start_bit, bits)
 		}
 
 		if err == nil {
@@ -144,12 +144,11 @@ func ParsePacket(cmsg *can.RawMessage) (pgnParsed *ParsedMessage) {
 			if !oneSolution {
 				for i <= j {
 					if res == RES_MANUFACTURER {
-						data, _ = msg.extractNumber(res, start_byte, bytes, start_bit, bits)
+						data, _ = msg.extractNumber(&field, start_byte, bytes, start_bit, bits)
 					}
 					if v, ok := field.Units.(string); ok && v[0] == '=' {
 						value, _ := strconv.ParseUint(v[1:], 10, 64)
 						if value == data.(uint64) {
-							// fmt.Println(idx, pgnParsed.Data[idx], value)
 							// We have a match, continue parsing
 							break
 						} else {
@@ -175,7 +174,6 @@ func ParsePacket(cmsg *can.RawMessage) (pgnParsed *ParsedMessage) {
 		if idx == len(fields)-1 && pgnDefinition.RepeatingFields > 0 && start_byte < uint32(data_len) {
 			idx -= int(pgnDefinition.RepeatingFields)
 		}
-
 	}
 
 	return
@@ -325,14 +323,12 @@ func (msg *RawMessage) extractPressure(start, end uint32) (p float32, e error) {
 }
 
 func (msg *RawMessage) extractStringLZ(start uint32) (s string, e error) {
-
 	if int(start) >= len(msg.Data) {
 		e = &DecodeError{nil, "Data not present"}
 		return
 	}
 
 	end := msg.Data[start]
-
 	if end == 0 {
 		e = &DecodeError{nil, "Data not present"}
 		return
@@ -389,9 +385,10 @@ func (msg *RawMessage) extractString(start, end uint32) (s string, e error) {
 
 }
 
-func (msg *RawMessage) extractNumber(res float64, start, end, offset, width uint32) (value interface{}, e error) {
+func (msg *RawMessage) extractNumber(field *Field, start, end, offset, width uint32) (value interface{}, e error) {
 	data := make([]byte, 8)
 	bytes := end - start
+	res := field.Resolution
 	var num uint64
 
 	if bytes > 8 {
@@ -406,38 +403,64 @@ func (msg *RawMessage) extractNumber(res float64, start, end, offset, width uint
 	num = num >> offset
 	num = num & mask
 
-	var maxValue uint64
-	if width > 8 {
-		maxValue = 1<<(width-1) - 1
-	} else if width == 1 {
-		maxValue = 1
-	} else {
-		maxValue = 1<<width - 1
-	}
-
-	if maxValue == 0 {
-		maxValue = 0x7FFFFFFFFFFFFFFF
-	}
-
-	if num > maxValue {
+	if (1<<width)&num != 0 {
 		e = &DecodeError{data, "Field not present"}
 		return
 	}
 
+	//	var maxValue uint64
+	//	if width > 8 {
+	//		maxValue = 1<<(width-1) - 1
+	//	} else if width == 1 {
+	//		maxValue = 1
+	//	} else {
+	//		maxValue = 1<<width - 1
+	//	}
+
+	//	if maxValue == 0 {
+	//		maxValue = 0x7FFFFFFFFFFFFFFF
+	//	}
+
+	//	if num > maxValue {
+	//		e = &DecodeError{data, "Field not present"}
+	//		return
+	//	}
+
 	if res != 1 && res != RES_LOOKUP && res != RES_MANUFACTURER && res != RES_INTEGER {
-		value = float64(num) * float64(res)
+		if field.Signed {
+			if field.Size <= 8 {
+				value = float64(int8(num)) * float64(res)
+			} else if field.Size <= 16 {
+				value = float64(int16(num)) * float64(res)
+			} else if field.Size <= 32 {
+				value = float64(int32(num)) * float64(res)
+			} else {
+				value = float64(int64(num)) * float64(res)
+			}
+		} else {
+			value = float64(num) * float64(res)
+		}
 	} else {
-		value = num
+		if field.Signed {
+			if field.Size <= 8 {
+				value = int8(num)
+			} else if field.Size <= 16 {
+				value = int16(num)
+			} else if field.Size <= 32 {
+				value = int32(num)
+			} else {
+				value = int64(num)
+			}
+		} else {
+			value = num
+		}
 	}
 
 	return
 }
 
 func (msg *RawMessage) extractLookupField(f *Field, start, end, startBit, bits uint32) (ret interface{}, e error) {
-
-	res := f.Resolution
-
-	n, err := msg.extractNumber(res, start, end, startBit, bits)
+	n, err := msg.extractNumber(f, start, end, startBit, bits)
 
 	if err != nil {
 		e = err
@@ -459,11 +482,24 @@ func (msg *RawMessage) extractLookupField(f *Field, start, end, startBit, bits u
 
 }
 
+func (msg *RawMessage) extractLookupSubfield(f *Field, superId, start, end, startBit, bits uint32) (ret interface{}, e error) {
+	n, err := msg.extractNumber(f, start, end, startBit, bits)
+	if err != nil {
+		e = err
+		return
+	}
+
+	if u, ok := f.Units.(PgnSubLookup); ok {
+		ret = u[int(superId)][int(n.(float64))]
+	} else {
+		ret = n
+	}
+
+	return
+}
+
 func (msg *RawMessage) extractManufacturer(f *Field, start, end, startBit, bits uint32) (ret interface{}, e error) {
-
-	res := f.Resolution
-
-	n, err := msg.extractNumber(res, start, end, startBit, bits)
+	n, err := msg.extractNumber(f, start, end, startBit, bits)
 
 	if err != nil {
 		e = err
