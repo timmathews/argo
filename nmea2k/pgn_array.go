@@ -403,10 +403,34 @@ var PgnList = PgnArray{
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0}},
 	},
 
+	{"Unknown", "Simnet", 65305, false, 0x08, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", "", 0},
+		{"Reserved", 2, 1, false, nil, "", "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
+		{"A", 8, 1, false, nil, "", "", 0},
+		{"B", 8, 1, false, nil, "", "", 0},
+		{"C", 8, 1, false, nil, "", "", 0},
+		{"D", 8, 1, false, nil, "", "", 0},
+		{"E", 8, 1, false, nil, "", "", 0},
+		{"F", 8, 1, false, nil, "", "", 0}},
+	},
+
 	{"Reprogram Status", "Simnet", 65325, false, 0x08, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", "", 0},
 		{"Reserved", 2, 1, false, nil, "", "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0}},
+	},
+
+	{"Analog Channel", "Simnet", 65330, false, 8, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=381", "B&G", "", 0},
+		{"Reserved", 2, 1, false, nil, "", "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
+		{"Channel", 9, 1, false, nil, "", "", 0},
+		{"Settings", 4, 1, false, nil, "", "", 0},
+		{"Width", 2, 1, false, nil, "", "", 0},
+		{"Settings", 1, 1, false, nil, "", "", 0},
+		//{"Value", 16, 1, true, nil, "", "", 0},
+		{"Value", 32, 1, true, nil, "", "", 0}},
 	},
 
 	{"Autopilot Mode", "Simnet", 65341, false, 0x08, 0, []Field{
@@ -2649,6 +2673,42 @@ var PgnList = PgnArray{
 		{"I", 8, 1, false, 0, "", "", 0}},
 	},
 
+	{"Furuno: Unknown", "Furuno", 130821, false, 0x0c, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1855", "Furuno", "", 0},
+		{"Reserved", 2, 1, false, 0, "", "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
+		{"SID", 8, 1, false, 0, "", "", 0},
+		{"A", 8, 1, false, 0, "", "", 0},
+		{"B", 8, 1, false, 0, "", "", 0},
+		{"C", 8, 1, false, 0, "", "", 0},
+		{"D", 8, 1, false, 0, "", "", 0},
+		{"E", 8, 1, false, 0, "", "", 0},
+		{"F", 8, 1, false, 0, "", "", 0},
+		{"G", 8, 1, false, 0, "", "", 0},
+		{"H", 8, 1, false, 0, "", "", 0},
+		{"I", 8, 1, false, 0, "", "", 0}},
+	},
+
+	{"Simnet: Unknown", "Simrad", 130822, false, 0xd0, 1, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", "", 0},
+		{"Reserved", 2, 1, false, 0, "", "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
+		{"Data", 13 * 8, RES_BINARY, false, 0, "", "", 0},
+		{"Data", 8 * 8, RES_BINARY, false, 0, "", "", 0}},
+	},
+
+	{"Simnet: Unknown", "Simrad", 130824, false, 8, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", "", 0},
+		{"Reserved", 2, 1, false, 0, "", "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
+		{"A", 8, 1, false, 0, "", "", 0},
+		{"B", 8, 1, false, 0, "", "", 0},
+		{"C", 8, 1, false, 0, "", "", 0},
+		{"D", 8, 1, false, 0, "", "", 0},
+		{"E", 8, 1, false, 0, "", "", 0},
+		{"F", 8, 1, false, 0, "", "", 0}},
+	},
+
 	// Uwe Lovas has seen this from EP-70R
 	{"Lowrance: unknown", "Lowrance", 130827, false, 10, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=140", "Lowrance", "", 0},
@@ -2728,10 +2788,18 @@ var PgnList = PgnArray{
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0}},
 	},
 
-	{"Simnet: Data User Group Configuration", "Simrad", 130840, false, 0x08, 0, []Field{
+	{"Simnet: Data User Group Configuration", "Simrad", 130840, false, 17, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", "", 0},
 		{"Reserved", 2, 1, false, 0, "", "", 0},
-		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0}},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
+		{"Reserved", 8, RES_BINARY, false, 0, "", "", 0},
+		{"A", 8, RES_BINARY, false, 0, "", "", 0},
+		{"B", 8, RES_BINARY, false, 0, "", "", 0},
+		{"C", 8, RES_BINARY, false, 0, "", "", 0},
+		{"Reserved", 8, RES_BINARY, false, 0, "", "", 0},
+		{"D", 8, RES_BINARY, false, 0, "", "", 0},
+		{"Bytes", 64, RES_BINARY, false, 0, "", "", 0},
+		{"Reserved", 8, RES_BINARY, false, 0, "", "", 0}},
 	},
 
 	// Where did this come from ?
@@ -2780,21 +2848,91 @@ var PgnList = PgnArray{
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0}},
 	},
 
-	{"Simnet: Parameter Handle", "Simrad", 130845, false, 0x0e, 0, []Field{
+	{"Simnet: Display Group", "Simrad", 130845, false, 11, 0, []Field{
 		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", "", 0},
 		{"Reserved", 2, 1, false, 0, "", "", 0},
 		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
-		{"Message ID", 6, 1, false, 0, "", "", 0},
-		{"Repeat indicator", 2, RES_LOOKUP, false, lookupRepeatIndicator, "", "", 0},
+		{"A", 6, 1, false, 0, "", "", 0},
+		{"B", 2, 1, false, 0, "", "", 0},
+		{"C", 8, 1, false, 0, "", "", 0},
 		{"D", 8, 1, false, 0, "", "", 0},
-		{"Group", 8, 1, false, 0, "", "", 0},
+		{"E", 8, 1, false, 0, "", "", 0},
 		{"F", 8, 1, false, 0, "", "", 0},
+		{"Parameter", 16, 1, false, "=31", "Display Group", "", 0},
 		{"G", 8, 1, false, 0, "", "", 0},
-		{"H", 8, 1, false, 0, "", "", 0},
-		{"I", 8, 1, false, 0, "", "", 0},
-		{"J", 8, 1, false, 0, "", "", 0},
-		{"Backlight", 8, RES_LOOKUP, false, lookupSimnetBacklightLevel, "", "", 0},
-		{"L", 16, 1, false, 0, "", "", 0}},
+		{"Value", 8, 1, false, 0, "", "", 0}},
+	},
+
+	{"Simnet: Backlight Color", "Simrad", 130845, false, 11, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", "", 0},
+		{"Reserved", 2, 1, false, 0, "", "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
+		{"A", 6, 1, false, 0, "", "", 0},
+		{"B", 2, 1, false, 0, "", "", 0},
+		{"C", 8, 1, false, 0, "", "", 0},
+		{"D", 8, 1, false, 0, "", "", 0},
+		{"E", 8, 1, false, 0, "", "", 0},
+		{"F", 8, 1, false, 0, "", "", 0},
+		{"Parameter", 16, 1, false, "=37", "Backlight Color", "", 0},
+		{"G", 8, 1, false, 0, "", "", 0},
+		{"Value", 8, 1, false, 0, "", "", 0}},
+	},
+
+	{"Simnet: Data ID", "Simrad", 130845, false, 12, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", "", 0},
+		{"Reserved", 2, 1, false, 0, "", "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
+		{"A", 6, 1, false, 0, "", "", 0},
+		{"B", 2, 1, false, 0, "", "", 0},
+		{"C", 8, 1, false, 0, "", "", 0},
+		{"D", 8, 1, false, 0, "", "", 0},
+		{"E", 8, 1, false, 0, "", "", 0},
+		{"F", 8, 1, false, 0, "", "", 0},
+		{"Parameter", 16, 1, false, "=143", "Data ID", "", 0},
+		{"G", 8, 1, false, 0, "", "", 0},
+		{"Value", 16, 1, false, 0, "", "", 0}},
+	},
+
+	{"Simnet: Temporary Data ID", "Simrad", 130845, false, 12, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", "", 0},
+		{"Reserved", 2, 1, false, 0, "", "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
+		{"A", 6, 1, false, 0, "", "", 0},
+		{"B", 2, 1, false, 0, "", "", 0},
+		{"C", 8, 1, false, 0, "", "", 0},
+		{"D", 8, 1, false, 0, "", "", 0},
+		{"E", 8, 1, false, 0, "", "", 0},
+		{"F", 8, 1, false, 0, "", "", 0},
+		{"Parameter", 16, 1, false, 0, "", "", 0},
+		{"G", 8, 1, false, 0, "", "", 0},
+		{"Value", 16, 1, false, 0, "", "", 0}},
+	},
+
+	{"Simnet: Unknown", "Simrad", 130846, false, 19, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", "", 0},
+		{"Reserved", 2, 1, false, 0, "", "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
+		{"Bytes", 136, RES_BINARY, false, 0, "", "", 0}},
+	},
+
+	{"Simnet: Device Serial", "Navico", 130847, true, 12, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=275", "Navico", "", 0},
+		{"Reserved", 2, 1, false, 0, "", "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
+		{"Device Serial", 10, RES_STRINGLZ, false, 0, "", "", 0}},
+	},
+
+	{"Simnet: Event Command: Configure", "Simrad", 130850, false, 12, 0, []Field{
+		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", "", 0},
+		{"Reserved", 2, 1, false, 0, "", "", 0},
+		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
+		{"Device Address", 8, 1, false, 0, "", "", 0},
+		{"Reserved", 16, 0, false, 0, "", "", 0},
+		{"B", 8, 1, false, 0, "", "", 0},
+		{"C", 8, 1, false, 0, "", "", 0},
+		{"D", 8, 1, false, 0, "", "", 0},
+		{"Selected", 8, RES_LOOKUP, false, lookupYesNo, "", "", 0},
+		{"F", 24, 1, false, 0, "", "", 0}},
 	},
 
 	{"Simnet: Event Command: Alarm?", "Simrad", 130850, false, 12, 0, []Field{
@@ -2810,29 +2948,29 @@ var PgnList = PgnArray{
 		{"G", 8, 1, false, 0, "", "", 0}},
 	},
 
-	{"Simnet: Event Command: AP command", "Simrad", 130850, false, 12, 0, []Field{
-		{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", "", 0},
-		{"Reserved", 2, 1, false, 0, "", "", 0},
-		{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
-		{"Proprietary ID", 8, RES_LOOKUP, false, "=2", "AP command", "", 0},
-		{"B", 16, 1, false, 0, "", "", 0},
-		{"Controlling Device", 8, 1, false, 0, "", "", 0},
-		{"Event", 16, RES_LOOKUP, false, lookupSimnetApEvents, "", "", 0},
-		{"Direction", 8, RES_LOOKUP, false, lookupSimnetDirection, "", "", 0},
-		{"Angle", 16, RES_DEGREES, false, "deg", "", "", 0},
-		{"G", 8, 1, false, 0, "", "", 0}},
-	},
+	//  {"Simnet: Event Command: AP command", "Simrad", 130850, false, 12, 0, []Field{
+	//  	{"Manufacturer Code", 11, RES_MANUFACTURER, false, "=1857", "Simrad", "", 0},
+	//  	{"Reserved", 2, 1, false, 0, "", "", 0},
+	//  	{"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", "", 0},
+	//  	{"Proprietary ID", 8, RES_LOOKUP, false, "=2", "AP command", "", 0},
+	//  	{"B", 16, 1, false, 0, "", "", 0},
+	//  	{"Controlling Device", 8, 1, false, 0, "", "", 0},
+	//  	{"Event", 16, RES_LOOKUP, false, lookupSimnetApEvents, "", "", 0},
+	//  	{"Direction", 8, RES_LOOKUP, false, lookupSimnetDirection, "", "", 0},
+	//  	{"Angle", 16, RES_DEGREES, false, "deg", "", "", 0},
+	//  	{"G", 8, 1, false, 0, "", "", 0}},
+	//  },
 
-	//  1: { "Simnet: Event Command: Unknown", 130850, false, 12, 0, []Field{
-	//    { "Manufacturer Code", 11, RES_MANUFACTURER, false, lookupCompanyCode, "Simrad", 0},
-	//    { "Reserved", 2, 1, false, 0, "", 0},
-	//    { "Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
-	//    { "A", 16, 1, false, 0, "", 0},
-	//    { "Proprietary ID", 8, RES_LOOKUP, false, "=1", "Alarm command", 0},
-	//    { "B", 8, 1, false, 0, "", 0},
-	//    { "C", 16, 1, false, 0, "", 0},
-	//    { "D", 16, 1, false, 0, "", 0},
-	//    { "E", 16, 1, false, 0, "", 0}},
+	//  {"Simnet: Event Command: Unknown", 130850, false, 12, 0, []Field{
+	//    {"Manufacturer Code", 11, RES_MANUFACTURER, false, lookupCompanyCode, "Simrad", 0},
+	//    {"Reserved", 2, 1, false, 0, "", 0},
+	//    {"Industry Code", 3, RES_LOOKUP, false, lookupIndustryCode, "", 0},
+	//    {"A", 16, 1, false, 0, "", 0},
+	//    {"Proprietary ID", 8, RES_LOOKUP, false, "=1", "Alarm command", 0},
+	//    {"B", 8, 1, false, 0, "", 0},
+	//    {"C", 16, 1, false, 0, "", 0},
+	//    {"D", 16, 1, false, 0, "", 0},
+	//    {"E", 16, 1, false, 0, "", 0}},
 	//  },
 
 	{"Simnet: Event Reply: AP command", "Simrad", 130851, false, 12, 0, []Field{
