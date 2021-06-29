@@ -4,3 +4,5 @@ argo.conf
 vendor/package-lock.json
 *.swp
 node_modules/
+package.json
+yarn.lock
