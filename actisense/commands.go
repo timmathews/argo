@@ -128,8 +128,10 @@ func (p *ActisensePort) GetPortPCodes() (int, error) {
 	return p.write(ACmdSend, ACmdPortPCodeCfg)
 }
 
-func (p *ActisensePort) SetPortPCodes() (int, error) {
-	return p.write(ACmdSend, ACmdPortPCodeCfg)
+func (p *ActisensePort) SetPortPCodes(pcodes ...byte) (int, error) {
+	d := []byte{ACmdPortPCodeCfg, byte(len(pcodes) / 2)}
+	d = append(d, pcodes...)
+	return p.write(ACmdSend, d...)
 }
 
 func (p *ActisensePort) GetPortDupDelete() (int, error) {
