@@ -22,17 +22,16 @@ package canusb
 import (
 	"errors"
 	"fmt"
-	"github.com/timmathews/argo/can"
 	"io"
 	"time"
+
+	"github.com/timmathews/argo/can"
 )
 
 type CanPort struct {
 	p      io.ReadWriteCloser
 	a      uint8
 	IsOpen bool
-	rx     chan []byte
-	tx     chan *CanFrame
 }
 
 // OpenChannel opens the CAN bus port of the CANUSB adapter for communication.
@@ -56,7 +55,7 @@ func OpenChannel(port io.ReadWriteCloser, address uint8) (p *CanPort, err error)
 	}
 
 	// Open CANbus
-	s = fmt.Sprintf("O\r")
+	s = "O\r"
 	_, err = port.Write([]byte(s))
 	if err != nil {
 		return nil, err
@@ -67,8 +66,6 @@ func OpenChannel(port io.ReadWriteCloser, address uint8) (p *CanPort, err error)
 		p:      port,
 		a:      221,
 		IsOpen: true,
-		rx:     make(chan []byte),
-		tx:     make(chan *CanFrame),
 	}
 
 	return p, nil
@@ -81,8 +78,6 @@ func OpenChannel(port io.ReadWriteCloser, address uint8) (p *CanPort, err error)
 func (p *CanPort) CloseChannel() error {
 	_, err := p.Write([]byte("C\r"))
 
-	close(p.tx)
-	close(p.rx)
 	p.p.Close()
 
 	return err
@@ -104,7 +99,7 @@ func (p *CanPort) Read() (frame *can.RawMessage, err error) {
 					msg = nil
 					msg = append(msg, b)
 					sof = true
-				} else if b == '\r' && sof == true {
+				} else if b == '\r' && sof {
 					rec, err := p.frameReceived(msg)
 					if err == nil {
 						return &can.RawMessage{
@@ -117,7 +112,7 @@ func (p *CanPort) Read() (frame *can.RawMessage, err error) {
 							Data:        rec.Data,
 						}, nil
 					}
-				} else if sof == true {
+				} else if sof {
 					msg = append(msg, b)
 				}
 			}
@@ -144,10 +139,10 @@ func (p *CanPort) Write(b []byte) (int, error) {
 		data += fmt.Sprintf("%.2X", byt)
 	}
 
-	data += fmt.Sprintf("%.2X", 0) // Source
+	data += fmt.Sprintf("%.2X", p.a) // Source
 
 	if len > 8 {
-		return 0, errors.New("Does not support long writes currently!")
+		return 0, errors.New("does not support long writes")
 	}
 
 	data += fmt.Sprintf("%.1X", len)
@@ -202,7 +197,7 @@ func (p *CanPort) frameReceived(msg []byte) (*CanFrame, error) {
 				return frame, nil
 			} else {
 				partial_messages[uid] = *frame
-				return nil, errors.New("Partial PGN")
+				return nil, errors.New("partial PGN")
 			}
 		} else {
 			partial, ok := partial_messages[uid]
@@ -214,7 +209,7 @@ func (p *CanPort) frameReceived(msg []byte) (*CanFrame, error) {
 					return &partial, nil
 				} else {
 					partial_messages[uid] = partial
-					return nil, errors.New("Partial PGN")
+					return nil, errors.New("partial PGN")
 				}
 			} // If we have a frame out of sequence, should probably warn
 		}
