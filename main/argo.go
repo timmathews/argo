@@ -24,6 +24,15 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"os/signal"
+	"sort"
+	"strconv"
+	"syscall"
+	"time"
+
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/jacobsa/go-serial/serial"
 	"github.com/op/go-logging"
@@ -33,14 +42,6 @@ import (
 	"github.com/timmathews/argo/nmea2k"
 	"github.com/timmathews/argo/signalk"
 	"github.com/wsxiaoys/terminal"
-	"io"
-	"io/ioutil"
-	"os"
-	"os/signal"
-	"sort"
-	"strconv"
-	"syscall"
-	"time"
 )
 
 type StringSlice []string
@@ -213,7 +214,7 @@ func main() {
 	}
 
 	exitc := make(chan os.Signal, 1)
-	signal.Notify(exitc, os.Interrupt, os.Kill, syscall.SIGTERM)
+	signal.Notify(exitc, os.Interrupt, syscall.SIGTERM)
 
 	sig := <-exitc
 
@@ -279,7 +280,7 @@ func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessa
 		// Read from hardware
 		log.Debug("opening channel")
 		canport, _ := actisense.OpenChannel(port)
-		time.Sleep(2)
+		time.Sleep(250)
 
 		canport.GetOperatingMode()
 

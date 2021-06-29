@@ -22,15 +22,16 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/imdario/mergo"
-	"github.com/satori/go.uuid"
-	"github.com/timmathews/argo/config"
 	"html/template"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/gorilla/mux"
+	"github.com/imdario/mergo"
+	uuid "github.com/satori/go.uuid"
+	"github.com/timmathews/argo/config"
 )
 
 type Uuid struct {
@@ -85,7 +86,7 @@ func uuidHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Error("JSON Error:", err)
-		http.Error(w, "Could not generate UUID", 500)
+		http.Error(w, "Could not generate UUID", http.StatusInternalServerError)
 	} else {
 		io.WriteString(w, string(b))
 	}
@@ -98,7 +99,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
 			log.Error("Parsing %v", err)
-			http.Error(w, "Could not parse data", 400)
+			http.Error(w, "Could not parse data", http.StatusBadRequest)
 		} else {
 			log.Notice("\n%v", data)
 			err = mergo.Merge(&sysconf, data)
@@ -146,7 +147,7 @@ func appsHandler(w http.ResponseWriter, r *http.Request) {
 			t.ExecuteTemplate(w, "layout", data.Objects)
 		}
 	} else {
-		http.Error(w, "Method not allowed", 405)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -180,7 +181,7 @@ func appInstallHandlerFactory(m *mux.Router) http.HandlerFunc {
 			}
 
 		} else {
-			http.Error(w, "Method not allowed", 405)
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	}
 }
