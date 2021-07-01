@@ -157,7 +157,7 @@ func (p *ActisensePort) write(command byte, payload ...byte) (int, error) {
 func messageReceived(msg []byte) (*can.RawMessage, error) {
 
 	if len(msg) < 3 {
-		return nil, fmt.Errorf("Ignore short command len = %v\n", len(msg))
+		return nil, fmt.Errorf("ignore short command len = %v", len(msg))
 	}
 
 	var checksum byte
@@ -166,7 +166,7 @@ func messageReceived(msg []byte) (*can.RawMessage, error) {
 	}
 
 	if checksum != 0 {
-		return nil, errors.New("Ignoring message with invalid checksum")
+		return nil, errors.New("ignoring message with invalid checksum")
 	}
 
 	command := msg[0]
@@ -176,7 +176,7 @@ func messageReceived(msg []byte) (*can.RawMessage, error) {
 	} else if command == ACmdRecv {
 		return ngtMessageReceived(msg[1:])
 	} else {
-		return nil, fmt.Errorf("Unknown message type (%02X) received", command)
+		return nil, fmt.Errorf("unknown message type (%02X) received", command)
 	}
 }
 
@@ -184,7 +184,7 @@ func n2kMessageReceived(msg []byte) (*can.RawMessage, error) {
 
 	// Packet length from NGT1
 	if msg[0] < 11 {
-		return nil, fmt.Errorf("Ignore short msg, %v", len(msg))
+		return nil, fmt.Errorf("ignore short msg, %v", len(msg))
 	}
 
 	raw := new(can.RawMessage)
@@ -197,13 +197,13 @@ func n2kMessageReceived(msg []byte) (*can.RawMessage, error) {
 	lth := msg[11]
 
 	if lth > 223 {
-		return nil, fmt.Errorf("Ignore long msg %v", lth)
+		return nil, fmt.Errorf("ignore long msg %v", lth)
 	}
 
 	raw.Length = lth
 	lth += 12
 	if int(lth) > len(msg) {
-		return nil, fmt.Errorf("Ignore corrupt msg / data length: %d", lth)
+		return nil, fmt.Errorf("ignore corrupt msg / data length: %d", lth)
 	}
 	raw.Data = msg[12:lth]
 
@@ -215,7 +215,7 @@ func ngtMessageReceived(msg []byte) (*can.RawMessage, error) {
 	pLen := msg[0]
 
 	if pLen < 12 {
-		return nil, fmt.Errorf("Ignore short msg %v", len(msg))
+		return nil, fmt.Errorf("ignore short msg %v", len(msg))
 	}
 
 	raw := new(can.RawMessage)

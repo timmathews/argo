@@ -34,13 +34,58 @@ type CanPort struct {
 	IsOpen bool
 }
 
+var group byte = 0
+
+// Send a 60928 ISO Address Claim parameter group
+func (p *CanPort) AddressClaim(preferredAddress uint8) uint8 {
+	buf := make([]byte, 8)
+	unique := uint32(0x1fffff)
+	manufacturer := uint32(100)
+	lower_instance := uint32(0)
+	upper_instance := uint32(0)
+	function := uint32(25)
+	class := uint32(25)
+	instance := uint32(0)
+	industry_code := uint32(4)
+	arb_addr := uint32(1)
+
+	var i0, i1 uint32
+
+	i0 = unique
+	i0 += manufacturer << 21
+
+	i1 = lower_instance
+	i1 += upper_instance << 3
+	i1 += function << 8
+	i1 += class << 17
+	i1 += instance << 24
+	i1 += industry_code << 28
+	i1 += arb_addr << 31
+
+	binary.LittleEndian.PutUint32(buf[0:4], i0)
+	binary.LittleEndian.PutUint32(buf[4:8], i1)
+
+	addr_claim := can.RawMessage{
+		Timestamp:   time.Now(),
+		Priority:    2,
+		Source:      221,
+		Destination: 225,
+		Pgn:         60928,
+		Length:      8,
+		Data:        buf,
+	}
+
+	p.a = preferredAddress
+	p.Send(&addr_claim)
+
+	return preferredAddress
+}
+
 // OpenChannel opens the CAN bus port of the CANUSB adapter for communication.
 // This must be called after opening the serial port, but before beginning
 // communication with the CAN bus network. No harm will come from calling this
 // function multiple times. CloseChannel is its counterpart.
 func OpenChannel(port io.ReadWriteCloser, address uint8) (p *CanPort, err error) {
-	var s string
-
 	defer func() {
 		if err != nil && p != nil {
 			p.CloseChannel()
@@ -48,15 +93,13 @@ func OpenChannel(port io.ReadWriteCloser, address uint8) (p *CanPort, err error)
 	}()
 
 	// Set baudrate
-	s = fmt.Sprintf("S%d\r", 5) // 5 = 250k
-	_, err = port.Write([]byte(s))
+	_, err = port.Write([]byte("S5\r")) // S5 = 250k
 	if err != nil {
 		return nil, err
 	}
 
 	// Open CANbus
-	s = "O\r"
-	_, err = port.Write([]byte(s))
+	_, err = port.Write([]byte("O\r"))
 	if err != nil {
 		return nil, err
 	}
