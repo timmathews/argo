@@ -20,6 +20,7 @@
 package canusb
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -104,12 +105,13 @@ func OpenChannel(port io.ReadWriteCloser, address uint8) (p *CanPort, err error)
 		return nil, err
 	}
 
-	// TODO: Address negotiation
 	p = &CanPort{
 		p:      port,
-		a:      221,
-		IsOpen: true,
+		IsOpen: false,
 	}
+
+	p.a = p.AddressClaim(address)
+	p.IsOpen = true
 
 	return p, nil
 }
@@ -165,13 +167,21 @@ func (p *CanPort) Read() (frame *can.RawMessage, err error) {
 	}
 }
 
+func (p *CanPort) Address() uint8 {
+	return p.a
+}
+
 func (p *CanPort) Write(b []byte) (int, error) {
 	data := "T"
 	pri := b[0]
 	pgn := b[1:4]
 	dst := b[4]
 	len := b[5]
-	pld := b[6:]
+	pld := b[6 : 6+len]
+
+	if len > 8 {
+		return 0, errors.New("does not support long writes")
+	}
 
 	data += fmt.Sprintf("%.2X", pri<<2+pgn[0]&0x1)
 	if pgn[1] < 240 {
@@ -184,17 +194,95 @@ func (p *CanPort) Write(b []byte) (int, error) {
 
 	data += fmt.Sprintf("%.2X", p.a) // Source
 
-	if len > 8 {
-		return 0, errors.New("does not support long writes")
-	}
-
 	data += fmt.Sprintf("%.1X", len)
 
 	for _, byt := range pld {
 		data += fmt.Sprintf("%.2X", byt)
 	}
+
 	data += "\r"
+
 	return p.p.Write([]byte(data))
+}
+
+// Send writes a RawMessage to the CANbus. Send can handles single-frame and
+// fast packet PGNs. Larger data sets must be sent using
+func (p *CanPort) Send(frame *can.RawMessage) (int, error) {
+	buf := make([]byte, 14)
+
+	buf[0] = frame.Priority
+	buf[1] = byte((frame.Pgn & 0xf0000) >> 16)
+	buf[2] = byte((frame.Pgn & 0xff00) >> 8)
+	buf[3] = byte(frame.Pgn)
+	buf[4] = frame.Destination
+
+	// Up to eight bytes can be sent in a single frame
+	// Up to 223 bytes can be sent as a fast packet
+	// Over 223 bytes can be sent using other CANbus methods ... not implemented here
+
+	dataLen := len(frame.Data)
+
+	if dataLen <= 8 {
+		buf[5] = frame.Length
+		n := copy(buf[6:], frame.Data)
+
+		if n < int(frame.Length) {
+			return n, errors.New("not enough space for data")
+		}
+
+		return p.Write(buf)
+	}
+
+	if dataLen > 8 && dataLen <= 223 {
+		chunksize := 6
+		tmp := make([]byte, 8)
+		seq := 0
+		grp := group
+		total := 0
+		group++
+
+		for i := 0; i < dataLen; i += chunksize {
+			tmp[0] = byte(seq&0x1f) + byte(grp&0x7)<<5
+			seq++
+
+			if i == 1 {
+				chunksize++
+			}
+
+			end := i + chunksize
+			this := chunksize
+
+			if end > dataLen {
+				this = chunksize - (end - dataLen)
+				end = dataLen
+			}
+
+			fmt.Println(seq, frame.Data[i:end])
+
+			if i == 0 {
+				tmp[1] = byte(dataLen)
+				copy(tmp[2:], frame.Data[i:end])
+				copy(buf[6:], tmp[0:this+2])
+				buf[5] = byte(this + 2)
+
+			} else {
+				copy(tmp[1:], frame.Data[i:end])
+				copy(buf[6:], tmp[0:this+1])
+				buf[5] = byte(this + 1)
+			}
+
+			n, err := p.Write(buf)
+			if err != nil {
+				return n, err
+			}
+
+			total += n
+		}
+
+		return total, nil
+	}
+
+	return 0, errors.New("cannot send data larger than fast packets")
 }
 
 func (p *CanPort) frameReceived(msg []byte) (*CanFrame, error) {

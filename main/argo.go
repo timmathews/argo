@@ -272,6 +272,9 @@ func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessa
 		for {
 			raw, err := canport.Read()
 			if err == nil {
+				if raw.Pgn == 60928 && raw.Source == canport.Address() {
+					canport.AddressClaim(canport.Address() + 1)
+				}
 				txch <- *(nmea2k.ParsePacket(raw))
 			} else {
 				log.Warning("canport:", err)
