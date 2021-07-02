@@ -19,11 +19,6 @@
 
 package actisense
 
-import (
-	"fmt"
-	"math"
-)
-
 const (
 	// N2K commands
 	N2kMsgRecv = 0x93
@@ -83,6 +78,14 @@ const (
 	OpModeRxAll
 )
 
+type ActisensePCode byte
+
+const (
+	PCodeOff ActisensePCode = iota
+	PCodeOnAlways
+	PCodeOnSession
+)
+
 const (
 	RxPGNList byte = iota
 	TxPGNList
@@ -128,9 +131,11 @@ func (p *ActisensePort) GetPortPCodes() (int, error) {
 	return p.write(ACmdSend, ACmdPortPCodeCfg)
 }
 
-func (p *ActisensePort) SetPortPCodes(pcodes ...byte) (int, error) {
-	d := []byte{ACmdPortPCodeCfg, byte(len(pcodes) / 2)}
-	d = append(d, pcodes...)
+func (p *ActisensePort) SetPortPCodes(pcodes ...ActisensePCode) (int, error) {
+	d := []byte{ACmdPortPCodeCfg}
+	for _, p := range pcodes {
+		d = append(d, byte(p))
+	}
 	return p.write(ACmdSend, d...)
 }
 
@@ -179,8 +184,8 @@ func (p *ActisensePort) GetCANInfoField1() (int, error) {
 }
 
 func (p *ActisensePort) SetCANInfoField1(info string) (int, error) {
-	d := []byte{ACmdCANInfoField1}
-	d = append(d, []byte(truncateOrPad(info, 32))...)
+	d := []byte{ACmdCANInfoField1, byte(len(info) + 2), 1}
+	d = append(d, []byte(info)...)
 	return p.write(ACmdSend, d...)
 }
 
@@ -189,8 +194,8 @@ func (p *ActisensePort) GetCANInfoField2() (int, error) {
 }
 
 func (p *ActisensePort) SetCANInfoField2(info string) (int, error) {
-	d := []byte{ACmdCANInfoField2}
-	d = append(d, []byte(truncateOrPad(info, 32))...)
+	d := []byte{ACmdCANInfoField2, byte(len(info) + 2), 1}
+	d = append(d, []byte(info)...)
 	return p.write(ACmdSend, d...)
 }
 
@@ -258,25 +263,6 @@ func (p *ActisensePort) SetDefaultPGNEnableList(id byte) (int, error) {
 
 func (p *ActisensePort) GetParamsPGNEnableLists() (int, error) {
 	return p.write(ACmdSend, ACmdParamsPGNEnableLists)
-}
-
-func intMin(a, b int) int {
-	return int(math.Min(float64(a), float64(b)))
-}
-
-func intMax(a, b int) int {
-	return int(math.Max(float64(a), float64(b)))
-}
-
-func truncateOrPad(s string, l int) (o string) {
-	o = s[0:intMin(len(s), l)]
-
-	if len(o) < l {
-		f := fmt.Sprintf("%%-%vv", l)
-		o = fmt.Sprintf(f, o)
-	}
-
-	return
 }
 
 func intToBytes(i int) []byte {
