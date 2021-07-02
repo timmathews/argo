@@ -134,6 +134,25 @@ func (p *ActisensePort) Read() (*can.RawMessage, error) {
 	}
 }
 
+func (p *ActisensePort) Send(frame *can.RawMessage) (int, error) {
+	buf := make([]byte, frame.Length+6)
+
+	//buf[0] = N2kMsgSend
+	buf[0] = frame.Priority
+	buf[1] = byte(frame.Pgn)
+	buf[2] = byte(frame.Pgn >> 8)
+	buf[3] = byte(frame.Pgn >> 16)
+	buf[4] = frame.Destination
+	buf[5] = frame.Length
+	n := copy(buf[6:], frame.Data)
+
+	if n < int(frame.Length) {
+		return n, errors.New("not enough space for data")
+	}
+
+	return p.write(N2kMsgSend, buf...)
+}
+
 func (p *ActisensePort) write(command byte, payload ...byte) (int, error) {
 	bst := []byte{DLE, STX}
 
