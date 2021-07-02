@@ -55,7 +55,11 @@ func OpenChannel(port io.ReadWriteCloser) (p *ActisensePort, err error) {
 	}
 
 	_, err = p.SetOperatingMode(OpModeRxAll)
+	if err != nil {
+		return nil, err
+	}
 
+	_, err = p.SetPortPCodes(0, 0, 0)
 	if err != nil {
 		return nil, err
 	}
