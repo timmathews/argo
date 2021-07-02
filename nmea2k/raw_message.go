@@ -368,8 +368,9 @@ func (msg *RawMessage) extractStringLZ(start uint32) (s string, e error) {
 		return
 	}
 
-	start++
 	end += byte(start)
+	start++
+
 	if int(end) > len(msg.Data) {
 		e = &DecodeError{nil, "Data not present"}
 		return
