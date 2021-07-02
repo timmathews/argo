@@ -257,8 +257,6 @@ func (p *CanPort) Send(frame *can.RawMessage) (int, error) {
 				end = dataLen
 			}
 
-			fmt.Println(seq, frame.Data[i:end])
-
 			if i == 0 {
 				tmp[1] = byte(dataLen)
 				copy(tmp[2:], frame.Data[i:end])
