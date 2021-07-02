@@ -985,7 +985,9 @@ var PgnList = PgnArray{
 		{"SID", 8, 1, false, nil, "", "", 0},
 		{"Speed Water Referenced", 16, 0.01, false, "m/s", "", "navigation.speedThroughWater", 0},
 		{"Speed Ground Referenced", 16, 0.01, false, "m/s", "", "navigation.speedOverGround", 0},
-		{"Speed Water Referenced Type", 4, RES_LOOKUP, false, nil, "", "", 0}},
+		{"Speed Water Referenced Type", 8, RES_LOOKUP, false, lookupSpeedReference, "", "", 0},
+		{"Speed Direction", 4, RES_LOOKUP, false, lookupSpeedDirection, "", "", 0},
+		{"Reserved", 4, 1, false, nil, "", "", 0}},
 	},
 
 	// http://www.maretron.com/support/manuals/DST100UM_1.2.pdf
@@ -1997,7 +1999,6 @@ var PgnList = PgnArray{
 		{"COG Reference", 2, RES_LOOKUP, false, lookupDirectionReference, "", "", 0},
 		{"Reserved", 2, RES_BINARY, false, nil, "Reserved", "", 0},
 		{"SID", 8, 1, false, nil, "", "", 0},
-		// So far, 2 bytes. Very sure of this given molly rose data
 		{"COG", 16, RES_DEGREES, false, "deg", "", "", 0},
 		{"SOG", 16, 0.01, false, "m/s", "", "", 0},
 		{"Heading", 16, RES_DEGREES, false, "deg", "", "", 0},

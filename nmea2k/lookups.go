@@ -102,6 +102,20 @@ var lookupEscalationStatus = PgnLookup{
 	1: "Escalated",
 }
 
+var lookupSpeedDirection = PgnLookup{
+	0: "Ahead",
+	1: "Astern",
+}
+
+var lookupSpeedReference = PgnLookup{
+	0:   "Paddle Wheel",
+	1:   "Pitot Tube",
+	2:   "Doppler Log",
+	3:   "Correlation Log",
+	4:   "Electromagnetic",
+	253: "Not supported",
+}
+
 var lookupSupport = PgnLookup{
 	0: "Not supported",
 	1: "Supported",
