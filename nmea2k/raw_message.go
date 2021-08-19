@@ -155,14 +155,19 @@ func ParsePacket(cmsg *can.RawMessage) (pgnParsed *ParsedMessage) {
 							break
 						} else {
 							i++
-							pgnDefinition = PgnList[i]
-							fields = pgnDefinition.FieldList
+							pgnListLen := len(PgnList)
+							if i < pgnListLen {
+								pgnDefinition = PgnList[i]
+								fields = pgnDefinition.FieldList
 
-							if idx >= len(fields) {
+								if idx >= len(fields) {
+									break
+								}
+
+								field = fields[idx]
+							} else {
 								break
 							}
-
-							field = fields[idx]
 						}
 					} else {
 						break
