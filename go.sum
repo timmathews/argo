@@ -25,8 +25,6 @@ github.com/op/go-logging v0.0.0-20160211212156-b2cb9fa56473 h1:J1QZwDXgZ4dJD2s19
 github.com/op/go-logging v0.0.0-20160211212156-b2cb9fa56473/go.mod h1:HzydrMdWErDVzsI23lYNej1Htcns9BCg93Dk0bBINWk=
 github.com/satori/go.uuid v1.1.0 h1:B9KXyj+GzIpJbV7gmr873NsY6zpbxNy24CBtGrk7jHo=
 github.com/satori/go.uuid v1.1.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
-github.com/timmathews/argo v0.0.0-20181009003531-03c44b3fef04 h1:EkKkR9E53qyarD/+E9l/Q2vht9JSg3Q+cAxOvjB53JA=
-github.com/timmathews/argo v0.0.0-20181009003531-03c44b3fef04/go.mod h1:iG3KBDcgVX5zqC11ks5tSORdW2gCXROP5S2crUH4J18=
 github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0 h1:3UeQBvD0TFrlVjOeLOBz+CPAI8dnbqNSVwUwRrkp7vQ=
 github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0/go.mod h1:IXCdmsXIht47RaVFLEdVnh1t+pgYtTAhQGj73kz+2DM=
 golang.org/x/net v0.0.0-20161229225711-8fd7f2595553 h1:R1raIZjpvFR0iw8sqwNeyRumKrHFoend3L2d5xbadFI=
