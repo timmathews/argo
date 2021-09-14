@@ -21,10 +21,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/op/go-logging"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/op/go-logging"
 )
 
 type connection struct {
@@ -128,7 +129,7 @@ func (h *hub) run() {
 
 func serveWs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		http.Error(w, "Method not allowed", 405)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -136,7 +137,7 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 
 	ws, err := websocket.Upgrade(w, r, nil, 1024, 1024)
 	if _, ok := err.(websocket.HandshakeError); ok {
-		http.Error(w, "Not a websocket handshake", 400)
+		http.Error(w, "Not a websocket handshake", http.StatusBadRequest)
 		return
 	} else if err != nil {
 		log.Error("Websocket:", err)
@@ -154,7 +155,7 @@ func serveWs(w http.ResponseWriter, r *http.Request) {
 
 func handleStats(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		http.Error(w, "Method not allowed", 405)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 

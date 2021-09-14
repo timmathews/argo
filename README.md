@@ -23,7 +23,6 @@ After that, you can install argo. Go has some opinions on how you should manage
 your source code workspaces, so use the commands below to get the paths right.
 
 ```
-$ sudo apt-get install libzmq-dev
 $ cd $GOPATH/src
 $ git clone git@github.com:timmathews/argo github.com/timmathews/argo
 $ cd github.com/timmathews/argo
@@ -31,9 +30,8 @@ $ ./build.sh
 $ sudo ./build.sh --install
 ```
 
-If you're not interested in hacking on Argo, you can install the libzmq-dev
-library as above and then `go get github.com/timmathews/argo`. Which will
-install argo in into $GOPATH/bin.
+If you're not interested in hacking on Argo, then just run
+`go get github.com/timmathews/argo`. Argo will be installed in `$GOPATH/bin`.
 
 By default, argo will try to use /dev/ttyUSB0 for the Actisense NGT-1, but you
 can change this by calling argo with a specific device like `argo
@@ -43,6 +41,37 @@ There are utility scripts in the `canusb` and `actisense` folders which will
 install udev rules for those devices. You probably won't need these, but if for
 some reason your distro doesn't recognize the vendor IDs for those devices,
 these scripts can help.
+
+Other Platforms
+---------------
+
+You can cross compile for other platforms by setting the `GOARCH` environment
+variable.
+
+### MIPS (OpenWRT and lots of routers):
+
+```
+$ export GOARCH=mips GOARCH=softfloat
+```
+
+### ARM (Raspberry Pi and clones):
+
+```
+$ export GOARCH=arm GOARM=7
+```
+
+If your target OS is not the same as your host OS (e.g. you're compiling on Mac
+and targeting a Raspberry Pi), be sure to also set `GOOS`.
+
+```
+$ export GOOS=linux
+```
+
+Notes
+-----
+
+You shouldn't need to install the libzmq-dev package any longer, but if your
+build fails, then `sudo apt install libzmq-dev` may help.
 
 TODO
 ----

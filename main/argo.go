@@ -24,6 +24,15 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"os/signal"
+	"sort"
+	"strconv"
+	"syscall"
+	"time"
+
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/jacobsa/go-serial/serial"
 	"github.com/op/go-logging"
@@ -33,18 +42,7 @@ import (
 	"github.com/timmathews/argo/nmea2k"
 	"github.com/timmathews/argo/signalk"
 	"github.com/wsxiaoys/terminal"
-	"io"
-	"io/ioutil"
-	"os"
-	"os/signal"
-	"sort"
-	"strconv"
-	"syscall"
-	"time"
 )
-
-// Timestamp format for printing
-const layout = "2006-01-02-15:04:05.999"
 
 type StringSlice []string
 
@@ -164,6 +162,7 @@ func main() {
 
 			if (opts.Pgn == 0 || int(res.Header.Pgn) == opts.Pgn) &&
 				(opts.Src == 255 || int(res.Header.Source) == opts.Src) &&
+				(opts.Dst == 255 || int(res.Header.Destination) == opts.Dst) &&
 				!opts.Stats {
 				log.Debug(res.Header.Print(verbose))
 				log.Info(res.Print(verbose))
@@ -216,11 +215,11 @@ func main() {
 	}
 
 	exitc := make(chan os.Signal, 1)
-	signal.Notify(exitc, os.Interrupt, os.Kill, syscall.SIGTERM)
+	signal.Notify(exitc, os.Interrupt, syscall.SIGTERM)
 
 	sig := <-exitc
 
-	log.Notice("cleaning up and exiting with", sig)
+	log.Notice("cleaning up and exiting with %v", sig)
 }
 
 func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessage) {
@@ -253,14 +252,14 @@ func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessa
 	}
 
 	// Set up hardware and start reading data
-	log.Debug("configuring", iface.Type)
+	log.Debug("configuring %v", iface.Type)
 
 	if iface.Type == "canusb" {
 		log.Debug("adding Fast Packets")
 
 		for _, p := range nmea2k.PgnList {
 			if p.Size > 8 {
-				log.Debug("adding PGN:", p.Pgn)
+				log.Debug("adding PGN: %d", p.Pgn)
 				canusb.AddFastPacket(p.Pgn)
 			}
 		}
@@ -273,6 +272,9 @@ func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessa
 		for {
 			raw, err := canport.Read()
 			if err == nil {
+				if raw.Pgn == 60928 && raw.Source == canport.Address() {
+					canport.AddressClaim(canport.Address() + 1)
+				}
 				txch <- *(nmea2k.ParsePacket(raw))
 			} else {
 				log.Warning("canport:", err)
@@ -282,7 +284,9 @@ func processInterface(iface config.InterfaceConfig, txch chan nmea2k.ParsedMessa
 		// Read from hardware
 		log.Debug("opening channel")
 		canport, _ := actisense.OpenChannel(port)
-		time.Sleep(2)
+		time.Sleep(250)
+
+		canport.GetOperatingMode()
 
 		for {
 			raw, err := canport.Read()

@@ -23,11 +23,12 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/timmathews/argo/nmea2k"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/gorilla/mux"
+	"github.com/timmathews/argo/nmea2k"
 )
 
 type IndexEntry struct {
@@ -107,12 +108,12 @@ func MessagesIndex(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	fmt.Fprintf(w, string(b))
+	fmt.Fprint(w, string(b))
 }
 
 func MessageDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	key, _ := vars["key"]
+	key := vars["key"]
 	tok := strings.Split(key, ".")
 	pgn, _ := strconv.ParseInt(tok[0], 10, 32)
 	var enc string
@@ -140,7 +141,7 @@ func MessageDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error("Marshalling failed:", err)
 	}
-	fmt.Fprintf(w, string(b))
+	fmt.Fprint(w, string(b))
 }
 
 func SendMessageHandler(cmd chan CommandRequest) http.HandlerFunc {
@@ -152,8 +153,8 @@ func SendMessageHandler(cmd chan CommandRequest) http.HandlerFunc {
 			if err != nil {
 				fmt.Fprintf(w, "Invalid JSON")
 			}
-			log.Debug("Request Type:", b.RequestType)
-			log.Debug("Requested PGN:", b.RequestedPgn)
+			log.Debugf("Request Type: %v", b.RequestType)
+			log.Debugf("Requested PGN: %v", b.RequestedPgn)
 			cmd <- b
 		}
 	}

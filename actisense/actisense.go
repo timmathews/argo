@@ -30,33 +30,17 @@ import (
 
 const (
 	// ASCII characters which mark packet start and stop
-	NUL = 0x00
 	STX = 0x02
 	ETX = 0x03
 	DLE = 0x10
-	DC1 = 0x11
-	ESC = 0x1B
-
-	// N2K commands
-	N2K_MSG_RECEIVED = 0x93
-	N2K_MSG_SEND     = 0x94
-
-	// NGT commands
-	NGT_MSG_RECEIVED = 0xA0
-	NGT_MSG_SEND     = 0xA1
 )
-
-// The following startup command was reverse engineered from Actisense
-// NMEAreader. It instructs the NGT1 to clear its PGN message TX list, thus it
-// starts sending all PGNs.
-var NGT_STARTUP_SEQ = []byte{DC1, STX, NUL}
 
 type MsgState int
 
 const (
-	MSG_START MsgState = iota
-	MSG_ESCAPE
-	MSG_MESSAGE
+	MsgStart MsgState = iota
+	MsgEscape
+	MsgMessage
 )
 
 type ActisensePort struct {
@@ -70,8 +54,12 @@ func OpenChannel(port io.ReadWriteCloser) (p *ActisensePort, err error) {
 		IsOpen: true,
 	}
 
-	_, err = p.write(NGT_MSG_SEND, NGT_STARTUP_SEQ)
+	_, err = p.SetOperatingMode(OpModeRxAll)
+	if err != nil {
+		return nil, err
+	}
 
+	_, err = p.SetPortPCodes(0, 0, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -98,13 +86,13 @@ func OpenChannel(port io.ReadWriteCloser) (p *ActisensePort, err error) {
 // plus the length plus the checksum add up to zero, modulo 256.
 //
 func (p *ActisensePort) Write(payload []byte) (int, error) {
-	return p.write(N2K_MSG_SEND, payload)
+	return p.write(N2kMsgSend, payload...)
 }
 
 func (p *ActisensePort) Read() (*can.RawMessage, error) {
 	var buf []byte
 	rxbuf := []byte{0}
-	state := MSG_START
+	state := MsgStart
 	var msg *can.RawMessage
 
 	for {
@@ -114,39 +102,58 @@ func (p *ActisensePort) Read() (*can.RawMessage, error) {
 		}
 
 		for _, b := range rxbuf {
-			if state == MSG_ESCAPE {
+			if state == MsgEscape {
 				if b == ETX { // End of message
 					msg, err = messageReceived(buf)
 					buf = nil
-					state = MSG_START
+					state = MsgStart
 					if err == nil {
 						return msg, nil
 					}
 				} else if b == STX { // Start of message
-					state = MSG_MESSAGE
+					state = MsgMessage
 				} else if b == DLE { // Escaped DLE char
 					buf = append(buf, b)
-					state = MSG_MESSAGE
+					state = MsgMessage
 				} else { // Unexpected character after DLE
 					buf = nil
-					state = MSG_START
+					state = MsgStart
 				}
-			} else if state == MSG_MESSAGE {
+			} else if state == MsgMessage {
 				if b == DLE { // Escape char
-					state = MSG_ESCAPE
+					state = MsgEscape
 				} else {
 					buf = append(buf, b)
 				}
 			} else {
 				if b == DLE { // Escape char
-					state = MSG_ESCAPE
+					state = MsgEscape
 				}
 			}
 		}
 	}
 }
 
-func (p *ActisensePort) write(command byte, payload []byte) (int, error) {
+func (p *ActisensePort) Send(frame *can.RawMessage) (int, error) {
+	buf := make([]byte, frame.Length+6)
+
+	//buf[0] = N2kMsgSend
+	buf[0] = frame.Priority
+	buf[1] = byte(frame.Pgn)
+	buf[2] = byte(frame.Pgn >> 8)
+	buf[3] = byte(frame.Pgn >> 16)
+	buf[4] = frame.Destination
+	buf[5] = frame.Length
+	n := copy(buf[6:], frame.Data)
+
+	if n < int(frame.Length) {
+		return n, errors.New("not enough space for data")
+	}
+
+	return p.write(N2kMsgSend, buf...)
+}
+
+func (p *ActisensePort) write(command byte, payload ...byte) (int, error) {
 	bst := []byte{DLE, STX}
 
 	bst = append(bst, command, byte(len(payload)))
@@ -173,7 +180,7 @@ func (p *ActisensePort) write(command byte, payload []byte) (int, error) {
 func messageReceived(msg []byte) (*can.RawMessage, error) {
 
 	if len(msg) < 3 {
-		return nil, errors.New(fmt.Sprintf("Ignore short command len = %v\n", len(msg)))
+		return nil, fmt.Errorf("ignore short command len = %v", len(msg))
 	}
 
 	var checksum byte
@@ -182,17 +189,17 @@ func messageReceived(msg []byte) (*can.RawMessage, error) {
 	}
 
 	if checksum != 0 {
-		return nil, errors.New("Ignoring message with invalid checksum")
+		return nil, errors.New("ignoring message with invalid checksum")
 	}
 
 	command := msg[0]
 
-	if command == N2K_MSG_RECEIVED {
+	if command == N2kMsgRecv {
 		return n2kMessageReceived(msg[1:])
-	} else if command == NGT_MSG_RECEIVED {
+	} else if command == ACmdRecv {
 		return ngtMessageReceived(msg[1:])
 	} else {
-		return nil, errors.New(fmt.Sprintf("Unknown message type (%02X) received", command))
+		return nil, fmt.Errorf("unknown message type (%02X) received", command)
 	}
 }
 
@@ -200,7 +207,7 @@ func n2kMessageReceived(msg []byte) (*can.RawMessage, error) {
 
 	// Packet length from NGT1
 	if msg[0] < 11 {
-		return nil, errors.New(fmt.Sprintf("Ignore short msg", len(msg)))
+		return nil, fmt.Errorf("ignore short msg, %v", len(msg))
 	}
 
 	raw := new(can.RawMessage)
@@ -213,13 +220,13 @@ func n2kMessageReceived(msg []byte) (*can.RawMessage, error) {
 	lth := msg[11]
 
 	if lth > 223 {
-		return nil, errors.New(fmt.Sprintf("Ignore long msg", lth))
+		return nil, fmt.Errorf("ignore long msg %v", lth)
 	}
 
 	raw.Length = lth
 	lth += 12
 	if int(lth) > len(msg) {
-		return nil, fmt.Errorf("Ignore corrupt msg / data length: %d", lth)
+		return nil, fmt.Errorf("ignore corrupt msg / data length: %d", lth)
 	}
 	raw.Data = msg[12:lth]
 
@@ -231,7 +238,7 @@ func ngtMessageReceived(msg []byte) (*can.RawMessage, error) {
 	pLen := msg[0]
 
 	if pLen < 12 {
-		return nil, errors.New(fmt.Sprintf("Ignore short msg", len(msg)))
+		return nil, fmt.Errorf("ignore short msg %v", len(msg))
 	}
 
 	raw := new(can.RawMessage)

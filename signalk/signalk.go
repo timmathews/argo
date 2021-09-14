@@ -22,14 +22,13 @@ package signalk
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/timmathews/argo/nmea2k"
 	"io/ioutil"
 	"strconv"
 	"strings"
 	"time"
-)
 
-const timeformat = "2006-01-02T15:04:05"
+	"github.com/timmathews/argo/nmea2k"
+)
 
 type condition struct {
 	Operation string `xml:"op"`
@@ -231,10 +230,10 @@ func merge(left, right map[int]bool) map[int]bool {
 func (fieldset fieldset) parse(dataFields nmea2k.DataMap) (string, map[int]bool) {
 	f := fieldset.toMap()
 	if fieldset.Type == "datetime" {
-		dt, ok := dataFields[f["date"]].(time.Time)
-		tm, ok := dataFields[f["time"]].(time.Time)
+		dt, ok1 := dataFields[f["date"]].(time.Time)
+		tm, ok2 := dataFields[f["time"]].(time.Time)
 
-		if ok {
+		if ok1 && ok2 {
 			var usedFields = make(map[int]bool, 1)
 
 			usedFields[f["date"]] = true

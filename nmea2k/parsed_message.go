@@ -22,11 +22,14 @@ package nmea2k
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/timmathews/argo/can"
-	"gopkg.in/vmihailenco/msgpack.v2"
 	"strconv"
 	"time"
+
+	"github.com/timmathews/argo/can"
+	"gopkg.in/vmihailenco/msgpack.v2"
 )
+
+var layout = "2006-01-02T15:04:05.000"
 
 type DataMap map[int]interface{}
 
@@ -71,7 +74,7 @@ func FromCanBoat(data string) (*ParsedMessage, error) {
 	l, _ := PgnList.Last(cbm.Pgn)
 
 	if f != l {
-		return nil, fmt.Errorf("(%v): f (%v) != l (%v)\n", cbm.Pgn, f, l)
+		return nil, fmt.Errorf("(%v): f (%v) != l (%v)", cbm.Pgn, f, l)
 	}
 
 	dd := make(map[int]interface{})

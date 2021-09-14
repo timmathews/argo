@@ -22,8 +22,9 @@ package canusb
 import (
 	"errors"
 	"fmt"
-	"github.com/timmathews/argo/can"
 	"strconv"
+
+	"github.com/timmathews/argo/can"
 )
 
 type msgType int
@@ -98,8 +99,8 @@ func ParseFrame(p []byte) (*CanFrame, error) {
 	var err error
 	var offset int
 
-	if p == nil || len(p) == 0 {
-		return nil, errors.New("Empty byte array")
+	if len(p) == 0 {
+		return nil, errors.New("empty byte array")
 	}
 
 	switch p[0] {
@@ -142,7 +143,7 @@ func ParseFrame(p []byte) (*CanFrame, error) {
 			frame.Pgn = (frame.id >> 8) & 0x03FF00
 		}
 	} else {
-		return nil, errors.New(fmt.Sprintf("canusb.ParseFrame: Unable to parse message ID: %s", err))
+		return nil, fmt.Errorf("canusb.ParseFrame: Unable to parse message ID: %s", err)
 	}
 
 	n, err = strconv.ParseUint(string(p[offset]), 16, 8)
@@ -153,7 +154,7 @@ func ParseFrame(p []byte) (*CanFrame, error) {
 			return nil, errors.New("canusb.ParseFrame: Expected length <= 8")
 		}
 	} else {
-		return nil, errors.New(fmt.Sprintf("canusb.ParseFrame: Unable to parse message length: %s", err))
+		return nil, fmt.Errorf("canusb.ParseFrame: Unable to parse message length: %s", err)
 	}
 
 	offset++
@@ -161,14 +162,14 @@ func ParseFrame(p []byte) (*CanFrame, error) {
 	data_len := len(p[offset:]) - 4
 
 	if data_len%2 != 0 || data_len/2 != int(n) {
-		return nil, errors.New(fmt.Sprintf("canusb.ParseFrame: Expected %d bytes, got %d", n*2, data_len))
+		return nil, fmt.Errorf("canusb.ParseFrame: Expected %d bytes, got %d", n*2, data_len)
 	} else {
 		for i := offset; i < data_len+offset; i += 2 {
 			v, err = strconv.ParseUint(string(p[i:i+2]), 16, 8)
 			if err == nil {
 				frame.Data = append(frame.Data, byte(v))
 			} else {
-				return nil, errors.New(fmt.Sprintf("canusb.ParseFrame: Unable to parse data: %s", err))
+				return nil, fmt.Errorf("canusb.ParseFrame: Unable to parse data: %s", err)
 			}
 		}
 	}
