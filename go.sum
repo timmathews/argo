@@ -1,5 +1,7 @@
 github.com/asbjorn/argo v1.1.1 h1:2Qo4H2a5L6LaagYqDwlVdXM5CFBIN7H6a4q+DR4WTiI=
 github.com/asbjorn/argo v1.1.1/go.mod h1:qWySId9q7OxWDy3cJv7Vlq1DokE5L3uyjz5WN7NAnks=
+github.com/asbjorn/argo v1.1.2-rc1 h1:gP9SpfPAx2M+j4b4um3IzIgvoqBEjUnYhjY3Ii98mHM=
+github.com/asbjorn/argo v1.1.2-rc1/go.mod h1:dpLjcvPN06njOGkbdcqanHfJ6+slulRhZPnAXDtDJr8=
 github.com/burntsushi/toml v0.2.0 h1:1dV0laB43OdzcmNxn0Us4ZYueQUcpxxlMJ0NF0MPJhQ=
 github.com/burntsushi/toml v0.2.0/go.mod h1:tCq67G3LEDB9hykA6+KWl2FPEy0nPcvE8TTBhtOtdGs=
 github.com/deckarep/golang-set v0.0.0-20170202203032-fc8930a5e645 h1:P2qhNT0y1A7XeBvSwkvXV2nZTd28Ax5n709pred+3Ys=
@@ -31,8 +33,15 @@ github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0 h1:3UeQBvD0TFrlV
 github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0/go.mod h1:IXCdmsXIht47RaVFLEdVnh1t+pgYtTAhQGj73kz+2DM=
 golang.org/x/net v0.0.0-20161229225711-8fd7f2595553 h1:R1raIZjpvFR0iw8sqwNeyRumKrHFoend3L2d5xbadFI=
 golang.org/x/net v0.0.0-20161229225711-8fd7f2595553/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
+golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd h1:O7DYs+zxREGLKzKoMQrtrEacpb0ZVXA5rIwylE2Xchk=
+golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd/go.mod h1:CfG3xpIq0wQ8r1q4Su4UZFWDARRcnwPjda9FqA0JpMk=
 golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e h1:vcxGaoTs7kV8m5Np9uUNQin4BrLOthgV7252N8V+FwY=
 golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
+golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/term v0.0.0-20210927222741-03fcf44c2211/go.mod h1:jbD1KX2456YbFQfuXm/mYQcufACuNUgVhRMnK/tPxf8=
+golang.org/x/text v0.3.7/go.mod h1:u+2+/6zg+i71rQMx5EYifcz6MCKuco9NR6JIITiCfzQ=
+golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
 google.golang.org/appengine v1.0.1-0.20161217034650-08a149cfaee0 h1:rYf3ZsXcmuxMqvit5i+rfstUzjzWLHe5cFsNXF+2IIA=
 google.golang.org/appengine v1.0.1-0.20161217034650-08a149cfaee0/go.mod h1:EbEs0AVv82hx2wNQdGPgUI5lhzA/G0D9YwlJXL52JkM=
 gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f h1:BLraFXnmrev5lT+xlilqcH8XK9/i0At2xKjWk4p6zsU=

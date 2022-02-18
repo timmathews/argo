@@ -16,7 +16,8 @@ require (
 	github.com/satori/go.uuid v1.1.0
 	github.com/timmathews/argo v0.0.0-00010101000000-000000000000
 	github.com/wsxiaoys/terminal v0.0.0-20160513160801-0940f3fc43a0
+	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	gopkg.in/vmihailenco/msgpack.v2 v2.9.1
 )
 
-replace github.com/timmathews/argo => github.com/asbjorn/argo v1.1.1
+replace github.com/timmathews/argo => github.com/asbjorn/argo v1.1.2-rc1
