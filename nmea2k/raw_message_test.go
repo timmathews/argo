@@ -233,4 +233,15 @@ func TestPgn127489NumberExtraction(t *testing.T) {
 	if ok {
 		t.Errorf("the value for the field 'total engine hours' is invalid: (%d). Need to check maximum value during extraction. RawMessage: %+v\n", engineHours, pgnParsed.Data[6])
 	}
+
+	// This RawMessage is the 'BAD' one with invalid values. Field 6 should be 'nil' with the proper validation.
+	msg = RawMessage{new(can.RawMessage)}
+	msg.Data = []byte{0x00, 0xb0, 0x09, 0xff, 0xff, 0xab, 0x7c, 0xff, 0x7f, 0x15, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x60, 0x02, 0xff, 0x00, 0x00, 0x00, 0x00, 0x0f, 0x05}
+	msg.Pgn = uint32(127489)
+
+	pgnParsed = ParsePacket(msg.RawMessage)
+	alternator, ok := pgnParsed.Data[4].(float64)
+	if ok {
+		t.Errorf("the value for the field 'alternator_potential' is invalid: (%f). Need to check maximum value during extraction. RawMessage: %+v\n", alternator, pgnParsed.Data[4])
+	}
 }

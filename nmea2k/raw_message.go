@@ -463,7 +463,16 @@ func (msg *RawMessage) extractNumber(field *Field, start, end, offset, width uin
 		maxValue = 0x7FFFFFFFFFFFFFFF
 	}
 
-	if num > maxValue {
+	var reserved uint64
+	if maxValue >= 15 {
+		reserved = 2
+	} else if maxValue > 1 {
+		reserved = 1
+	} else {
+		reserved = 0
+	}
+
+	if num > maxValue-reserved {
 		e = &DecodeError{data, "Field not present"}
 		return
 	}
