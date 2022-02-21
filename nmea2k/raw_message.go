@@ -187,9 +187,19 @@ func ParsePacket(cmsg *can.RawMessage) (pgnParsed *ParsedMessage) {
 							break
 						} else {
 							i++
-							pgnDefinition = PgnList[i]
-							fields = pgnDefinition.FieldList
-							field = fields[idx]
+							pgnListLen := len(PgnList)
+							if i < pgnListLen {
+								pgnDefinition = PgnList[i]
+								fields = pgnDefinition.FieldList
+
+								if idx >= len(fields) {
+									break
+								}
+
+								field = fields[idx]
+							} else {
+								break
+							}
 						}
 					} else {
 						break
@@ -440,23 +450,32 @@ func (msg *RawMessage) extractNumber(field *Field, start, end, offset, width uin
 		return
 	}
 
-	//	var maxValue uint64
-	//	if width > 8 {
-	//		maxValue = 1<<(width-1) - 1
-	//	} else if width == 1 {
-	//		maxValue = 1
-	//	} else {
-	//		maxValue = 1<<width - 1
-	//	}
+	var maxValue uint64
+	if width > 8 {
+		maxValue = 1<<(width-1) - 1
+	} else if width == 1 {
+		maxValue = 1
+	} else {
+		maxValue = 1<<width - 1
+	}
 
-	//	if maxValue == 0 {
-	//		maxValue = 0x7FFFFFFFFFFFFFFF
-	//	}
+	if maxValue == 0 {
+		maxValue = 0x7FFFFFFFFFFFFFFF
+	}
 
-	//	if num > maxValue {
-	//		e = &DecodeError{data, "Field not present"}
-	//		return
-	//	}
+	var reserved uint64
+	if maxValue >= 15 {
+		reserved = 2
+	} else if maxValue > 1 {
+		reserved = 1
+	} else {
+		reserved = 0
+	}
+
+	if num > maxValue-reserved {
+		e = &DecodeError{data, "Field not present"}
+		return
+	}
 
 	if res != 1 && res != RES_LOOKUP && res != RES_MANUFACTURER && res != RES_INTEGER {
 		if field.Signed {
